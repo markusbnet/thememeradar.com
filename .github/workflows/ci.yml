@@ -16,11 +16,6 @@ jobs:
         image: amazon/dynamodb-local:latest
         ports:
           - 8000:8000
-        options: >-
-          --health-cmd="curl -f http://localhost:8000 || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout code
@@ -46,8 +41,16 @@ jobs:
           echo "SESSION_COOKIE_NAME=meme_radar_session" >> .env.local
           echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> .env.local
 
+      - name: Wait for DynamoDB Local
+        run: sleep 5
+
       - name: Initialize DynamoDB tables
         run: npx tsx scripts/init-db.ts
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
 
       - name: Run linter
         run: npm run lint
