@@ -1,13 +1,14 @@
 /**
  * Reddit Scan API Endpoint
- * POST /api/scan
+ * GET  /api/scan - Automated cron job (scans default subreddits)
+ * POST /api/scan - Manual scan (custom subreddits)
  *
- * Triggers a manual scan of specified subreddit(s)
- * Returns aggregated ticker mentions with sentiment analysis
+ * Scans Reddit for stock mentions, analyzes sentiment, and saves to DynamoDB
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createScanner } from '@/lib/scanner/scanner';
+import { saveScanResults } from '@/lib/db/storage';
 
 // Configuration from environment variables
 const REDDIT_CONFIG = {
@@ -15,6 +16,9 @@ const REDDIT_CONFIG = {
   clientSecret: process.env.REDDIT_CLIENT_SECRET || '',
   userAgent: process.env.REDDIT_USER_AGENT || 'MemeRadar/1.0',
 };
+
+// Default subreddits to scan (for cron job)
+const DEFAULT_SUBREDDITS = ['wallstreetbets', 'stocks', 'investing'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,6 +71,9 @@ export async function POST(request: NextRequest) {
       results = await scanner.scanMultipleSubreddits(subreddits, limit);
     }
 
+    // Save results to DynamoDB
+    await saveScanResults(results);
+
     // Convert Map to object for JSON serialization
     const serializedResults = results.map((result) => ({
       ...result,
@@ -101,34 +108,63 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint for testing (returns instructions)
+/**
+ * GET endpoint for automated cron job
+ * Scans default subreddits and saves results to DynamoDB
+ */
 export async function GET() {
-  return NextResponse.json({
-    message: 'Reddit Scan API Endpoint',
-    usage: {
-      method: 'POST',
-      body: {
-        subreddit: 'Single subreddit name (string)',
-        subreddits: 'Multiple subreddit names (array)',
-        limit: 'Number of posts to fetch per subreddit (default: 25)',
+  try {
+    // Validate Reddit credentials
+    if (!REDDIT_CONFIG.clientId || !REDDIT_CONFIG.clientSecret) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Reddit API credentials not configured',
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('🔄 Starting automated Reddit scan...');
+    console.log(`📡 Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
+
+    // Create scanner instance
+    const scanner = createScanner(REDDIT_CONFIG);
+
+    // Scan default subreddits
+    const results = await scanner.scanMultipleSubreddits(DEFAULT_SUBREDDITS, 25);
+
+    // Save results to DynamoDB
+    await saveScanResults(results);
+
+    // Calculate summary
+    const summary = {
+      scannedAt: new Date().toISOString(),
+      subreddits: DEFAULT_SUBREDDITS,
+      totalPosts: results.reduce((sum, r) => sum + r.stats.totalPosts, 0),
+      totalComments: results.reduce((sum, r) => sum + r.stats.totalComments, 0),
+      totalUniqueTickers: new Set(
+        results.flatMap((r) => Array.from(r.tickers.keys()))
+      ).size,
+      totalMentions: results.reduce((sum, r) => sum + r.stats.totalMentions, 0),
+    };
+
+    console.log('✅ Scan completed:', summary);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Scan completed and saved to database',
+      data: summary,
+    });
+  } catch (error: any) {
+    console.error('❌ Automated scan error:', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || 'Scan failed',
       },
-      examples: [
-        {
-          description: 'Scan single subreddit',
-          body: {
-            subreddit: 'wallstreetbets',
-            limit: 10,
-          },
-        },
-        {
-          description: 'Scan multiple subreddits',
-          body: {
-            subreddits: ['wallstreetbets', 'stocks', 'investing'],
-            limit: 25,
-          },
-        },
-      ],
-    },
-    note: 'Requires REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET environment variables',
-  });
+      { status: 500 }
+    );
+  }
 }
