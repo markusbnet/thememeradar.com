@@ -1,0 +1,26 @@
+{
+  "tickers": [
+    "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "TSLA", "NVDA", "META", "BRK.B", "BRK.A",
+    "V", "JNJ", "WMT", "JPM", "MA", "PG", "UNH", "HD", "DIS", "BAC",
+    "ADBE", "CRM", "NFLX", "CMCSA", "XOM", "VZ", "PFE", "INTC", "CSCO", "KO",
+    "PEP", "ABT", "TMO", "ABBV", "MRK", "AVGO", "COST", "NKE", "ACN", "ORCL",
+    "TXN", "DHR", "LLY", "MDT", "NEE", "BMY", "UPS", "HON", "QCOM", "PM",
+    "UNP", "RTX", "LIN", "LOW", "T", "CVX", "INTU", "IBM", "AMGN", "AMD",
+    "BA", "CAT", "AMAT", "GE", "SBUX", "NOW", "ISRG", "SPGI", "DE", "BLK",
+    "MMM", "ADP", "GILD", "TGT", "MO", "ADI", "ZTS", "BKNG", "CI", "SYK",
+    "AMT", "MDLZ", "VRTX", "LRCX", "CB", "PLD", "DUK", "SCHW", "TJX", "USB",
+    "SO", "BSX", "C", "MMC", "MU", "FIS", "CL", "EOG", "BDX", "NSC",
+    "GME", "AMC", "BB", "PLTR", "NIO", "WISH", "CLOV", "SOFI", "BBBY", "HOOD",
+    "COIN", "RIVN", "LCID", "SKLZ", "SNDL", "ATER", "PROG", "RDBX", "MULN", "CEI",
+    "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "EEM", "GLD", "SLV", "USO",
+    "ARKK", "ARKG", "ARKF", "ARKW", "XLF", "XLE", "XLK", "XLV", "XLI", "XLY"
+  ],
+  "blacklist": [
+    "FOR", "IT", "ARE", "OR", "ON", "BY", "AT", "TO", "IN", "A", "I", "AN",
+    "CEO", "CFO", "IPO", "SEC", "ETF", "USA", "NYSE", "NASDAQ", "WSB", "DD",
+    "IMO", "IMHO", "FOMO", "ATH", "AH", "PM", "AM", "FD", "YOLO", "TL;DR",
+    "EDIT", "TLDR", "OP", "US", "UK", "EU", "FDA", "AI", "ML", "AR", "VR",
+    "CEO", "CTO", "CFO", "COO", "HR", "PR", "IR", "ER", "PE", "PS", "EPS",
+    "GDP", "CPI", "PPI", "PMI", "NFP", "FOMC", "FED", "ECB", "BOJ", "BOE"
+  ]
+}
