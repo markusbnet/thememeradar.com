@@ -14,17 +14,17 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 // Configuration from environment
-const isDevelopment = process.env.NODE_ENV === 'development';
-const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080';
+const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT;
+const useLocalDb = !!DYNAMODB_ENDPOINT; // Use local if endpoint is explicitly set
 
 // Create DynamoDB client
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION || 'us-east-1',
-  endpoint: isDevelopment ? DYNAMODB_ENDPOINT : undefined,
-  credentials: isDevelopment
+  endpoint: useLocalDb ? DYNAMODB_ENDPOINT : undefined,
+  credentials: useLocalDb
     ? {
-        accessKeyId: 'local',
-        secretAccessKey: 'local',
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local',
       }
     : undefined,
 });
