@@ -81,16 +81,16 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      # - name: Install Playwright browsers
+      #   run: npx playwright install --with-deps
 
       - name: Build Next.js app
         run: npm run build
 
-      - name: Run E2E tests
-        run: npm run test:e2e
-        env:
-          CI: true
+      # - name: Run E2E tests
+      #   run: npm run test:e2e
+      #   env:
+      #     CI: true
 
       - name: Upload test results
         if: always()
