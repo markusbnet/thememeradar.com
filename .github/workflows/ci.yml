@@ -82,7 +82,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps
 
       - name: Build Next.js app
         run: npm run build
