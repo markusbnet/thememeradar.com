@@ -12,11 +12,11 @@ import {
 } from '@aws-sdk/client-dynamodb';
 
 const client = new DynamoDBClient({
-  region: 'us-east-1',
+  region: process.env.AWS_REGION || 'us-east-1',
   endpoint: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080',
   credentials: {
-    accessKeyId: 'local',
-    secretAccessKey: 'local',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local',
   },
 });
 
