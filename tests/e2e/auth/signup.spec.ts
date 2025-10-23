@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Signup Page', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to signup page before each test
-    await page.goto('http://localhost:3000/signup');
+    await page.goto('http://localhost:3001/signup');
   });
 
   test('should display signup form with all required elements', async ({ page }) => {
@@ -82,7 +82,7 @@ test.describe('Signup Page', () => {
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Navigate back to signup page
-    await page.goto('http://localhost:3000/signup');
+    await page.goto('http://localhost:3001/signup');
 
     // Try to sign up again with same email
     await page.getByLabel(/email/i).fill(duplicateEmail);
