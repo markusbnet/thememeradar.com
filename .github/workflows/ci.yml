@@ -57,9 +57,19 @@ jobs:
 
       - name: Run unit tests
         run: npm run test -- --testPathPattern=tests/unit
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
 
       - name: Run integration tests
         run: npm run test -- --testPathPattern=tests/integration
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

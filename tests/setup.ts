@@ -84,10 +84,11 @@ jest.mock('uuid', () => ({
 // Mock environment variables for tests
 process.env.JWT_SECRET = 'test-secret-key-for-testing-only';
 process.env.NODE_ENV = 'test';
-process.env.DYNAMODB_ENDPOINT = 'http://localhost:8080';
-process.env.AWS_REGION = 'us-east-1';
-process.env.AWS_ACCESS_KEY_ID = 'test';
-process.env.AWS_SECRET_ACCESS_KEY = 'test';
+// Use DYNAMODB_ENDPOINT from env if set (for CI), otherwise default to local dev port
+process.env.DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080';
+process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-1';
+process.env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
+process.env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
 process.env.USERS_TABLE_NAME = 'users';
 process.env.SESSION_COOKIE_NAME = 'meme_radar_session';
 process.env.SESSION_EXPIRATION_DAYS = '7';
