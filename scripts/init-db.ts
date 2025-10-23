@@ -21,6 +21,7 @@ const client = new DynamoDBClient({
 });
 
 const TABLES = {
+  USERS: 'users',
   STOCK_MENTIONS: 'stock_mentions',
   STOCK_EVIDENCE: 'stock_evidence',
   SCAN_HISTORY: 'scan_history',
@@ -37,6 +38,43 @@ async function deleteTableIfExists(tableName: string) {
   } catch (error: any) {
     console.error(`Error checking/deleting table ${tableName}:`, error.message);
   }
+}
+
+async function createUsersTable() {
+  const tableName = TABLES.USERS;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'userId', KeyType: 'HASH' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'userId', AttributeType: 'S' },
+        { AttributeName: 'email', AttributeType: 'S' },
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'email-index',
+          KeySchema: [{ AttributeName: 'email', KeyType: 'HASH' }],
+          Projection: { ProjectionType: 'ALL' },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 5,
+            WriteCapacityUnits: 5,
+          },
+        },
+      ],
+      ProvisionedThroughput: {
+        ReadCapacityUnits: 5,
+        WriteCapacityUnits: 5,
+      },
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
 }
 
 async function createStockMentionsTable() {
@@ -145,12 +183,14 @@ async function main() {
   console.log('=== Initializing DynamoDB Tables ===\n');
 
   try {
+    await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
     await createScanHistoryTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
+    console.log('- users (stores user accounts)');
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
     console.log('- scan_history (stores scan metadata)');
