@@ -88,6 +88,6 @@ process.env.DYNAMODB_ENDPOINT = 'http://localhost:8080';
 process.env.AWS_REGION = 'us-east-1';
 process.env.AWS_ACCESS_KEY_ID = 'test';
 process.env.AWS_SECRET_ACCESS_KEY = 'test';
-process.env.USERS_TABLE_NAME = 'meme-radar-users';
+process.env.USERS_TABLE_NAME = 'users';
 process.env.SESSION_COOKIE_NAME = 'meme_radar_session';
 process.env.SESSION_EXPIRATION_DAYS = '7';
