@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { docClient, PutCommand, QueryCommand, GetCommand } from './client';
 
-const USERS_TABLE = process.env.USERS_TABLE_NAME || 'meme-radar-users';
+const USERS_TABLE = process.env.USERS_TABLE_NAME || 'users';
 
 export interface User {
   userId: string;
