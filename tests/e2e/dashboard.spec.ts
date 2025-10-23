@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Protected Dashboard', () => {
   test('should redirect to login when not authenticated', async ({ page }) => {
     // Try to access dashboard without logging in
-    await page.goto('http://localhost:3001/dashboard');
+    await page.goto('/dashboard');
 
     // Should redirect to login page
     await expect(page).toHaveURL(/\/login/);
@@ -15,7 +15,7 @@ test.describe('Protected Dashboard', () => {
     const testPassword = 'ValidPass123!';
 
     // Sign up
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -35,7 +35,7 @@ test.describe('Protected Dashboard', () => {
     const testEmail = `testlogout-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -50,7 +50,7 @@ test.describe('Protected Dashboard', () => {
     const testEmail = `testlogout2-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -63,7 +63,7 @@ test.describe('Protected Dashboard', () => {
     await expect(page).toHaveURL(/\/login/);
 
     // Try to access dashboard again
-    await page.goto('http://localhost:3001/dashboard');
+    await page.goto('/dashboard');
 
     // Should still redirect to login (session cleared)
     await expect(page).toHaveURL(/\/login/);
@@ -74,7 +74,7 @@ test.describe('Protected Dashboard', () => {
     const testEmail = `testpersist-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -93,7 +93,7 @@ test.describe('Protected Dashboard', () => {
     const testEmail = `testemail-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();

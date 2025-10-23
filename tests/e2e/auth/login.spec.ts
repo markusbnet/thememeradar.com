@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to login page before each test
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
   });
 
   test('should display login form with all required elements', async ({ page }) => {
@@ -24,7 +24,7 @@ test.describe('Login Page', () => {
     const testEmail = `testlogin-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -33,7 +33,7 @@ test.describe('Login Page', () => {
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Now log out (by navigating to login page)
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
 
     // Fill in the login form
     await page.getByLabel(/email/i).fill(testEmail);
@@ -85,14 +85,14 @@ test.describe('Login Page', () => {
     const correctPassword = 'ValidPass123!';
     const wrongPassword = 'WrongPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(correctPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Navigate to login
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
 
     // Try to login with wrong password
     await page.getByLabel(/email/i).fill(testEmail);
@@ -166,14 +166,14 @@ test.describe('Login Page', () => {
     const testEmail = `testtrim-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Navigate to login
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
 
     // Fill email with extra whitespace
     await page.getByLabel(/email/i).fill(`  ${testEmail}  `);
@@ -191,14 +191,14 @@ test.describe('Login Page', () => {
     const testEmail = `testenter-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
 
-    await page.goto('http://localhost:3001/signup');
+    await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Navigate to login
-    await page.goto('http://localhost:3001/login');
+    await page.goto('/login');
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(testEmail);
