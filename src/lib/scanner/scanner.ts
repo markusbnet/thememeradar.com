@@ -3,9 +3,9 @@
  * Orchestrates Reddit data collection, ticker extraction, and sentiment analysis
  */
 
-import { createRedditClient, RedditClient, RedditPost, RedditComment } from '@/lib/reddit/client';
-import { detectTickers } from '@/lib/stock/ticker-detector';
-import { analyzeSentiment, SentimentResult } from '@/lib/sentiment/analyzer';
+import { RedditClient, type RedditPost, type RedditComment } from '@/lib/reddit';
+import { extractTickers } from '@/lib/ticker-detection';
+import { analyzeSentiment, type SentimentResult } from '@/lib/sentiment';
 
 // Types
 export interface ScannerConfig {
@@ -69,32 +69,20 @@ export interface ScanResult {
  */
 export class Scanner {
   private redditClient: RedditClient;
-  private authenticated: boolean = false;
 
   constructor(config: ScannerConfig) {
-    this.redditClient = createRedditClient({
-      clientId: config.clientId,
-      clientSecret: config.clientSecret,
-      userAgent: config.userAgent,
-    });
-  }
+    // Set env vars for RedditClient (it reads from process.env)
+    process.env.REDDIT_CLIENT_ID = config.clientId;
+    process.env.REDDIT_CLIENT_SECRET = config.clientSecret;
+    process.env.REDDIT_USER_AGENT = config.userAgent;
 
-  /**
-   * Ensure Reddit client is authenticated
-   */
-  private async ensureAuthenticated(): Promise<void> {
-    if (!this.authenticated) {
-      await this.redditClient.authenticate();
-      this.authenticated = true;
-    }
+    this.redditClient = new RedditClient();
   }
 
   /**
    * Scan a single subreddit for stock mentions
    */
   async scanSubreddit(subreddit: string, limit: number = 25): Promise<ScanResult> {
-    await this.ensureAuthenticated();
-
     const scannedAt = Date.now();
     const tickerMap = new Map<string, TickerMention[]>();
     const posts: ScannedPost[] = [];
@@ -109,12 +97,12 @@ export class Scanner {
     for (const post of redditPosts) {
       // Extract tickers from post
       const postText = `${post.title} ${post.body}`;
-      const postTickers = detectTickers(postText);
+      const postTickers = extractTickers(postText);
 
       // Fetch comments for this post
       let comments: RedditComment[] = [];
       try {
-        comments = await this.redditClient.getComments(post.id);
+        comments = await this.redditClient.getPostComments(subreddit, post.id);
       } catch (error: any) {
         console.error(`Failed to fetch comments for post ${post.id}:`, error.message);
         // Continue with empty comments
@@ -125,7 +113,7 @@ export class Scanner {
       // Process comments
       const scannedComments: ScannedComment[] = [];
       for (const comment of comments) {
-        const commentTickers = detectTickers(comment.body);
+        const commentTickers = extractTickers(comment.body);
 
         scannedComments.push({
           id: comment.id,

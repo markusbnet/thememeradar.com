@@ -108,8 +108,8 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
     const keywordCounts = new Map<string, number>();
     for (const mention of mentions) {
       const keywords = [
-        ...mention.sentiment.keywords.bullish,
-        ...mention.sentiment.keywords.bearish,
+        ...mention.sentiment.bullishKeywords,
+        ...mention.sentiment.bearishKeywords,
       ];
       for (const keyword of keywords) {
         keywordCounts.set(keyword, (keywordCounts.get(keyword) || 0) + 1);
@@ -164,8 +164,8 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
         type: mention.source,
         text: mention.text,
         keywords: [
-          ...mention.sentiment.keywords.bullish,
-          ...mention.sentiment.keywords.bearish,
+          ...mention.sentiment.bullishKeywords,
+          ...mention.sentiment.bearishKeywords,
         ],
         sentimentScore: mention.sentiment.score,
         sentimentCategory: mention.sentiment.category,

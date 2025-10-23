@@ -37,11 +37,12 @@ export const docClient = DynamoDBDocumentClient.from(client, {
   },
 });
 
-// Table names
+// Table names (with environment-based prefix)
+const TABLE_PREFIX = useLocalDb ? '' : 'memeradar-';
 export const TABLES = {
-  STOCK_MENTIONS: 'stock_mentions',
-  STOCK_EVIDENCE: 'stock_evidence',
-  SCAN_HISTORY: 'scan_history',
+  STOCK_MENTIONS: `${TABLE_PREFIX}stock_mentions`,
+  STOCK_EVIDENCE: `${TABLE_PREFIX}stock_evidence`,
+  SCAN_HISTORY: `${TABLE_PREFIX}scan_history`,
 };
 
 // Export command constructors for use in other modules
