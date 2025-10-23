@@ -64,7 +64,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
 
       - name: Run integration tests
-        run: npm run test -- --testPathPattern=tests/integration
+        run: npm run test -- --testPathPattern=tests/integration --runInBand
         env:
           DYNAMODB_ENDPOINT: http://localhost:8000
           AWS_REGION: us-east-1
