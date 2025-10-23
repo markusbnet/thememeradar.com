@@ -31,15 +31,15 @@ export default function StockCard({
   const getSentimentDisplay = (category: string) => {
     switch (category) {
       case 'strong_bullish':
-        return { emoji: '=€=', label: 'Strong Bullish', color: 'text-green-600' };
+        return { emoji: 'ğŸ“ˆğŸš€', label: 'Strong Bullish', color: 'text-green-600' };
       case 'bullish':
-        return { emoji: '>', label: 'Bullish', color: 'text-green-500' };
+        return { emoji: 'ğŸ“ˆ', label: 'Bullish', color: 'text-green-500' };
       case 'bearish':
-        return { emoji: '=Ä', label: 'Bearish', color: 'text-red-500' };
+        return { emoji: 'ğŸ“‰', label: 'Bearish', color: 'text-red-500' };
       case 'strong_bearish':
-        return { emoji: '=€', label: 'Strong Bearish', color: 'text-red-600' };
+        return { emoji: 'ğŸ“‰ğŸ’¥', label: 'Strong Bearish', color: 'text-red-600' };
       default:
-        return { emoji: '=', label: 'Neutral', color: 'text-gray-500' };
+        return { emoji: 'â–', label: 'Neutral', color: 'text-gray-500' };
     }
   };
 
@@ -64,7 +64,7 @@ export default function StockCard({
           {/* Velocity indicator */}
           <div className={`text-right ${isPositiveVelocity ? 'text-green-600' : 'text-red-600'}`}>
             <div className="flex items-center justify-end gap-1">
-              <span className="text-2xl">{isPositiveVelocity ? '‘' : '“'}</span>
+              <span className="text-2xl">{isPositiveVelocity ? 'â†‘' : 'â†“'}</span>
               <span className="text-xl font-bold">
                 {Math.abs(velocity).toFixed(0)}%
               </span>
@@ -91,7 +91,7 @@ export default function StockCard({
 
         {/* Click indicator */}
         <div className="mt-4 text-sm text-purple-600 font-medium flex items-center justify-center gap-1">
-          View details ’
+          View details â†’
         </div>
       </div>
     </Link>
