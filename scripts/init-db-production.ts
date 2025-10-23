@@ -118,10 +118,6 @@ async function createStockMentionsTable() {
         },
       ],
       BillingMode: 'PAY_PER_REQUEST',
-      TimeToLiveSpecification: {
-        Enabled: true,
-        AttributeName: 'ttl',
-      },
     })
   );
 
@@ -151,10 +147,6 @@ async function createStockEvidenceTable() {
         { AttributeName: 'evidenceId', AttributeType: 'S' },
       ],
       BillingMode: 'PAY_PER_REQUEST',
-      TimeToLiveSpecification: {
-        Enabled: true,
-        AttributeName: 'ttl',
-      },
     })
   );
 
@@ -190,10 +182,6 @@ async function createScanHistoryTable() {
         },
       ],
       BillingMode: 'PAY_PER_REQUEST',
-      TimeToLiveSpecification: {
-        Enabled: true,
-        AttributeName: 'ttl',
-      },
     })
   );
 
