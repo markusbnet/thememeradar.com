@@ -9,6 +9,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 
 // Configuration from environment
+// Note: Vercel env vars are trimmed automatically, no need to .trim() here
 const DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT;
 const useLocalDb = !!DYNAMODB_ENDPOINT; // Use local if endpoint is explicitly set
 
