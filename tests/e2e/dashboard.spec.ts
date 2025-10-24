@@ -1,6 +1,29 @@
 import { test, expect } from '@playwright/test';
 
+// Helper function to delete test user
+async function deleteTestUser(email: string, baseURL: string) {
+  try {
+    await fetch(`${baseURL}/api/test/delete-user`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+  } catch (error) {
+    console.warn(`Failed to delete test user ${email}:`, error);
+  }
+}
+
 test.describe('Protected Dashboard', () => {
+  const testUsers: string[] = [];
+
+  test.afterEach(async ({ baseURL }) => {
+    // Clean up all test users created during this test
+    for (const email of testUsers) {
+      await deleteTestUser(email, baseURL || 'http://localhost:3001');
+    }
+    testUsers.length = 0; // Clear the array
+  });
+
   test('should redirect to login when not authenticated', async ({ page }) => {
     // Try to access dashboard without logging in
     await page.goto('/dashboard');
@@ -13,6 +36,7 @@ test.describe('Protected Dashboard', () => {
     // First, create a user and log in
     const testEmail = `testdash-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
+    testUsers.push(testEmail); // Track for cleanup
 
     // Sign up
     await page.goto('/signup');
@@ -34,6 +58,7 @@ test.describe('Protected Dashboard', () => {
     // Create user and log in
     const testEmail = `testlogout-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
+    testUsers.push(testEmail); // Track for cleanup
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
@@ -49,6 +74,7 @@ test.describe('Protected Dashboard', () => {
     // Create user and log in
     const testEmail = `testlogout2-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
+    testUsers.push(testEmail); // Track for cleanup
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
@@ -73,6 +99,7 @@ test.describe('Protected Dashboard', () => {
     // Create user and log in
     const testEmail = `testpersist-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
+    testUsers.push(testEmail); // Track for cleanup
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
@@ -92,6 +119,7 @@ test.describe('Protected Dashboard', () => {
     // Create user and log in
     const testEmail = `testemail-${Date.now()}@example.com`;
     const testPassword = 'ValidPass123!';
+    testUsers.push(testEmail); // Track for cleanup
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);

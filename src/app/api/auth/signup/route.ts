@@ -6,12 +6,6 @@ import { createUser } from '@/lib/db/users';
 
 export async function POST(request: NextRequest) {
   try {
-    // Debug: Log raw request details
-    const clonedRequest = request.clone();
-    const rawBody = await clonedRequest.text();
-    console.log('[DEBUG] Raw request body:', rawBody);
-    console.log('[DEBUG] Content-Type:', request.headers.get('content-type'));
-
     const body = await request.json();
     const { email, password } = body;
 

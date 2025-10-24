@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { docClient, PutCommand, QueryCommand, GetCommand } from './client';
+import { docClient, PutCommand, QueryCommand, GetCommand, DeleteCommand } from './client';
 
 const USERS_TABLE = process.env.USERS_TABLE_NAME || 'users';
 
@@ -108,6 +108,24 @@ export async function updateLastLogin(userId: string): Promise<void> {
         userId,
         lastLoginAt: Date.now(),
       },
+    })
+  );
+}
+
+/**
+ * Deletes a user by email (for test cleanup)
+ * @param email - User's email
+ */
+export async function deleteUserByEmail(email: string): Promise<void> {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return; // User doesn't exist, nothing to delete
+  }
+
+  await docClient.send(
+    new DeleteCommand({
+      TableName: USERS_TABLE,
+      Key: { userId: user.userId },
     })
   );
 }

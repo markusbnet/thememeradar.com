@@ -1,9 +1,32 @@
 import { test, expect } from '@playwright/test';
 
+// Helper function to delete test user
+async function deleteTestUser(email: string, baseURL: string) {
+  try {
+    await fetch(`${baseURL}/api/test/delete-user`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+  } catch (error) {
+    console.warn(`Failed to delete test user ${email}:`, error);
+  }
+}
+
 test.describe('Signup Page', () => {
+  const testUsers: string[] = [];
+
   test.beforeEach(async ({ page }) => {
     // Navigate to signup page before each test
     await page.goto('/signup');
+  });
+
+  test.afterEach(async ({ baseURL }) => {
+    // Clean up all test users created during this test
+    for (const email of testUsers) {
+      await deleteTestUser(email, baseURL || 'http://localhost:3001');
+    }
+    testUsers.length = 0; // Clear the array
   });
 
   test('should display signup form with all required elements', async ({ page }) => {
@@ -22,6 +45,7 @@ test.describe('Signup Page', () => {
   test('should successfully sign up with valid email and password', async ({ page }) => {
     const uniqueEmail = `test-${Date.now()}@example.com`;
     const validPassword = 'ValidPass123!';
+    testUsers.push(uniqueEmail); // Track for cleanup
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(uniqueEmail);
@@ -72,6 +96,7 @@ test.describe('Signup Page', () => {
   test('should show error for duplicate email', async ({ page }) => {
     const duplicateEmail = `duplicate-${Date.now()}@example.com`;
     const validPassword = 'ValidPass123!';
+    testUsers.push(duplicateEmail); // Track for cleanup
 
     // First signup - should succeed
     await page.getByLabel(/email/i).fill(duplicateEmail);
@@ -156,6 +181,7 @@ test.describe('Signup Page', () => {
   test('should trim whitespace from email', async ({ page }) => {
     const uniqueEmail = `test-${Date.now()}@example.com`;
     const validPassword = 'ValidPass123!';
+    testUsers.push(uniqueEmail); // Track for cleanup
 
     // Fill email with extra whitespace
     await page.getByLabel(/email/i).fill(`  ${uniqueEmail}  `);
@@ -171,6 +197,7 @@ test.describe('Signup Page', () => {
   test('should handle form submission with Enter key', async ({ page }) => {
     const uniqueEmail = `test-${Date.now()}@example.com`;
     const validPassword = 'ValidPass123!';
+    testUsers.push(uniqueEmail); // Track for cleanup
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(uniqueEmail);

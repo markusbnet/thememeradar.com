@@ -16,12 +16,15 @@ const useLocalDb = !!DYNAMODB_ENDPOINT; // Use local if endpoint is explicitly s
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION || 'us-east-1',
   endpoint: useLocalDb ? DYNAMODB_ENDPOINT : undefined,
-  credentials: useLocalDb
-    ? {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local',
-      }
-    : undefined,
+  // Provide credentials if environment variables are set
+  // This works for both local development and production
+  credentials:
+    process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+      ? {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        }
+      : undefined, // Falls back to AWS SDK default credential chain
 });
 
 // Create DynamoDB Document client for easier JSON handling
