@@ -57,3 +57,5 @@ Thumbs.db
 
 # Test output
 test-results/
+.env.vercel.production
+.env.production

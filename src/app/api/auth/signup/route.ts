@@ -98,7 +98,18 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Signup error:', error);
+    // Detailed error logging for debugging
+    console.error('[SIGNUP] Error occurred:', {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      env: {
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION,
+        tableName: process.env.USERS_TABLE_NAME,
+      },
+    });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
