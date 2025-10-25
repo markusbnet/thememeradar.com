@@ -74,9 +74,11 @@ export class RedditClient {
 
     // Token still valid, no need to re-authenticate
     if (this.accessToken && now < this.tokenExpiry) {
+      console.log('[Reddit] Using cached access token');
       return;
     }
 
+    console.log('[Reddit] Authenticating with Reddit OAuth...');
     const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
 
     const response = await fetch('https://www.reddit.com/api/v1/access_token', {
@@ -90,6 +92,8 @@ export class RedditClient {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Reddit] OAuth failed: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`Reddit OAuth failed: ${response.statusText}`);
     }
 
@@ -97,6 +101,7 @@ export class RedditClient {
     this.accessToken = data.access_token;
     // Set expiry to 5 minutes before actual expiry (buffer)
     this.tokenExpiry = now + (data.expires_in - 300) * 1000;
+    console.log(`[Reddit] Successfully authenticated. Token expires in ${data.expires_in}s`);
   }
 
   /**
@@ -105,6 +110,7 @@ export class RedditClient {
   async getHotPosts(subreddit: string, limit: number = 25): Promise<RedditPost[]> {
     await this.authenticate();
 
+    console.log(`[Reddit] Fetching ${limit} hot posts from r/${subreddit}`);
     const url = `https://oauth.reddit.com/r/${subreddit}/hot?limit=${limit}`;
     const response = await fetch(url, {
       headers: {
@@ -114,10 +120,13 @@ export class RedditClient {
     });
 
     if (!response.ok) {
+      console.error(`[Reddit] Failed to fetch posts from r/${subreddit}: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to fetch posts from r/${subreddit}: ${response.statusText}`);
     }
 
     const listing: RedditListingResponse = await response.json();
+    const postCount = listing.data.children.length;
+    console.log(`[Reddit] Received ${postCount} posts from r/${subreddit}`);
 
     return listing.data.children.map(child => ({
       id: child.data.id,
