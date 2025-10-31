@@ -39,7 +39,7 @@ export default function LoginPage() {
       if (!value.trim()) {
         setEmailError('Email is required');
       } else if (!validateEmail(value)) {
-        setEmailError('Please enter a valid email address');
+        setEmailError('Invalid email address');
       } else {
         setEmailError('');
       }
@@ -66,7 +66,7 @@ export default function LoginPage() {
     if (!email.trim()) {
       setEmailError('Email is required');
     } else if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError('Invalid email address');
     }
   };
 
@@ -89,7 +89,7 @@ export default function LoginPage() {
     if (!email.trim()) {
       setEmailError('Email is required');
     } else if (!emailValid) {
-      setEmailError('Please enter a valid email address');
+      setEmailError('Invalid email address');
     }
 
     if (!password) {
