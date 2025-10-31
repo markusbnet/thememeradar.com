@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,16 +10,97 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [touched, setTouched] = useState({ email: false, password: false });
 
   // Set page title
   useEffect(() => {
     document.title = 'Log In - The Meme Radar';
   }, []);
 
+  // Email validation
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Handle email change with validation
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    // Clear general error when user starts typing
+    if (error) setError('');
+
+    // Validate email in real-time if field has been touched
+    if (touched.email) {
+      if (!value.trim()) {
+        setEmailError('Email is required');
+      } else if (!validateEmail(value)) {
+        setEmailError('Please enter a valid email address');
+      } else {
+        setEmailError('');
+      }
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    // Clear general error when user starts typing
+    if (error) setError('');
+
+    // Clear password error if field has been touched
+    if (touched.password && passwordError) {
+      setPasswordError('');
+    }
+  };
+
+  // Handle blur to mark field as touched
+  const handleEmailBlur = () => {
+    setTouched(prev => ({ ...prev, email: true }));
+    if (!email.trim()) {
+      setEmailError('Email is required');
+    } else if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    setTouched(prev => ({ ...prev, password: true }));
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+    setEmailError('');
+    setPasswordError('');
+
+    // Mark all fields as touched
+    setTouched({ email: true, password: true });
+
+    // Validate fields
+    const emailValid = validateEmail(email);
+
+    if (!email.trim()) {
+      setEmailError('Email is required');
+    } else if (!emailValid) {
+      setEmailError('Please enter a valid email address');
+    }
+
+    if (!password) {
+      setPasswordError('Password is required');
+    }
+
+    // Don't submit if validation fails
+    if (!emailValid || !password) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -28,13 +109,15 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         setError(data.error || 'Login failed');
+        // Clear password field on failed login for security
+        setPassword('');
         setIsLoading(false);
         return;
       }
@@ -43,6 +126,8 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
+      // Clear password field on error for security
+      setPassword('');
       setIsLoading(false);
     }
   };
@@ -79,11 +164,23 @@ export default function LoginPage() {
                 id="email"
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-slate-900"
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                className={`w-full px-4 py-2 border ${
+                  emailError ? 'border-red-300' : 'border-slate-300'
+                } rounded-lg focus:ring-2 ${
+                  emailError ? 'focus:ring-red-500' : 'focus:ring-purple-500'
+                } focus:border-transparent outline-none transition text-slate-900`}
                 placeholder="you@example.com"
                 autoComplete="email"
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? 'email-error' : undefined}
               />
+              {emailError && (
+                <p id="email-error" className="mt-1 text-sm text-red-600">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -99,10 +196,17 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-slate-900"
+                  onChange={handlePasswordChange}
+                  onBlur={handlePasswordBlur}
+                  className={`w-full px-4 py-2 border ${
+                    passwordError ? 'border-red-300' : 'border-slate-300'
+                  } rounded-lg focus:ring-2 ${
+                    passwordError ? 'focus:ring-red-500' : 'focus:ring-purple-500'
+                  } focus:border-transparent outline-none transition text-slate-900`}
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  aria-invalid={!!passwordError}
+                  aria-describedby={passwordError ? 'password-error' : undefined}
                 />
                 <button
                   type="button"
@@ -148,6 +252,11 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {passwordError && (
+                <p id="password-error" className="mt-1 text-sm text-red-600">
+                  {passwordError}
+                </p>
+              )}
             </div>
 
             {/* Error Message */}

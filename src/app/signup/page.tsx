@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,16 +10,124 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [touched, setTouched] = useState({ email: false, password: false });
 
   // Set page title
   useEffect(() => {
     document.title = 'Sign Up - The Meme Radar';
   }, []);
 
+  // Email validation
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Password validation
+  const validatePassword = (password: string): boolean => {
+    return (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[^A-Za-z0-9]/.test(password)
+    );
+  };
+
+  // Handle email change with validation
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    // Clear general error when user starts typing
+    if (error) setError('');
+
+    // Validate email in real-time if field has been touched
+    if (touched.email) {
+      if (!value.trim()) {
+        setEmailError('Email is required');
+      } else if (!validateEmail(value)) {
+        setEmailError('Please enter a valid email address');
+      } else {
+        setEmailError('');
+      }
+    }
+  };
+
+  // Handle password change with validation
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    // Clear general error when user starts typing
+    if (error) setError('');
+
+    // Validate password in real-time if field has been touched
+    if (touched.password) {
+      if (!value) {
+        setPasswordError('Password is required');
+      } else if (!validatePassword(value)) {
+        setPasswordError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+      } else {
+        setPasswordError('');
+      }
+    }
+  };
+
+  // Handle blur to mark field as touched
+  const handleEmailBlur = () => {
+    setTouched(prev => ({ ...prev, email: true }));
+    if (!email.trim()) {
+      setEmailError('Email is required');
+    } else if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    setTouched(prev => ({ ...prev, password: true }));
+    if (!password) {
+      setPasswordError('Password is required');
+    } else if (!validatePassword(password)) {
+      setPasswordError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+
+    // Mark all fields as touched to show validation errors
+    setTouched({ email: true, password: true });
+
+    // Validate all fields
+    const emailValid = validateEmail(email);
+    const passwordValid = validatePassword(password);
+
+    if (!email.trim()) {
+      setEmailError('Email is required');
+    } else if (!emailValid) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+
+    if (!password) {
+      setPasswordError('Password is required');
+    } else if (!passwordValid) {
+      setPasswordError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+    } else {
+      setPasswordError('');
+    }
+
+    // Don't submit if validation fails
+    if (!emailValid || !passwordValid) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -28,7 +136,7 @@ export default function SignupPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await response.json();
@@ -79,11 +187,23 @@ export default function SignupPage() {
                 id="email"
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-slate-900"
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                className={`w-full px-4 py-2 border ${
+                  emailError ? 'border-red-300' : 'border-slate-300'
+                } rounded-lg focus:ring-2 ${
+                  emailError ? 'focus:ring-red-500' : 'focus:ring-purple-500'
+                } focus:border-transparent outline-none transition text-slate-900`}
                 placeholder="you@example.com"
                 autoComplete="email"
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? 'email-error' : undefined}
               />
+              {emailError && (
+                <p id="email-error" className="mt-1 text-sm text-red-600">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -99,10 +219,17 @@ export default function SignupPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition text-slate-900"
+                  onChange={handlePasswordChange}
+                  onBlur={handlePasswordBlur}
+                  className={`w-full px-4 py-2 border ${
+                    passwordError ? 'border-red-300' : 'border-slate-300'
+                  } rounded-lg focus:ring-2 ${
+                    passwordError ? 'focus:ring-red-500' : 'focus:ring-purple-500'
+                  } focus:border-transparent outline-none transition text-slate-900`}
                   placeholder="••••••••"
                   autoComplete="new-password"
+                  aria-invalid={!!passwordError}
+                  aria-describedby={passwordError ? 'password-error' : 'password-hint'}
                 />
                 <button
                   type="button"
@@ -148,9 +275,15 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
-                Must be at least 8 characters with uppercase, lowercase, number, and special character
-              </p>
+              {passwordError ? (
+                <p id="password-error" className="mt-1 text-sm text-red-600">
+                  {passwordError}
+                </p>
+              ) : (
+                <p id="password-hint" className="mt-2 text-xs text-slate-500">
+                  Must be at least 8 characters with uppercase, lowercase, number, and special character
+                </p>
+              )}
             </div>
 
             {/* Error Message */}
