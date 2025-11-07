@@ -1,298 +1,445 @@
-# TODO.md - Meme Stock Radar Task List
+# The Meme Radar - Implementation TODO
 
-## 🚀 Current Phase: Project Initialization
-
-**Status:** Setting up project structure and planning architecture
-
----
-
-## 📋 Phase 1: MVP (Minimum Viable Product)
-
-### ✅ Completed
-- [x] Created CLAUDE.md with comprehensive project requirements
-- [x] Researched wallstreetbets terminology and sentiment keywords
-- [x] Planned cost structure ($0/month within free tiers)
-
-### 🏗️ Project Setup (In Progress)
-- [ ] Initialize Next.js project with TypeScript + Tailwind CSS
-- [ ] Set up project structure (src/, tests/, components/, lib/)
-- [ ] Configure ESLint + Prettier
-- [ ] Set up Git repository and .gitignore
-- [ ] Configure GitHub Actions CI/CD workflow
-- [ ] Set up DynamoDB Local (Docker)
-- [ ] Create DynamoDB schema and init scripts
-- [ ] Set up Reddit API OAuth application
-- [ ] Configure environment variables (.env.local template)
-
-### 🔐 Authentication System
-- [ ] Design auth API routes (/api/auth/signup, /api/auth/login, /api/auth/logout)
-- [ ] Write tests for authentication (TDD)
-- [ ] Implement JWT token generation and validation
-- [ ] Implement bcrypt password hashing
-- [ ] Create user signup page (email + password)
-- [ ] Create user login page
-- [ ] Add email validation
-- [ ] Implement rate limiting on auth endpoints
-- [ ] Create protected route middleware
-- [ ] Add session management (httpOnly cookies)
-- [ ] Write E2E tests for auth flows
-
-### 📡 Reddit API Integration
-- [ ] Set up Reddit API client (OAuth 2.0)
-- [ ] Write tests for Reddit API integration (TDD)
-- [ ] Implement token refresh logic
-- [ ] Create function to fetch hot posts from subreddit
-- [ ] Create function to fetch comments for post
-- [ ] Implement rate limit handling (exponential backoff)
-- [ ] Add error handling and retry logic
-- [ ] Test with r/wallstreetbets, r/stocks, r/investing
-- [ ] Create /api/scan endpoint for cron job
-
-### 🔍 Stock Ticker Detection
-- [ ] Create ticker detection utility (regex + validation)
-- [ ] Write tests for ticker detection (TDD)
-- [ ] Implement NYSE/NASDAQ ticker list validation
-- [ ] Add false positive filtering (common words)
-- [ ] Test with real Reddit post samples
-- [ ] Handle edge cases ($, spaces, multiple tickers)
-
-### 💭 Sentiment Analysis
-- [ ] Create sentiment analysis utility
-- [ ] Write tests for sentiment analysis (TDD)
-- [ ] Implement wallstreetbets keyword dictionary
-- [ ] Implement bullish/bearish/neutral keyword matching
-- [ ] Add keyword weighting system
-- [ ] Calculate sentiment scores (-1 to 1)
-- [ ] Test with real Reddit post/comment samples
-- [ ] Handle sarcasm and context (future enhancement)
-
-### 🗄️ DynamoDB Operations
-- [ ] Create DynamoDB client wrapper
-- [ ] Write tests for DB operations (TDD)
-- [ ] Implement CRUD operations for users table
-- [ ] Implement CRUD operations for posts table
-- [ ] Implement CRUD operations for comments table
-- [ ] Implement CRUD operations for stock_mentions table
-- [ ] Implement CRUD operations for stock_evidence table
-- [ ] Configure TTL (30-day expiration)
-- [ ] Add batch write operations
-- [ ] Create database seed scripts for testing
-
-### ⏰ Background Jobs (Vercel Cron)
-- [ ] Configure Vercel cron job (every 5 minutes)
-- [ ] Implement scan orchestrator
-- [ ] Fetch posts from all subreddits
-- [ ] Fetch comments for all posts
-- [ ] Extract tickers from posts and comments
-- [ ] Calculate sentiment for each mention
-- [ ] Aggregate data into stock_mentions table
-- [ ] Store evidence in stock_evidence table
-- [ ] Add monitoring and error logging
-- [ ] Test scan job locally
-
-### 🎨 UI Components
-- [ ] Set up Tailwind UI component library
-- [ ] Create layout component (header, footer, nav)
-- [ ] Create StockCard component
-- [ ] Create StockList component (top 10 trending/fading)
-- [ ] Create RefreshTimer component
-- [ ] Create SentimentBadge component
-- [ ] Create VelocityIndicator component
-- [ ] Create Sparkline chart component
-- [ ] Test all components with Storybook or similar
-
-### 📊 Dashboard Page
-- [ ] Create /dashboard route
-- [ ] Write E2E tests for dashboard (TDD)
-- [ ] Implement protected route (auth required)
-- [ ] Fetch top 10 trending stocks (API call)
-- [ ] Fetch top 10 fading stocks (API call)
-- [ ] Display refresh timer (last updated, next update)
-- [ ] Add auto-refresh when new data available
-- [ ] Make mobile responsive
-- [ ] Test on real mobile devices
-
-### 📈 Stock Detail Page
-- [ ] Create /stock/[ticker] route
-- [ ] Write E2E tests for stock detail page (TDD)
-- [ ] Fetch stock metrics (mentions, sentiment, velocity)
-- [ ] Display 7-day mention count chart
-- [ ] Display 7-day sentiment chart
-- [ ] Show subreddit breakdown (pie chart or table)
-- [ ] Display supporting evidence (top 5 posts/comments)
-- [ ] Highlight keywords in evidence text
-- [ ] Link to original Reddit threads
-- [ ] Make mobile responsive
-
-### 🧪 Testing & QA
-- [ ] Write unit tests for all utility functions (100% coverage)
-- [ ] Write integration tests for all API routes
-- [ ] Write E2E tests for critical user flows
-- [ ] Test with real Reddit data
-- [ ] Performance testing (load times, API response times)
-- [ ] Cross-browser testing (Chrome, Firefox, Safari)
-- [ ] Mobile device testing (iOS, Android)
-- [ ] Accessibility testing (WCAG 2.1 AA)
-
-### 🚢 Deployment
-- [ ] Create Vercel project
-- [ ] Configure production environment variables
-- [ ] Set up production DynamoDB tables (AWS)
-- [ ] Configure custom domain (thememeradar.com)
-- [ ] Set up SSL certificate (Vercel auto)
-- [ ] Configure GitHub Actions for CI/CD
-- [ ] Deploy to production
-- [ ] Run production smoke tests
-- [ ] Monitor for errors (first 24 hours)
+**Created:** November 7, 2025
+**Status:** In Progress - Gap Remediation
+**Total Work:** ~63 hours remaining
 
 ---
 
-## 📋 Phase 2: Enhancements (Post-MVP)
+## 🔴 PHASE 1: CRITICAL FIXES (24 hours) - IN PROGRESS
 
-### 🔖 Watchlists
-- [ ] Design watchlist feature (UX/UI mockups)
-- [ ] Add watchlists table to DynamoDB schema
-- [ ] Write tests for watchlist functionality (TDD)
-- [ ] Create API routes for watchlist CRUD
-- [ ] Add "Add to Watchlist" button on stock cards
-- [ ] Create /watchlist page to view saved stocks
-- [ ] Show watchlist stocks on dashboard (separate section)
-- [ ] Add remove from watchlist functionality
-- [ ] Test with multiple users and stocks
+### Week 1 - Day 1-2 (16 hours)
 
-### 🔔 Alerts & Notifications
-- [ ] Design alert system (email, push, in-app)
-- [ ] Add alerts table to DynamoDB schema
-- [ ] Write tests for alert functionality (TDD)
-- [ ] Implement alert trigger logic:
-  - [ ] Stock enters top 10 trending
-  - [ ] Mention count spike (>50% increase)
-  - [ ] Sentiment shift (from bullish to bearish or vice versa)
-- [ ] Set up email service (SendGrid or AWS SES)
-- [ ] Create email templates
-- [ ] Add alert preferences page (/settings/alerts)
-- [ ] Implement alert delivery (email)
-- [ ] Add in-app notification system (toast/banner)
-- [ ] Test alert triggers and delivery
+- [ ] **1. Posts & Comments Database Tables (3h)** - HIGH PRIORITY
+  - [ ] Add `posts` table schema to init-db.ts
+    - PK: postId, SK: scannedAt
+    - Attributes: subreddit, title, body, author, upvotes, createdAt, tickers
+    - GSI: subreddit-scannedAt-index
+    - TTL: 30 days
+  - [ ] Add `comments` table schema to init-db.ts
+    - PK: commentId, SK: scannedAt
+    - Attributes: postId, subreddit, body, author, upvotes, createdAt, tickers
+    - GSI: postId-index
+    - TTL: 30 days
+  - [ ] Update saveScanResults() to populate both tables
+  - [ ] Run db:init to create tables
+  - [ ] Add tests for table creation
+  - [ ] Verify tables exist locally
 
-### 📊 User Preferences
-- [ ] Create /settings page
-- [ ] Add user preferences table to DynamoDB
-- [ ] Allow users to customize:
-  - [ ] Preferred subreddits to track
-  - [ ] Top X stocks to display (10, 25, 50)
-  - [ ] Default time range (1hr, 4hr, 24hr, 7d)
-  - [ ] Alert preferences
-  - [ ] Theme (light/dark mode)
-- [ ] Save preferences to database
-- [ ] Apply preferences across app
+- [ ] **2. Health API Endpoint (30min)** - QUICK WIN
+  - [ ] Create src/app/api/health/route.ts
+  - [ ] Check DynamoDB connectivity
+  - [ ] Check Reddit API token validity (optional for MVP)
+  - [ ] Return JSON with status + timestamp
+  - [ ] Add integration test
+  - [ ] Test endpoint manually
 
-### 📥 Export Data
-- [ ] Add "Export" button to dashboard and stock detail pages
-- [ ] Implement CSV export for stock mentions
-- [ ] Implement JSON export for stock mentions
-- [ ] Include metadata (timestamp, sentiment, etc.)
-- [ ] Test export with large datasets
+- [ ] **3. Stock Detail APIs (4h)**
+  - [ ] Create src/app/api/stocks/[ticker]/route.ts
+    - GET endpoint
+    - Query stock_mentions by ticker
+    - Return all 8 metrics
+    - Include historical data (7 days)
+    - Error handling (404 if ticker not found)
+  - [ ] Create src/app/api/stocks/[ticker]/evidence/route.ts
+    - GET endpoint
+    - Query stock_evidence by ticker
+    - Return top 10 posts/comments by upvotes
+    - Include Reddit URLs
+    - Pagination support (optional for MVP)
+  - [ ] Add integration tests for both endpoints
+  - [ ] Test manually with curl
+
+- [ ] **4. Stock Detail Page - Phase 1 (8h)**
+  - [ ] Create src/app/stock/[ticker]/page.tsx
+    - Server Component with data fetching
+    - Error boundary
+    - Loading state
+  - [ ] Create src/components/stock-detail/StockHeader.tsx
+    - Display ticker symbol (large)
+    - Current sentiment with emoji
+    - Velocity indicator
+  - [ ] Create src/components/stock-detail/EvidenceSection.tsx
+    - List top 5 posts/comments
+    - Show upvotes, subreddit
+    - Highlight keywords (Phase 2)
+    - Link to Reddit (use redditUrl from evidence)
+  - [ ] Create src/components/stock-detail/StatsTable.tsx
+    - Total mentions (24hr, 7d)
+    - Sentiment breakdown (% bullish/neutral/bearish)
+    - Top keywords
+  - [ ] Test page navigation from dashboard
+  - [ ] Mobile responsive check
+
+### Week 1 - Day 3-4 (16 hours)
+
+- [ ] **5. Rate Limiting Middleware (4h)**
+  - [ ] Create src/lib/auth/rate-limiter.ts
+    - In-memory Map store
+    - Track by IP + email
+    - 5 attempts per 15 minutes
+    - Clean up old entries
+  - [ ] Create src/lib/auth/rate-limit-middleware.ts
+    - Extract IP from request
+    - Check rate limit before processing
+    - Return 429 if exceeded
+  - [ ] Apply to /api/auth/signup
+  - [ ] Apply to /api/auth/login
+  - [ ] Add unit tests (rate limiter logic)
+  - [ ] Add integration tests (429 responses)
+  - [ ] Test manually (make 6+ requests)
+
+- [ ] **6. CSRF Protection (3h)**
+  - [ ] Create src/lib/auth/csrf.ts
+    - generateCSRFToken() function
+    - validateCSRFToken() function
+    - Use crypto.randomBytes(32)
+  - [ ] Update login/signup to set CSRF cookie
+    - Separate from JWT cookie
+    - httpOnly: false (client needs to read)
+    - sameSite: 'strict'
+  - [ ] Create CSRF validation middleware
+    - Check X-CSRF-Token header
+    - Compare with cookie value
+  - [ ] Apply to POST/DELETE endpoints
+    - /api/auth/logout
+    - /api/scan (if exposed)
+  - [ ] Update client components to send CSRF header
+  - [ ] Add tests
+  - [ ] Test CSRF attack scenario
+
+- [ ] **7. Code Quality Fixes (1.5h)**
+  - [ ] Create src/lib/logger.ts
+    - Environment-aware logging
+    - Levels: debug, info, warn, error
+    - Silent in production (or use proper service)
+  - [ ] Replace all console.log (24 instances)
+    - src/lib/reddit.ts (9)
+    - src/app/api/scan/route.ts (7)
+    - src/lib/scanner/scanner.ts (1)
+    - src/lib/auth/client.ts (2)
+    - Other routes (5)
+  - [ ] Fix all `any` types (13 instances)
+    - Error handling: catch (error: unknown)
+    - Create proper error types
+    - Update diagnostic route types
+  - [ ] Run npx tsc --noEmit
+  - [ ] Run npm run lint
+  - [ ] All tests must pass
+
+- [ ] **8. Stock Detail Page - Phase 2 (7.5h)**
+  - [ ] Create src/components/stock-detail/MentionChart.tsx
+    - Placeholder for sparkline (Phase 2)
+    - Or simple text: "Chart coming soon"
+  - [ ] Create src/components/stock-detail/SentimentChart.tsx
+    - Placeholder for sentiment over time
+  - [ ] Create src/components/stock-detail/SubredditBreakdown.tsx
+    - Pie chart or bar chart of mentions by subreddit
+    - Or simple table for MVP
+  - [ ] Enhance EvidenceSection
+    - Highlight keywords in context
+    - Color-code sentiment (bullish=green, bearish=red)
+  - [ ] Add E2E test for stock detail page
+    - Navigate from dashboard
+    - Verify data loads
+    - Check evidence links
+  - [ ] Polish UI/UX
+  - [ ] Mobile testing
+
+### Week 1 - Day 5 (8 hours)
+
+- [ ] **9. Integration Testing & Bug Fixes**
+  - [ ] Set up DynamoDB Local in test environment
+    - Docker container start/stop in tests
+    - Or use testcontainers
+  - [ ] Fix 20 failing integration tests
+  - [ ] Run full test suite
+    - npm run test (unit + integration)
+    - npm run test:e2e
+  - [ ] Fix any failing tests
+  - [ ] Manual QA testing
+    - Sign up new user
+    - Log in
+    - View dashboard
+    - Click stock → detail page
+    - View evidence
+    - Log out
+  - [ ] Check rate limiting works
+  - [ ] Check CSRF protection works
+  - [ ] Test health endpoint
+  - [ ] Fix bugs found
+
+- [ ] **10. Code Review & Deploy to Staging**
+  - [ ] Self code review
+    - No console.log
+    - No `any` types
+    - All tests passing
+    - CLAUDE.md compliance
+  - [ ] Run linter: npm run lint
+  - [ ] Run build: npm run build
+  - [ ] Test production build locally: npm run start
+  - [ ] Commit all changes
+  - [ ] Push to branch
+  - [ ] Deploy to Vercel staging (if available)
+  - [ ] Smoke test on staging
 
 ---
 
-## 📋 Phase 3: Advanced Features
+## 🟡 PHASE 2: MVP QUALITY (24 hours) - PENDING
 
-### 💵 Stock Price Integration
-- [ ] Research stock price APIs (Alpha Vantage, Finnhub, etc.)
-- [ ] Choose API based on free tier limits
-- [ ] Integrate stock price API
-- [ ] Display current stock price on stock cards
-- [ ] Show price change (%, $) on stock cards
-- [ ] Add price chart alongside mention chart
-- [ ] Correlate Reddit activity with price movement
+### Week 2 - Day 6-7 (16 hours)
 
-### 📈 Correlation Analysis
-- [ ] Calculate correlation between:
-  - [ ] Mention count vs stock price
-  - [ ] Sentiment score vs stock price
-  - [ ] Reddit activity vs volume traded
-- [ ] Display correlation metrics on stock detail page
-- [ ] Create correlation chart (scatter plot)
-- [ ] Add statistical significance indicators
+- [ ] **11. Sparkline Charts (5h)**
+  - [ ] Choose chart library (recharts recommended)
+  - [ ] Install: npm install recharts
+  - [ ] Create src/components/Sparkline.tsx
+  - [ ] Fetch 7-day data in StockCard
+  - [ ] Display mini line chart
+  - [ ] Mobile responsive
+  - [ ] Add to Stock Detail page charts
+  - [ ] Tests
 
-### 🌐 More Subreddits
-- [ ] Add r/pennystocks
-- [ ] Add r/options
-- [ ] Add r/SecurityAnalysis
-- [ ] Add r/StockMarket
-- [ ] Add r/investing
-- [ ] Make subreddit list configurable per user
+- [ ] **12. Multi-Period Metrics (6h)**
+  - [ ] Update roundToInterval() for 1hr, 4hr, 24hr, 7d
+  - [ ] Modify saveScanResults() to save to multiple periods
+  - [ ] Use batch write for efficiency
+  - [ ] Add time period selector to UI
+  - [ ] Update API to accept period parameter
+  - [ ] Tests for each interval
+  - [ ] Verify DynamoDB write volume (still in free tier)
 
-### 🧠 Advanced Sentiment Analysis
-- [ ] Research NLP libraries (Hugging Face Transformers, etc.)
-- [ ] Implement context-aware sentiment (sarcasm detection)
-- [ ] Add entity recognition (distinguish between stocks and companies)
-- [ ] Train custom model on wallstreetbets data
-- [ ] A/B test new sentiment model vs keyword-based
+- [ ] **13. DD Count & Top Subreddit (2h)**
+  - [ ] Add ddCount to stock_mentions schema
+  - [ ] Detect DD flair/title
+  - [ ] Add topSubreddit field
+  - [ ] Track mentions per subreddit
+  - [ ] Update API responses
+  - [ ] Display in UI
+  - [ ] Tests
+
+- [ ] **14. Testing (3h)**
+  - [ ] Add tests for sparkline component
+  - [ ] Add tests for multi-period metrics
+  - [ ] Add tests for new fields
+  - [ ] E2E tests for charts
+  - [ ] Fix any broken tests
+
+### Week 2 - Day 8-9 (16 hours)
+
+- [ ] **15. Fetch ALL Comments (4h)**
+  - [ ] Update getPostComments() in reddit.ts
+  - [ ] Implement pagination loop
+  - [ ] Use `after` parameter
+  - [ ] Fetch nested comments (depth > 1)
+  - [ ] Respect 100 req/min limit
+  - [ ] Add delay between requests if needed
+  - [ ] Tests with mocked pagination
+  - [ ] Monitor scan time (should still complete in <2min)
+
+- [ ] **16. Exponential Backoff (3h)**
+  - [ ] Create src/lib/utils/retry.ts
+  - [ ] Implement exponential backoff function
+    - Max retries: 4
+    - Delays: 2s, 4s, 8s, 16s
+  - [ ] Apply to all Reddit API calls
+  - [ ] Handle 429 rate limit errors
+  - [ ] Add logging
+  - [ ] Tests
+
+- [ ] **17. ±50 Word Sentiment Window (4h)**
+  - [ ] Update analyzeSentiment() in sentiment.ts
+  - [ ] Find ticker position in text
+  - [ ] Extract ±50 words around ticker
+  - [ ] Run sentiment on window only
+  - [ ] Handle multiple ticker mentions
+  - [ ] Aggregate sentiment scores
+  - [ ] Tests with windowed examples
+  - [ ] Compare accuracy vs full-text
+
+- [ ] **18. Testing (5h)**
+  - [ ] Add tests for comment pagination
+  - [ ] Add tests for retry logic
+  - [ ] Add tests for sentiment windowing
+  - [ ] Integration tests for Reddit client
+  - [ ] E2E tests for full scan flow
+  - [ ] Performance testing
+
+### Week 2 - Day 10 (8 hours)
+
+- [ ] **19. Integration & E2E Testing**
+  - [ ] Run full test suite
+  - [ ] Fix failing tests
+  - [ ] Manual testing
+  - [ ] Check scan still completes in time
+  - [ ] Verify sentiment accuracy improved
+  - [ ] Check all comments being fetched
+
+- [ ] **20. Performance Testing**
+  - [ ] Measure scan execution time
+  - [ ] Measure API response times
+  - [ ] Measure page load times
+  - [ ] Optimize slow queries
+  - [ ] Add caching if needed
+
+- [ ] **21. Deploy to Staging**
+  - [ ] Commit & push
+  - [ ] Deploy to staging
+  - [ ] Smoke test
+  - [ ] Bug fixes
 
 ---
 
-## 📋 Phase 4: Scaling & Premium
+## 🟢 PHASE 3: POLISH (15 hours) - PENDING
 
-### 📱 Mobile App
-- [ ] Design mobile app (React Native)
-- [ ] Set up React Native project
-- [ ] Share API and utilities with web app
-- [ ] Implement authentication in mobile app
-- [ ] Implement dashboard in mobile app
-- [ ] Add push notifications
-- [ ] Deploy to TestFlight (iOS)
-- [ ] Deploy to Google Play (Android)
+### Week 3 - Day 11-12 (16 hours)
 
-### 👥 Social Features
-- [ ] Add user profiles
-- [ ] Allow users to share stocks (social links)
-- [ ] Add commenting/discussion on stocks
-- [ ] Implement upvoting/downvoting
-- [ ] Create trending discussions page
+- [ ] **22. Mobile Optimization (6h)**
+  - [ ] Verify touch targets (44×44px min)
+  - [ ] Add swipeable cards (react-swipeable)
+  - [ ] Add collapsible sections
+  - [ ] Test responsive tables
+  - [ ] Measure load times
+  - [ ] Optimize images/fonts
+  - [ ] Test on real devices
+  - [ ] Fix mobile bugs
 
-### 💰 Premium Tier
-- [ ] Design premium features:
-  - Real-time updates (< 15 min)
-  - Top 100 stocks (vs top 10)
-  - Advanced analytics
-  - API access
-  - No ads (if we add ads to free tier)
-- [ ] Integrate Stripe for payments
-- [ ] Create subscription plans (monthly, yearly)
-- [ ] Implement paywall for premium features
-- [ ] Add billing page (/settings/billing)
-- [ ] Handle subscription lifecycle (cancel, renew, etc.)
+- [ ] **23. Auto-Refresh Improvements (4h)**
+  - [ ] Add timestamp to API responses
+  - [ ] Poll /api/stocks/trending every 30s
+  - [ ] Show "New data available" notification
+  - [ ] Manual refresh button
+  - [ ] Use React Query or SWR
+  - [ ] Tests
+
+- [ ] **24. Ticker Validation (1h)**
+  - [ ] Import valid-tickers.json
+  - [ ] Add validation in ticker-detection.ts
+  - [ ] Keep blacklist for common words
+  - [ ] Tests
+  - [ ] Verify fewer false positives
+
+- [ ] **25. Missing NPM Scripts (1h)**
+  - [ ] Add db:reset script
+  - [ ] Add format script
+  - [ ] Add scan script
+  - [ ] Test all scripts
+  - [ ] Update documentation
+
+- [ ] **26. Testing (4h)**
+  - [ ] Test mobile UI
+  - [ ] Test auto-refresh
+  - [ ] Test ticker validation
+  - [ ] E2E tests on mobile
+  - [ ] Fix bugs
+
+### Week 3 - Day 13-14 (14 hours)
+
+- [ ] **27. Minor Fixes (5h)**
+  - [ ] TTL verification in production
+  - [ ] scan_history table usage
+  - [ ] Fix fading stocks filter (10 mentions)
+  - [ ] Populate Reddit URLs in evidence
+  - [ ] Fix sentiment category threshold (bearish)
+  - [ ] Tests for all fixes
+
+- [ ] **28. Final E2E Testing (4h)**
+  - [ ] Complete user flow testing
+  - [ ] Cross-browser testing
+  - [ ] Mobile device testing
+  - [ ] Performance testing
+  - [ ] Security testing
+  - [ ] Fix all bugs found
+
+- [ ] **29. Performance Optimization (3h)**
+  - [ ] Database query optimization
+  - [ ] API response caching
+  - [ ] Image optimization
+  - [ ] Bundle size optimization
+  - [ ] Lighthouse audit
+  - [ ] Fix performance issues
+
+- [ ] **30. Documentation (2h)**
+  - [ ] Update README.md
+  - [ ] Update CLAUDE.md if needed
+  - [ ] Add deployment checklist
+  - [ ] Add monitoring guide
+  - [ ] Code comments for complex logic
+
+### Week 3 - Day 15 (Friday)
+
+- [ ] **31. Production Deployment**
+  - [ ] Final code review
+  - [ ] All tests passing
+  - [ ] Linter passing
+  - [ ] Build successful
+  - [ ] Environment variables set in Vercel
+  - [ ] Database tables created in production
+  - [ ] TTL enabled on all tables
+  - [ ] Deploy to production
+  - [ ] Post-deployment verification
+    - Health check
+    - Sign up test user
+    - View dashboard
+    - View stock details
+    - Check Reddit data flowing
+  - [ ] Set up monitoring
+  - [ ] Launch! 🚀
 
 ---
 
-## 🐛 Known Issues / Tech Debt
+## 📊 Progress Tracking
 
-_(None yet - project just started)_
+**Updated:** November 7, 2025
+
+### Completion Status
+- Phase 1 (Critical): 0% (0/10 tasks)
+- Phase 2 (High Priority): 0% (0/11 tasks)
+- Phase 3 (Polish): 0% (0/11 tasks)
+
+**Overall: 0/32 tasks complete (0%)**
+
+### Time Spent
+- Week 1: 0/40 hours
+- Week 2: 0/40 hours
+- Week 3: 0/30 hours
+
+**Total: 0/110 hours**
+
+### Blockers
+None currently
+
+### Notes
+- Started: November 7, 2025
+- Target completion: November 28, 2025 (3 weeks)
+- Review this file daily and update progress
+- Mark tasks complete with [x] as you finish them
+- Add notes about any issues or blockers
 
 ---
 
-## 📝 Notes & Ideas
+## 🎯 Daily Checklist
 
-### Random Ideas (Not Prioritized)
-- Twitter/X integration (track meme stocks on Twitter)
-- Discord integration (track Discord servers)
-- GameStop/AMC historical analysis (case studies)
-- Reddit user influence scores (identify key opinion leaders)
-- Meme image detection (classify posts with meme images)
-- Short interest data integration (track stocks with high short interest)
-- Options flow data (track unusual options activity)
-- Institutional holdings data (track what hedge funds are doing)
+Before ending each day:
+- [ ] Update TODO.md with progress
+- [ ] Mark completed tasks with [x]
+- [ ] Note any blockers or issues
+- [ ] Run tests: npm run test
+- [ ] Commit changes: git add . && git commit -m "..."
+- [ ] Push to branch: git push
 
-### Research Needed
-- [ ] Study successful meme stock events (GME, AMC, BBBY)
-- [ ] Analyze what signals preceded stock spikes
-- [ ] Interview active r/wallstreetbets users
-- [ ] Competitive analysis (similar tools?)
-- [ ] Legal considerations (financial advice disclaimers)
+Before starting each day:
+- [ ] Review TODO.md
+- [ ] Pull latest changes: git pull
+- [ ] Plan the day's tasks (3-4 tasks max)
+- [ ] Set up environment (DynamoDB Local, etc.)
+- [ ] Run existing tests to ensure starting from clean state
 
 ---
 
-**Last Updated:** 2025-10-22
-**Current Focus:** Phase 1 - MVP Development
+**Remember:**
+- Test-driven development (write tests first when possible)
+- All tests must pass before committing
+- No console.log statements
+- No `any` types
+- Simple solutions are best
+- Read existing code before making changes
