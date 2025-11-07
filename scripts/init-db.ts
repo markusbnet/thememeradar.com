@@ -22,6 +22,8 @@ const client = new DynamoDBClient({
 
 const TABLES = {
   USERS: 'users',
+  POSTS: 'posts',
+  COMMENTS: 'comments',
   STOCK_MENTIONS: 'stock_mentions',
   STOCK_EVIDENCE: 'stock_evidence',
   SCAN_HISTORY: 'scan_history',
@@ -35,8 +37,9 @@ async function deleteTableIfExists(tableName: string) {
       await client.send(new DeleteTableCommand({ TableName: tableName }));
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-  } catch (error: any) {
-    console.error(`Error checking/deleting table ${tableName}:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Error checking/deleting table ${tableName}:`, message);
   }
 }
 
@@ -60,6 +63,87 @@ async function createUsersTable() {
         {
           IndexName: 'email-index',
           KeySchema: [{ AttributeName: 'email', KeyType: 'HASH' }],
+          Projection: { ProjectionType: 'ALL' },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 5,
+            WriteCapacityUnits: 5,
+          },
+        },
+      ],
+      ProvisionedThroughput: {
+        ReadCapacityUnits: 5,
+        WriteCapacityUnits: 5,
+      },
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
+async function createPostsTable() {
+  const tableName = TABLES.POSTS;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'postId', KeyType: 'HASH' },
+        { AttributeName: 'scannedAt', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'postId', AttributeType: 'S' },
+        { AttributeName: 'scannedAt', AttributeType: 'N' },
+        { AttributeName: 'subreddit', AttributeType: 'S' },
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'subreddit-scannedAt-index',
+          KeySchema: [
+            { AttributeName: 'subreddit', KeyType: 'HASH' },
+            { AttributeName: 'scannedAt', KeyType: 'RANGE' },
+          ],
+          Projection: { ProjectionType: 'ALL' },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 5,
+            WriteCapacityUnits: 5,
+          },
+        },
+      ],
+      ProvisionedThroughput: {
+        ReadCapacityUnits: 5,
+        WriteCapacityUnits: 5,
+      },
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
+async function createCommentsTable() {
+  const tableName = TABLES.COMMENTS;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'commentId', KeyType: 'HASH' },
+        { AttributeName: 'scannedAt', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'commentId', AttributeType: 'S' },
+        { AttributeName: 'scannedAt', AttributeType: 'N' },
+        { AttributeName: 'postId', AttributeType: 'S' },
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'postId-index',
+          KeySchema: [{ AttributeName: 'postId', KeyType: 'HASH' }],
           Projection: { ProjectionType: 'ALL' },
           ProvisionedThroughput: {
             ReadCapacityUnits: 5,
@@ -184,6 +268,8 @@ async function main() {
 
   try {
     await createUsersTable();
+    await createPostsTable();
+    await createCommentsTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
     await createScanHistoryTable();
@@ -191,11 +277,14 @@ async function main() {
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
     console.log('- users (stores user accounts)');
+    console.log('- posts (stores Reddit posts with tickers)');
+    console.log('- comments (stores Reddit comments with tickers)');
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
     console.log('- scan_history (stores scan metadata)');
-  } catch (error: any) {
-    console.error('\n✗ Error creating tables:', error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('\n✗ Error creating tables:', message);
     process.exit(1);
   }
 }

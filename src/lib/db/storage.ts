@@ -3,8 +3,8 @@
  * Handles saving and retrieving stock mentions from DynamoDB
  */
 
-import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand } from './dynamodb';
-import { ScanResult, TickerMention } from '@/lib/scanner/scanner';
+import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand, BatchWriteCommand } from './dynamodb';
+import { ScanResult, TickerMention, ScannedPost, ScannedComment } from '@/lib/scanner/scanner';
 
 // Types for stored data
 export interface StoredStockMention {
@@ -63,10 +63,71 @@ function getTTL(timestamp: number = Date.now()): number {
 }
 
 /**
+ * Save posts to DynamoDB
+ */
+async function savePosts(posts: ScannedPost[], scannedAt: number): Promise<void> {
+  const ttl = getTTL();
+
+  for (const post of posts) {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLES.POSTS,
+        Item: {
+          postId: post.id,
+          scannedAt,
+          subreddit: post.subreddit,
+          title: post.title,
+          body: post.body,
+          author: post.author,
+          upvotes: post.upvotes,
+          createdAt: post.createdAt,
+          tickers: post.tickers,
+          ttl,
+        },
+      })
+    );
+  }
+}
+
+/**
+ * Save comments to DynamoDB
+ */
+async function saveComments(posts: ScannedPost[], scannedAt: number): Promise<void> {
+  const ttl = getTTL();
+
+  for (const post of posts) {
+    for (const comment of post.comments) {
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLES.COMMENTS,
+          Item: {
+            commentId: comment.id,
+            scannedAt,
+            postId: comment.postId,
+            subreddit: post.subreddit,
+            body: comment.body,
+            author: comment.author,
+            upvotes: comment.upvotes,
+            createdAt: comment.createdAt,
+            tickers: comment.tickers,
+            ttl,
+          },
+        })
+      );
+    }
+  }
+}
+
+/**
  * Save scan results to DynamoDB
  */
 export async function saveScanResults(results: ScanResult[]): Promise<void> {
   const timestamp = roundToInterval(Date.now());
+
+  // Save raw posts and comments to their respective tables
+  const allPosts = results.flatMap(r => r.posts);
+  await savePosts(allPosts, timestamp);
+  await saveComments(allPosts, timestamp);
 
   // Aggregate all ticker mentions across subreddits
   const tickerData = new Map<string, {
