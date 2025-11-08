@@ -3,11 +3,18 @@ import { verifyPassword } from '@/lib/auth/password';
 import { generateToken } from '@/lib/auth/jwt';
 import { validateEmail, sanitizeInput } from '@/lib/auth/validation';
 import { getUserByEmail } from '@/lib/db/users';
+import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limit-middleware';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password } = body;
+
+    // Check rate limit BEFORE processing
+    const rateLimitResponse = checkRateLimit(request, email);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
 
     // Validate required fields
     if (!email) {
@@ -51,6 +58,9 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Reset rate limit on successful login
+    resetRateLimit(request, sanitizedEmail);
 
     // Generate JWT token
     const token = generateToken(user.userId);
