@@ -4,6 +4,7 @@ import { generateToken } from '@/lib/auth/jwt';
 import { validateEmail, sanitizeInput } from '@/lib/auth/validation';
 import { getUserByEmail } from '@/lib/db/users';
 import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limit-middleware';
+import { generateCSRFToken, CSRF_COOKIE_NAME } from '@/lib/auth/csrf';
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,6 +94,16 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      maxAge,
+      path: '/',
+    });
+
+    // Set CSRF token cookie (NOT httpOnly so client can read it)
+    const csrfToken = generateCSRFToken();
+    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
+      httpOnly: false, // Client needs to read this
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge,
       path: '/',
     });
