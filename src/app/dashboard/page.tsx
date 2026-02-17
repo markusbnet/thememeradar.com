@@ -62,8 +62,8 @@ export default function DashboardPage() {
       } else {
         setError(result.error || 'Failed to fetch stock data');
       }
-    } catch (err: any) {
-      setError(err.message || 'Network error');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Network error');
     }
   };
 

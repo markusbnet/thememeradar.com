@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createScanner } from '@/lib/scanner/scanner';
 import { saveScanResults } from '@/lib/db/storage';
+import { logger } from '@/lib/logger';
 
 // Configuration from environment variables
 const REDDIT_CONFIG = {
@@ -95,13 +96,14 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
     console.error('Scan API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Internal server error',
+        error: message,
       },
       { status: 500 }
     );
@@ -125,8 +127,8 @@ export async function GET() {
       );
     }
 
-    console.log('🔄 Starting automated Reddit scan...');
-    console.log(`📡 Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
+    logger.log('Starting automated Reddit scan...');
+    logger.log(`Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
 
     // Create scanner instance
     const scanner = createScanner(REDDIT_CONFIG);
@@ -149,20 +151,21 @@ export async function GET() {
       totalMentions: results.reduce((sum, r) => sum + r.stats.totalMentions, 0),
     };
 
-    console.log('✅ Scan completed:', summary);
+    logger.log('Scan completed:', summary);
 
     return NextResponse.json({
       success: true,
       message: 'Scan completed and saved to database',
       data: summary,
     });
-  } catch (error: any) {
-    console.error('❌ Automated scan error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Scan failed';
+    console.error('Automated scan error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Scan failed',
+        error: message,
       },
       { status: 500 }
     );

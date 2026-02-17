@@ -24,13 +24,14 @@ export async function GET() {
         timestamp: Date.now(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch trending stocks';
     console.error('Trending stocks API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch trending stocks',
+        error: message,
       },
       { status: 500 }
     );

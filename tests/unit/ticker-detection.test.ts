@@ -44,6 +44,25 @@ describe('Ticker Detection', () => {
     });
   });
 
+  describe('KNOWN_TICKERS validation', () => {
+    it('should reject unknown standalone uppercase symbols not in ticker list', () => {
+      // XYZZY is not in valid-tickers.json — should be rejected for standalone
+      expect(isValidTicker('XYZZY', false)).toBe(false);
+    });
+
+    it('should accept $ prefix symbols even if not in known tickers list', () => {
+      // With $ prefix, user is explicitly calling it a ticker
+      expect(isValidTicker('XYZZY', true)).toBe(true);
+    });
+
+    it('should accept major meme stocks as standalone (they are in valid-tickers.json)', () => {
+      expect(isValidTicker('GME', false)).toBe(true);
+      expect(isValidTicker('AMC', false)).toBe(true);
+      expect(isValidTicker('PLTR', false)).toBe(true);
+      expect(isValidTicker('RIVN', false)).toBe(true);
+    });
+  });
+
   describe('extractTickers', () => {
     it('should extract $SYMBOL format', () => {
       const text = 'I bought $GME and $AMC yesterday!';

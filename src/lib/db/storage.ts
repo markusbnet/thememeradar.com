@@ -3,7 +3,7 @@
  * Handles saving and retrieving stock mentions from DynamoDB
  */
 
-import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand, BatchWriteCommand } from './dynamodb';
+import { docClient, TABLES, PutCommand, QueryCommand, UpdateCommand, ScanCommand, BatchWriteCommand } from './dynamodb';
 import { ScanResult, TickerMention, ScannedPost, ScannedComment } from '@/lib/scanner/scanner';
 
 // Types for stored data
@@ -188,28 +188,43 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
     else if (avgSentiment < -0.6) sentimentCategory = 'strong_bearish';
     else if (avgSentiment < -0.2) sentimentCategory = 'bearish';
 
-    // Save stock mention
-    const stockMention: StoredStockMention = {
-      ticker,
-      timestamp,
-      mentionCount: mentions.length,
-      uniquePosts: mentions.filter(m => m.source === 'post').length,
-      uniqueComments: mentions.filter(m => m.source === 'comment').length,
-      avgSentimentScore: Math.round(avgSentiment * 1000) / 1000,
-      sentimentCategory,
-      bullishCount,
-      bearishCount,
-      neutralCount,
-      totalUpvotes,
-      subredditBreakdown,
-      topKeywords,
-      ttl: getTTL(),
-    };
-
+    // Save stock mention using UpdateCommand with ADD to accumulate across scans
+    // within the same 15-min bucket (avoids overwriting data from earlier scans)
     await docClient.send(
-      new PutCommand({
+      new UpdateCommand({
         TableName: TABLES.STOCK_MENTIONS,
-        Item: stockMention,
+        Key: { ticker, timestamp },
+        UpdateExpression: `
+          ADD mentionCount :mentionCount,
+              uniquePosts :uniquePosts,
+              uniqueComments :uniqueComments,
+              bullishCount :bullishCount,
+              bearishCount :bearishCount,
+              neutralCount :neutralCount,
+              totalUpvotes :totalUpvotes
+          SET avgSentimentScore = :avgSentiment,
+              sentimentCategory = :sentimentCategory,
+              topKeywords = :topKeywords,
+              subredditBreakdown = :subredditBreakdown,
+              #ttl = :ttl
+        `,
+        ExpressionAttributeNames: {
+          '#ttl': 'ttl', // 'ttl' is a reserved word in DynamoDB
+        },
+        ExpressionAttributeValues: {
+          ':mentionCount': mentions.length,
+          ':uniquePosts': mentions.filter(m => m.source === 'post').length,
+          ':uniqueComments': mentions.filter(m => m.source === 'comment').length,
+          ':bullishCount': bullishCount,
+          ':bearishCount': bearishCount,
+          ':neutralCount': neutralCount,
+          ':totalUpvotes': totalUpvotes,
+          ':avgSentiment': Math.round(avgSentiment * 1000) / 1000,
+          ':sentimentCategory': sentimentCategory,
+          ':topKeywords': topKeywords,
+          ':subredditBreakdown': subredditBreakdown,
+          ':ttl': getTTL(),
+        },
       })
     );
 
@@ -318,15 +333,77 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
 
 /**
  * Get fading stocks (losing interest)
+ * Queries stocks that had significant activity in the PREVIOUS period
+ * and compares to the current period — including those with zero current mentions.
  */
 export async function getFadingStocks(limit: number = 10): Promise<TrendingStock[]> {
-  const trending = await getTrendingStocks(100); // Get more stocks first
+  const now = roundToInterval(Date.now());
+  const previousInterval = now - 15 * 60 * 1000;
 
-  // Filter for negative velocity and sort ascending
-  return trending
-    .filter(stock => stock.velocity < 0)
-    .sort((a, b) => a.velocity - b.velocity)
-    .slice(0, limit);
+  // Get previous period data (find stocks that had activity)
+  const previousData = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      IndexName: 'timestamp-index',
+      KeyConditionExpression: '#timestamp = :timestamp',
+      ExpressionAttributeNames: {
+        '#timestamp': 'timestamp',
+      },
+      ExpressionAttributeValues: {
+        ':timestamp': previousInterval,
+      },
+    })
+  );
+
+  // Get current period data
+  const currentData = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      IndexName: 'timestamp-index',
+      KeyConditionExpression: '#timestamp = :timestamp',
+      ExpressionAttributeNames: {
+        '#timestamp': 'timestamp',
+      },
+      ExpressionAttributeValues: {
+        ':timestamp': now,
+      },
+    })
+  );
+
+  // Build current mentions map for fast lookup
+  const currentMap = new Map<string, StoredStockMention>();
+  for (const item of currentData.Items || []) {
+    currentMap.set(item.ticker, item as StoredStockMention);
+  }
+
+  // Calculate velocity for stocks from previous period
+  // A stock is "fading" if it had >= 10 mentions previously but fewer now
+  const fading: TrendingStock[] = [];
+  for (const item of previousData.Items || []) {
+    const previous = item.mentionCount as number;
+    // CLAUDE.md: minimum 10 mentions in previous period (avoid false signals)
+    if (previous < 10) continue;
+
+    const currentItem = currentMap.get(item.ticker);
+    const current = currentItem?.mentionCount ?? 0;
+
+    // Calculate velocity (% change from previous to current)
+    const velocity = ((current - previous) / previous) * 100;
+
+    if (velocity < 0) {
+      fading.push({
+        ticker: item.ticker,
+        mentionCount: current,
+        sentimentScore: currentItem?.avgSentimentScore ?? (item.avgSentimentScore as number),
+        sentimentCategory: currentItem?.sentimentCategory ?? (item.sentimentCategory as string),
+        velocity,
+        timestamp: now,
+      });
+    }
+  }
+
+  // Sort by velocity ascending (most negative = most faded first)
+  return fading.sort((a, b) => a.velocity - b.velocity).slice(0, limit);
 }
 
 /**

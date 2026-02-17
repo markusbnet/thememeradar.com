@@ -3,9 +3,19 @@
  * Orchestrates Reddit data collection, ticker extraction, and sentiment analysis
  */
 
-import { RedditClient, type RedditPost, type RedditComment } from '@/lib/reddit';
+import { RedditClient, type RedditComment } from '@/lib/reddit';
 import { extractTickers } from '@/lib/ticker-detection';
 import { analyzeSentiment, type SentimentResult } from '@/lib/sentiment';
+
+/**
+ * Sleep for a given number of milliseconds (used for rate limiting)
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** Delay between Reddit API calls to respect 100 req/min rate limit */
+const API_DELAY_MS = 650;
 
 // Types
 export interface ScannerConfig {
@@ -99,12 +109,16 @@ export class Scanner {
       const postText = `${post.title} ${post.body}`;
       const postTickers = extractTickers(postText);
 
+      // Rate limit: delay before each comment fetch to stay under 100 req/min
+      await sleep(API_DELAY_MS);
+
       // Fetch comments for this post
       let comments: RedditComment[] = [];
       try {
         comments = await this.redditClient.getPostComments(subreddit, post.id);
-      } catch (error: any) {
-        console.error(`Failed to fetch comments for post ${post.id}:`, error.message);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Failed to fetch comments for post ${post.id}:`, message);
         // Continue with empty comments
       }
 
@@ -217,7 +231,8 @@ export class Scanner {
       try {
         const result = await this.scanSubreddit(subreddit, limit);
         results.push(result);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
         // Add error result for failed subreddit
         results.push({
           scannedAt: Date.now(),
@@ -231,7 +246,7 @@ export class Scanner {
             totalMentions: 0,
             subredditBreakdown: {},
           },
-          error: error.message,
+          error: message,
         });
       }
     }

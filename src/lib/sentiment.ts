@@ -57,10 +57,56 @@ export const BEARISH_KEYWORDS: SentimentKeyword[] = [
 ];
 
 /**
- * Analyze sentiment of text for a specific ticker
+ * Extract ±50-word context window around all mentions of a ticker.
+ * Returns full text if ticker not found (fallback for edge cases).
+ * CLAUDE.md requirement: analyze ±50 words around each ticker mention.
+ */
+export function extractTickerContext(text: string, ticker: string): string {
+  if (!text || !ticker) return text;
+
+  // Split text into words (preserve original for reassembly)
+  const words = text.split(/\s+/);
+  if (words.length === 0) return text;
+
+  // Build regex that matches $TICKER or standalone TICKER
+  const escapedTicker = ticker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const tickerPattern = new RegExp(
+    `(?:\\$${escapedTicker}\\b|\\b${escapedTicker}\\b)`,
+    'i'
+  );
+
+  // Find all word indices that contain the ticker
+  const contextIndices = new Set<number>();
+  for (let i = 0; i < words.length; i++) {
+    if (tickerPattern.test(words[i])) {
+      // Add ±50 words around each ticker occurrence
+      for (let j = Math.max(0, i - 50); j <= Math.min(words.length - 1, i + 50); j++) {
+        contextIndices.add(j);
+      }
+    }
+  }
+
+  if (contextIndices.size === 0) {
+    // Ticker not found in word list — return full text as fallback
+    return text;
+  }
+
+  // Rebuild text from the matched context windows
+  return Array.from(contextIndices)
+    .sort((a, b) => a - b)
+    .map(i => words[i])
+    .join(' ');
+}
+
+/**
+ * Analyze sentiment of text for a specific ticker.
+ * Only analyzes ±50 words around each mention of the ticker
+ * to reduce false signals from multi-ticker posts.
  */
 export function analyzeSentiment(text: string, ticker: string): SentimentResult {
-  const lowerText = text.toLowerCase();
+  // Extract context window around ticker mentions
+  const contextText = extractTickerContext(text, ticker);
+  const lowerText = contextText.toLowerCase();
   const bullishKeywords: string[] = [];
   const bearishKeywords: string[] = [];
 

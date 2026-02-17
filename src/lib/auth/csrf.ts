@@ -3,7 +3,7 @@
  * Generates and validates CSRF tokens to prevent CSRF attacks
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes, timingSafeEqual } from 'crypto';
 
 /**
  * Generate a cryptographically secure CSRF token
@@ -45,11 +45,11 @@ export function validateCSRFToken(
     return false;
   }
 
-  const bufferFromHeader = Buffer.from(tokenFromHeader);
-  const bufferFromCookie = Buffer.from(tokenFromCookie);
+  const bufferFromHeader = Buffer.from(tokenFromHeader, 'utf8');
+  const bufferFromCookie = Buffer.from(tokenFromCookie, 'utf8');
 
-  // Buffer.compare returns 0 if equal (timing-safe)
-  return bufferFromHeader.compare(bufferFromCookie) === 0;
+  // crypto.timingSafeEqual prevents timing attacks
+  return timingSafeEqual(bufferFromHeader, bufferFromCookie);
 }
 
 /**

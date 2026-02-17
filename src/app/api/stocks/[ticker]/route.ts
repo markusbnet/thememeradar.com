@@ -93,7 +93,7 @@ export async function GET(
     );
 
     // Format historical data
-    const historical = (historicalResult.Items || []).map(item => ({
+    const historical = (historicalResult.Items || []).map((item: Record<string, unknown>) => ({
       timestamp: item.timestamp,
       mentionCount: item.mentionCount,
       sentimentScore: item.avgSentimentScore,

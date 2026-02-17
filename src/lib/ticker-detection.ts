@@ -3,6 +3,15 @@
  * Extracts stock ticker symbols from text
  */
 
+import validTickersData from '@/data/valid-tickers.json';
+
+/**
+ * Set of known valid NYSE/NASDAQ tickers.
+ * Used to reduce false positives for standalone uppercase words.
+ * $ prefix signals explicit stock mention and bypasses this check.
+ */
+const KNOWN_TICKERS = new Set<string>(validTickersData.tickers);
+
 // Common words that might be mistaken for tickers
 const BLACKLIST = new Set([
   'FOR', 'IT', 'ARE', 'OR', 'ON', 'BY', 'AT', 'TO', 'IN', 'A', 'I',
@@ -22,6 +31,8 @@ const BLACKLIST = new Set([
  * - Must be 1-5 uppercase letters
  * - Single letters are not valid (except with $ prefix)
  * - Must not be a common word
+ * - Standalone uppercase (no $): must be in the known tickers list to reduce false positives
+ * - With $ prefix: user is explicitly calling it a stock, so skip allowlist check
  */
 export function isValidTicker(symbol: string, hasDollarSign: boolean = false): boolean {
   // Must be 1-5 letters
@@ -41,6 +52,13 @@ export function isValidTicker(symbol: string, hasDollarSign: boolean = false): b
 
   // Check blacklist
   if (BLACKLIST.has(symbol)) {
+    return false;
+  }
+
+  // For standalone uppercase words (no $ prefix): only accept if it's a known ticker.
+  // This prevents common abbreviations (CEO, AI, DD) from being treated as stocks.
+  // $ prefix means the user explicitly called it a stock — trust that intent.
+  if (!hasDollarSign && KNOWN_TICKERS.size > 0 && !KNOWN_TICKERS.has(symbol)) {
     return false;
   }
 

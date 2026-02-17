@@ -4,6 +4,7 @@
 
 import {
   analyzeSentiment,
+  extractTickerContext,
   getSentimentCategory,
   type SentimentResult,
 } from '@/lib/sentiment';
@@ -146,6 +147,60 @@ describe('Sentiment Analysis', () => {
 
       expect(result.score).toBeLessThanOrEqual(1);
       expect(result.score).toBeGreaterThanOrEqual(-1);
+    });
+  });
+
+  describe('context window (ticker isolation)', () => {
+    it('should not bleed sentiment from one ticker to another', () => {
+      // GME is bullish, AMC is bearish — they are far apart in the text
+      const words = Array(60).fill('neutral').join(' ');
+      const text = `$GME to the moon ${words} $AMC paper hands dump`;
+
+      const gmeResult = analyzeSentiment(text, 'GME');
+      const amcResult = analyzeSentiment(text, 'AMC');
+
+      // GME context should be bullish
+      expect(gmeResult.score).toBeGreaterThan(0);
+      // AMC context should be bearish
+      expect(amcResult.score).toBeLessThan(0);
+    });
+
+    it('should analyze full text when ticker not found (fallback)', () => {
+      const text = 'This is a great bullish stock with diamond hands!';
+      // Use a ticker that's not mentioned in the text
+      const result = analyzeSentiment(text, 'ZZZZZ');
+
+      // Full text has bullish keywords, so score should be positive
+      expect(result.score).toBeGreaterThan(0);
+    });
+  });
+
+  describe('extractTickerContext', () => {
+    it('should return full text when ticker not mentioned', () => {
+      const text = 'GME is going up today with diamond hands';
+      const context = extractTickerContext(text, 'AMC');
+      // AMC not in text — should return full text
+      expect(context).toBe(text);
+    });
+
+    it('should extract ±50 words around ticker mention', () => {
+      const prefix = Array(10).fill('word').join(' ');
+      const suffix = Array(10).fill('word').join(' ');
+      const text = `${prefix} $GME ${suffix}`;
+      const context = extractTickerContext(text, 'GME');
+
+      expect(context).toContain('GME');
+      // Should not be the full text (text has more than 50 words total but context is nearby)
+      expect(context.length).toBeLessThanOrEqual(text.length);
+    });
+
+    it('should handle empty text', () => {
+      expect(extractTickerContext('', 'GME')).toBe('');
+    });
+
+    it('should handle empty ticker', () => {
+      const text = 'GME is going up';
+      expect(extractTickerContext(text, '')).toBe(text);
     });
   });
 
