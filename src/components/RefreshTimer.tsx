@@ -76,7 +76,7 @@ export default function RefreshTimer() {
       </div>
       <button
         onClick={handleManualRefresh}
-        className="ml-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors"
+        className="ml-2 px-4 py-2.5 min-h-[44px] min-w-[44px] bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors"
       >
         Refresh
       </button>

@@ -6,13 +6,21 @@ import { extractTickers, isValidTicker } from '@/lib/ticker-detection';
 
 describe('Ticker Detection', () => {
   describe('isValidTicker', () => {
-    it('should accept valid tickers', () => {
+    it('should accept valid NYSE/NASDAQ tickers', () => {
       expect(isValidTicker('GME')).toBe(true);
       expect(isValidTicker('AAPL')).toBe(true);
       expect(isValidTicker('TSLA')).toBe(true);
       expect(isValidTicker('AMC')).toBe(true);
       expect(isValidTicker('BB')).toBe(true);
       expect(isValidTicker('NVDA')).toBe(true);
+    });
+
+    it('should reject unknown uppercase words', () => {
+      expect(isValidTicker('YOLO')).toBe(false);
+      expect(isValidTicker('MOON')).toBe(false);
+      expect(isValidTicker('HOLD')).toBe(false);
+      expect(isValidTicker('LETS')).toBe(false);
+      expect(isValidTicker('ZZZZ')).toBe(false);
     });
 
     it('should reject common words that look like tickers', () => {
@@ -153,6 +161,78 @@ describe('Ticker Detection', () => {
 
       // Should only extract properly formatted GME (all caps)
       expect(tickers).toEqual(['GME']);
+    });
+
+    it('should reject random uppercase words that are not real tickers', () => {
+      const text = 'YOLO MOON HOLD SELL LETS MAKE SOME GAINS TODAY';
+      const tickers = extractTickers(text);
+
+      // None of these are real NYSE/NASDAQ tickers
+      expect(tickers).toEqual([]);
+    });
+
+    it('should accept well-known NYSE/NASDAQ tickers', () => {
+      const text = 'My portfolio has AAPL MSFT GOOGL AMZN TSLA NVDA META';
+      const tickers = extractTickers(text);
+
+      expect(tickers).toContain('AAPL');
+      expect(tickers).toContain('MSFT');
+      expect(tickers).toContain('GOOGL');
+      expect(tickers).toContain('AMZN');
+      expect(tickers).toContain('TSLA');
+      expect(tickers).toContain('NVDA');
+      expect(tickers).toContain('META');
+      expect(tickers).toHaveLength(7);
+    });
+
+    it('should accept popular meme stocks', () => {
+      const text = '$GME $AMC $BB $BBBY $PLTR $SOFI';
+      const tickers = extractTickers(text);
+
+      expect(tickers).toContain('GME');
+      expect(tickers).toContain('AMC');
+      expect(tickers).toContain('BB');
+      expect(tickers).toContain('BBBY');
+      expect(tickers).toContain('PLTR');
+      expect(tickers).toContain('SOFI');
+    });
+
+    it('should accept popular ETFs', () => {
+      const text = 'SPY QQQ IWM DIA VTI VOO';
+      const tickers = extractTickers(text);
+
+      expect(tickers).toContain('SPY');
+      expect(tickers).toContain('QQQ');
+      expect(tickers).toContain('IWM');
+      expect(tickers).toContain('DIA');
+      expect(tickers).toContain('VTI');
+      expect(tickers).toContain('VOO');
+    });
+
+    it('should reject words that look like tickers but are not listed', () => {
+      const text = 'DONT MISS THIS HUGE DEAL';
+      const tickers = extractTickers(text);
+
+      // None of these are real NYSE/NASDAQ tickers
+      expect(tickers).toEqual([]);
+    });
+
+    it('should accept ambiguous tickers when prefixed with $', () => {
+      const text = '$IT $ON $FAST are my picks';
+      const tickers = extractTickers(text);
+
+      // These are real tickers and have $ prefix
+      expect(tickers).toContain('IT');
+      expect(tickers).toContain('ON');
+      expect(tickers).toContain('FAST');
+    });
+
+    it('should reject ambiguous tickers without $ prefix', () => {
+      const text = 'IT is going ON and things look FAST';
+      const tickers = extractTickers(text);
+
+      // These are common words — need $ prefix
+      expect(tickers).toEqual([]);
     });
   });
 });

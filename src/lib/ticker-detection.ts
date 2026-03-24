@@ -1,27 +1,30 @@
 /**
  * Stock Ticker Detection
  * Extracts stock ticker symbols from text
+ * Validates against a whitelist of known NYSE/NASDAQ tickers
  */
 
-// Common words that might be mistaken for tickers
-const BLACKLIST = new Set([
-  'FOR', 'IT', 'ARE', 'OR', 'ON', 'BY', 'AT', 'TO', 'IN', 'A', 'I',
-  'THE', 'IS', 'AN', 'AS', 'BE', 'OF', 'AND', 'BUT', 'NOT', 'YOU',
-  'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS',
-  'HIM', 'HIS', 'HOW', 'MAN', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WAY',
-  'WHO', 'BOY', 'DID', 'ITS', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE',
-  'DAD', 'MOM', 'YES', 'NO', 'OK', 'LOL', 'OMG', 'WTF', 'TBH', 'IMO',
-  'FWIW', 'YMMV', 'TL', 'DR', 'ELI', 'AMA', 'TIL', 'PSA', 'FYI',
-  'ASAP', 'DIY', 'FAQ', 'RIP', 'CEO', 'CFO', 'CTO', 'VP', 'HR',
-  'PR', 'IT', 'AI', 'ML', 'API', 'SDK', 'UI', 'UX', 'PM', 'AM',
-  'EDIT', 'TLDR', 'IIRC', 'AFAIK', 'IMHO', 'HODL', // HODL is slang, not a ticker
+import { TICKER_WHITELIST } from './ticker-list';
+
+// Real tickers that are also common English words — require $ prefix to avoid false positives
+const AMBIGUOUS_TICKERS = new Set([
+  'IT', 'ARE', 'ON', 'ALL', 'A', 'BE', 'AN', 'OR', 'SO', 'DO',
+  'AT', 'BY', 'TO', 'IN', 'AI', 'AM', 'PM', 'HR', 'IP',
+  'K', 'L', 'J', 'U', 'S', 'W', 'H',
+  'NOW', 'SEE', 'HAS', 'ONE', 'TWO', 'NEW', 'OLD', 'DAY',
+  'OUT', 'CAN', 'MAN', 'HIM', 'HIS', 'HER', 'WAY', 'BIG',
+  'LOW', 'KEY', 'HE', 'WE', 'GO', 'DD', 'RE', 'FL', 'CE',
+  'EDIT', 'FAST', 'OPEN', 'WELL', 'ALLY', 'FIVE', 'REAL',
+  'GRAB', 'TRUE', 'GOLD', 'BIRD', 'CHEF', 'DISH', 'RARE',
+  'PEAK', 'POOL', 'TELL', 'SAVE', 'RIDE',
 ]);
 
 /**
  * Check if a string is a valid stock ticker
  * - Must be 1-5 uppercase letters
  * - Single letters are not valid (except with $ prefix)
- * - Must not be a common word
+ * - Ambiguous tickers (common words) require $ prefix
+ * - Must be in the NYSE/NASDAQ whitelist
  */
 export function isValidTicker(symbol: string, hasDollarSign: boolean = false): boolean {
   // Must be 1-5 letters
@@ -39,8 +42,13 @@ export function isValidTicker(symbol: string, hasDollarSign: boolean = false): b
     return false;
   }
 
-  // Check blacklist
-  if (BLACKLIST.has(symbol)) {
+  // Ambiguous tickers (common words) require $ prefix
+  if (AMBIGUOUS_TICKERS.has(symbol) && !hasDollarSign) {
+    return false;
+  }
+
+  // Must be a known NYSE/NASDAQ ticker
+  if (!TICKER_WHITELIST.has(symbol)) {
     return false;
   }
 

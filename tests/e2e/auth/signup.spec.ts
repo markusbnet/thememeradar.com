@@ -35,7 +35,7 @@ test.describe('Signup Page', () => {
 
     // Check form elements are present
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
+    await expect(page.getByRole('textbox', { name: /password/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /sign up/i })).toBeVisible();
 
     // Check link to login page
@@ -49,7 +49,7 @@ test.describe('Signup Page', () => {
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(uniqueEmail);
-    await page.getByLabel(/password/i).fill(validPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(validPassword);
 
     // Submit the form
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -64,7 +64,7 @@ test.describe('Signup Page', () => {
   test('should show error for invalid email format', async ({ page }) => {
     // Fill in invalid email
     await page.getByLabel(/email/i).fill('invalid-email');
-    await page.getByLabel(/password/i).fill('ValidPass123!');
+    await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
 
     // Submit the form
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -81,7 +81,7 @@ test.describe('Signup Page', () => {
 
     // Fill in weak password
     await page.getByLabel(/email/i).fill(uniqueEmail);
-    await page.getByLabel(/password/i).fill('weak');
+    await page.getByRole('textbox', { name: /password/i }).fill('weak');
 
     // Submit the form
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -100,7 +100,7 @@ test.describe('Signup Page', () => {
 
     // First signup - should succeed
     await page.getByLabel(/email/i).fill(duplicateEmail);
-    await page.getByLabel(/password/i).fill(validPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(validPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
 
     // Wait for redirect to dashboard
@@ -111,7 +111,7 @@ test.describe('Signup Page', () => {
 
     // Try to sign up again with same email
     await page.getByLabel(/email/i).fill(duplicateEmail);
-    await page.getByLabel(/password/i).fill(validPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(validPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
 
     // Should show error about duplicate email
@@ -123,7 +123,7 @@ test.describe('Signup Page', () => {
 
   test('should validate empty email field', async ({ page }) => {
     // Fill only password
-    await page.getByLabel(/password/i).fill('ValidPass123!');
+    await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
 
     // Submit the form
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -152,7 +152,7 @@ test.describe('Signup Page', () => {
   });
 
   test('should toggle password visibility', async ({ page }) => {
-    const passwordInput = page.getByLabel(/password/i);
+    const passwordInput = page.getByRole('textbox', { name: /password/i });
 
     // Password should initially be hidden (type="password")
     await expect(passwordInput).toHaveAttribute('type', 'password');
@@ -185,7 +185,7 @@ test.describe('Signup Page', () => {
 
     // Fill email with extra whitespace
     await page.getByLabel(/email/i).fill(`  ${uniqueEmail}  `);
-    await page.getByLabel(/password/i).fill(validPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(validPassword);
 
     // Submit the form
     await page.getByRole('button', { name: /sign up/i }).click();
@@ -201,10 +201,10 @@ test.describe('Signup Page', () => {
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(uniqueEmail);
-    await page.getByLabel(/password/i).fill(validPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(validPassword);
 
     // Press Enter instead of clicking button
-    await page.getByLabel(/password/i).press('Enter');
+    await page.getByRole('textbox', { name: /password/i }).press('Enter');
 
     // Should redirect to dashboard
     await expect(page).toHaveURL(/\/dashboard/);

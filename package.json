@@ -18,6 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.699.0",
+    "@next/swc-darwin-arm64": "^15.1.4",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "next": "15.1.4",

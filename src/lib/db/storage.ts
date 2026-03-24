@@ -311,6 +311,56 @@ export async function getStockEvidence(ticker: string, limit: number = 10): Prom
 }
 
 /**
+ * Get time breakdown stats for a ticker (24hr, 7d, 30d)
+ */
+export async function getStockTimeBreakdown(ticker: string): Promise<{
+  periods: { label: string; mentions: number; bullishPct: number; neutralPct: number; bearishPct: number }[];
+}> {
+  const now = Date.now();
+  const periods = [
+    { label: '24 Hours', ms: 24 * 60 * 60 * 1000 },
+    { label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000 },
+    { label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000 },
+  ];
+
+  const results = await Promise.all(
+    periods.map(async (period) => {
+      const startTime = now - period.ms;
+
+      const result = await docClient.send(
+        new QueryCommand({
+          TableName: TABLES.STOCK_MENTIONS,
+          KeyConditionExpression: 'ticker = :ticker AND #ts BETWEEN :start AND :end',
+          ExpressionAttributeNames: { '#ts': 'timestamp' },
+          ExpressionAttributeValues: {
+            ':ticker': ticker,
+            ':start': startTime,
+            ':end': now,
+          },
+        })
+      );
+
+      const items = result.Items || [];
+      const totalMentions = items.reduce((sum: number, i: any) => sum + (i.mentionCount || 0), 0);
+      const totalBullish = items.reduce((sum: number, i: any) => sum + (i.bullishCount || 0), 0);
+      const totalBearish = items.reduce((sum: number, i: any) => sum + (i.bearishCount || 0), 0);
+      const totalNeutral = items.reduce((sum: number, i: any) => sum + (i.neutralCount || 0), 0);
+      const total = totalBullish + totalBearish + totalNeutral;
+
+      return {
+        label: period.label,
+        mentions: totalMentions,
+        bullishPct: total > 0 ? Math.round((totalBullish / total) * 100) : 0,
+        neutralPct: total > 0 ? Math.round((totalNeutral / total) * 100) : 0,
+        bearishPct: total > 0 ? Math.round((totalBearish / total) * 100) : 0,
+      };
+    })
+  );
+
+  return { periods: results };
+}
+
+/**
  * Get historical data for charts (mention count and sentiment over time)
  */
 export async function getStockHistory(ticker: string, days: number = 7): Promise<{

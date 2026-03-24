@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { checkAuth } from '@/lib/auth/client';
 import StockChart from '@/components/StockChart';
+import CollapsibleSection from '@/components/CollapsibleSection';
 
 interface StockDetails {
   ticker: string;
@@ -45,6 +46,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
     mentions: { label: string; value: number }[];
     sentiment: { label: string; value: number }[];
   } | null>(null);
+  const [timeBreakdown, setTimeBreakdown] = useState<{
+    periods: { label: string; mentions: number; bullishPct: number; neutralPct: number; bearishPct: number }[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +72,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           setEvidence(result.data.evidence);
           if (result.data.history) {
             setHistory(result.data.history);
+          }
+          if (result.data.timeBreakdown) {
+            setTimeBreakdown(result.data.timeBreakdown);
           }
         } else {
           setError(result.error || 'Stock not found');
@@ -194,10 +201,40 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           />
         </div>
 
+        {/* Time Breakdown */}
+        {timeBreakdown && timeBreakdown.periods.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistics by Time Period</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-500">Period</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-500">Mentions</th>
+                    <th className="text-right py-3 px-4 font-medium text-green-600">Bullish %</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-500">Neutral %</th>
+                    <th className="text-right py-3 px-4 font-medium text-red-600">Bearish %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timeBreakdown.periods.map((period) => (
+                    <tr key={period.label} className="border-b border-gray-100">
+                      <td className="py-3 px-4 font-medium text-gray-900">{period.label}</td>
+                      <td className="py-3 px-4 text-right text-gray-900">{period.mentions.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right text-green-600">{period.bullishPct}%</td>
+                      <td className="py-3 px-4 text-right text-gray-600">{period.neutralPct}%</td>
+                      <td className="py-3 px-4 text-right text-red-600">{period.bearishPct}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sentiment Breakdown */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Sentiment Breakdown</h2>
+          <CollapsibleSection title="Sentiment Breakdown">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-green-600 font-medium">📈 Bullish</span>
@@ -212,11 +249,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 <span className="text-gray-900 font-semibold">{stockDetails.bearishCount} mentions</span>
               </div>
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Subreddit Breakdown */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Subreddit Breakdown</h2>
+          <CollapsibleSection title="Subreddit Breakdown">
             <div className="space-y-3">
               {Object.entries(stockDetails.subredditBreakdown)
                 .sort(([, a], [, b]) => b - a)
@@ -227,35 +263,31 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   </div>
                 ))}
             </div>
-          </div>
+          </CollapsibleSection>
         </div>
 
         {/* Top Keywords */}
         {stockDetails.topKeywords.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Top Keywords</h2>
-            <div className="flex flex-wrap gap-2">
-              {stockDetails.topKeywords.map((keyword, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
+          <div className="mt-8">
+            <CollapsibleSection title="Top Keywords">
+              <div className="flex flex-wrap gap-2">
+                {stockDetails.topKeywords.map((keyword, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </CollapsibleSection>
           </div>
         )}
 
         {/* Supporting Evidence */}
         {evidence.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Supporting Evidence
-              <span className="text-sm text-gray-500 font-normal ml-2">
-                (Top {evidence.length} mentions by upvotes)
-              </span>
-            </h2>
+          <div className="mt-8">
+            <CollapsibleSection title={`Supporting Evidence (Top ${evidence.length} mentions by upvotes)`}>
             <div className="space-y-6">
               {evidence.map((item) => {
                 const itemSentiment = getSentimentDisplay(item.sentimentCategory);
@@ -290,6 +322,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 );
               })}
             </div>
+            </CollapsibleSection>
           </div>
         )}
       </main>

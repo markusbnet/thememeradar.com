@@ -41,7 +41,7 @@ test.describe('Protected Dashboard', () => {
     // Sign up
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
 
     // Should be redirected to dashboard
@@ -62,7 +62,7 @@ test.describe('Protected Dashboard', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -78,7 +78,7 @@ test.describe('Protected Dashboard', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -103,7 +103,7 @@ test.describe('Protected Dashboard', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -123,7 +123,7 @@ test.describe('Protected Dashboard', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 

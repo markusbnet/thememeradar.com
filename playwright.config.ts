@@ -24,7 +24,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
@@ -59,14 +59,15 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests (only if not testing external URL) */
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
-    command: 'PORT=3001 npm run dev',
-    url: 'http://localhost:3001',
+    command: 'PORT=3005 npm run dev',
+    url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
     env: {
-      DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080',
+      DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8002',
       AWS_REGION: process.env.AWS_REGION || 'us-east-1',
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || 'test',
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',
+      USERS_TABLE_NAME: process.env.USERS_TABLE_NAME || 'users',
     },
   },
 });

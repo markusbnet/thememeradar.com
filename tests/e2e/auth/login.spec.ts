@@ -12,7 +12,7 @@ test.describe('Login Page', () => {
 
     // Check form elements are present
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
+    await expect(page.getByRole('textbox', { name: /password/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /log in/i })).toBeVisible();
 
     // Check signup link is present
@@ -26,7 +26,7 @@ test.describe('Login Page', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
 
     // Wait for redirect to dashboard
@@ -37,7 +37,7 @@ test.describe('Login Page', () => {
 
     // Fill in the login form
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
 
     // Submit the form
     await page.getByRole('button', { name: /log in/i }).click();
@@ -50,7 +50,7 @@ test.describe('Login Page', () => {
   test('should show error for invalid email format', async ({ page }) => {
     // Fill in invalid email
     await page.getByLabel(/email/i).fill('invalid-email');
-    await page.getByLabel(/password/i).fill('ValidPass123!');
+    await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
 
     // Submit the form
     await page.getByRole('button', { name: /log in/i }).click();
@@ -67,7 +67,7 @@ test.describe('Login Page', () => {
     const nonExistentEmail = `nonexistent-${Date.now()}@example.com`;
 
     await page.getByLabel(/email/i).fill(nonExistentEmail);
-    await page.getByLabel(/password/i).fill('ValidPass123!');
+    await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
 
     // Submit the form
     await page.getByRole('button', { name: /log in/i }).click();
@@ -87,7 +87,7 @@ test.describe('Login Page', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(correctPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(correctPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -96,7 +96,7 @@ test.describe('Login Page', () => {
 
     // Try to login with wrong password
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(wrongPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(wrongPassword);
     await page.getByRole('button', { name: /log in/i }).click();
 
     // Should show error message
@@ -108,7 +108,7 @@ test.describe('Login Page', () => {
 
   test('should validate empty email field', async ({ page }) => {
     // Leave email empty
-    await page.getByLabel(/password/i).fill('ValidPass123!');
+    await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
 
     // Submit the form
     await page.getByRole('button', { name: /log in/i }).click();
@@ -135,7 +135,7 @@ test.describe('Login Page', () => {
   });
 
   test('should toggle password visibility', async ({ page }) => {
-    const passwordInput = page.getByLabel(/password/i);
+    const passwordInput = page.getByRole('textbox', { name: /password/i });
 
     // Password should initially be hidden (type="password")
     await expect(passwordInput).toHaveAttribute('type', 'password');
@@ -168,7 +168,7 @@ test.describe('Login Page', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -177,7 +177,7 @@ test.describe('Login Page', () => {
 
     // Fill email with extra whitespace
     await page.getByLabel(/email/i).fill(`  ${testEmail}  `);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
 
     // Submit the form
     await page.getByRole('button', { name: /log in/i }).click();
@@ -193,7 +193,7 @@ test.describe('Login Page', () => {
 
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
     await page.getByRole('button', { name: /sign up/i }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
@@ -202,10 +202,10 @@ test.describe('Login Page', () => {
 
     // Fill in the form
     await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByLabel(/password/i).fill(testPassword);
+    await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
 
     // Press Enter instead of clicking button
-    await page.getByLabel(/password/i).press('Enter');
+    await page.getByRole('textbox', { name: /password/i }).press('Enter');
 
     // Should successfully log in
     await expect(page).toHaveURL(/\/dashboard/);
