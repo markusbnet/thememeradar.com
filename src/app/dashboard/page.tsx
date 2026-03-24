@@ -13,6 +13,7 @@ interface TrendingStock {
   sentimentCategory: string;
   velocity: number;
   timestamp: number;
+  sparklineData?: number[];
 }
 
 interface StockData {
@@ -200,6 +201,7 @@ export default function DashboardPage() {
                   velocity={stock.velocity}
                   timestamp={stock.timestamp}
                   type="trending"
+                  sparklineData={stock.sparklineData}
                 />
               ))}
             </div>
@@ -236,6 +238,7 @@ export default function DashboardPage() {
                   velocity={stock.velocity}
                   timestamp={stock.timestamp}
                   type="fading"
+                  sparklineData={stock.sparklineData}
                 />
               ))}
             </div>

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteUserByEmail } from '@/lib/db/users';
 
@@ -33,7 +34,7 @@ export async function DELETE(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Delete user error:', error);
+    logger.error('Delete user error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

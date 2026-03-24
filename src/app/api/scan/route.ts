@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Reddit Scan API Endpoint
  * GET  /api/scan - Automated cron job (scans default subreddits)
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Scan API error:', error);
+    logger.error('Scan API error:', error);
 
     return NextResponse.json(
       {
@@ -125,8 +126,8 @@ export async function GET() {
       );
     }
 
-    console.log('🔄 Starting automated Reddit scan...');
-    console.log(`📡 Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
+    logger.info('🔄 Starting automated Reddit scan...');
+    logger.info(`📡 Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
 
     // Create scanner instance
     const scanner = createScanner(REDDIT_CONFIG);
@@ -149,7 +150,7 @@ export async function GET() {
       totalMentions: results.reduce((sum, r) => sum + r.stats.totalMentions, 0),
     };
 
-    console.log('✅ Scan completed:', summary);
+    logger.info('✅ Scan completed:', summary);
 
     return NextResponse.json({
       success: true,
@@ -157,7 +158,7 @@ export async function GET() {
       data: summary,
     });
   } catch (error: any) {
-    console.error('❌ Automated scan error:', error);
+    logger.error('❌ Automated scan error:', error);
 
     return NextResponse.json(
       {

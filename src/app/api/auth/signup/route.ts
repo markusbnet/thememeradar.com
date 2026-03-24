@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, validatePassword } from '@/lib/auth/password';
 import { generateToken } from '@/lib/auth/jwt';
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     // Detailed error logging for debugging
-    console.error('[SIGNUP] Error occurred:', {
+    logger.error('[SIGNUP] Error occurred:', {
       message: error instanceof Error ? error.message : String(error),
       name: error instanceof Error ? error.name : 'Unknown',
       stack: error instanceof Error ? error.stack : 'No stack trace',

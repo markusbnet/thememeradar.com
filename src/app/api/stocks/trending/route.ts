@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Trending Stocks API Endpoint
  * GET /api/stocks/trending
@@ -6,7 +7,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getTrendingStocks, getFadingStocks } from '@/lib/db/storage';
+import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
 
 export async function GET() {
   try {
@@ -16,16 +17,30 @@ export async function GET() {
       getFadingStocks(10),
     ]);
 
+    // Fetch sparkline data for all stocks in parallel
+    const allTickers = [...trending, ...fading].map(s => s.ticker);
+    const sparklineResults = await Promise.all(
+      allTickers.map(ticker => getSparklineData(ticker, 7))
+    );
+    const sparklineMap = new Map<string, number[]>();
+    allTickers.forEach((ticker, i) => sparklineMap.set(ticker, sparklineResults[i]));
+
+    const addSparkline = (stocks: typeof trending) =>
+      stocks.map(stock => ({
+        ...stock,
+        sparklineData: sparklineMap.get(stock.ticker) || [],
+      }));
+
     return NextResponse.json({
       success: true,
       data: {
-        trending,
-        fading,
+        trending: addSparkline(trending),
+        fading: addSparkline(fading),
         timestamp: Date.now(),
       },
     });
   } catch (error: any) {
-    console.error('Trending stocks API error:', error);
+    logger.error('Trending stocks API error:', error);
 
     return NextResponse.json(
       {

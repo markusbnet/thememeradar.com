@@ -203,7 +203,7 @@ Only after all five steps pass should the task be marked `[x] COMPLETE`.
 
 ---
 
-### Task 9: [ ] Add sparkline charts to stock cards
+### Task 9: [x] COMPLETE Add sparkline charts to stock cards
 
 **Priority:** MEDIUM (UI feature gap)
 
@@ -225,7 +225,7 @@ Only after all five steps pass should the task be marked `[x] COMPLETE`.
 
 ---
 
-### Task 10: [ ] Add charts to stock detail page
+### Task 10: [x] COMPLETE Add charts to stock detail page
 
 **Priority:** MEDIUM (UI feature gap)
 
@@ -252,7 +252,7 @@ Neither exists. The stock detail page only shows a header, stats, and evidence.
 
 ---
 
-### Task 11: [ ] Remove console.log from production code
+### Task 11: [x] COMPLETE Remove console.log from production code
 
 **Priority:** MEDIUM (code standards violation)
 

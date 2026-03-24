@@ -30,7 +30,6 @@ export async function checkAuth(): Promise<{ authenticated: boolean; user?: User
 
     return { authenticated: false };
   } catch (error) {
-    console.error('Auth check failed:', error);
     return { authenticated: false };
   }
 }
@@ -47,7 +46,6 @@ export async function logout(): Promise<boolean> {
 
     return response.ok;
   } catch (error) {
-    console.error('Logout failed:', error);
     return false;
   }
 }

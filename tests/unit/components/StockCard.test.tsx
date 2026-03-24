@@ -77,4 +77,18 @@ describe('StockCard', () => {
     render(<StockCard {...defaultProps} type="fading" velocity={-10} />);
     expect(screen.getByText('Fading')).toBeInTheDocument();
   });
+
+  it('should render sparkline when data is provided', () => {
+    const { container } = render(
+      <StockCard {...defaultProps} sparklineData={[10, 20, 15, 30, 25]} />
+    );
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
+  });
+
+  it('should not render sparkline when data is absent', () => {
+    const { container } = render(<StockCard {...defaultProps} />);
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeInTheDocument();
+  });
 });

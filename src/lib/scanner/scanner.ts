@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Reddit Scanner Service
  * Orchestrates Reddit data collection, ticker extraction, and sentiment analysis
@@ -104,7 +105,7 @@ export class Scanner {
       try {
         comments = await this.redditClient.getPostComments(subreddit, post.id);
       } catch (error: any) {
-        console.error(`Failed to fetch comments for post ${post.id}:`, error.message);
+        logger.error(`Failed to fetch comments for post ${post.id}:`, error.message);
         // Continue with empty comments
       }
 

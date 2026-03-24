@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import Sparkline from './Sparkline';
 
 interface StockCardProps {
   rank: number;
@@ -16,6 +17,7 @@ interface StockCardProps {
   velocity: number;
   timestamp: number;
   type: 'trending' | 'fading';
+  sparklineData?: number[];
 }
 
 export default function StockCard({
@@ -26,6 +28,7 @@ export default function StockCard({
   sentimentCategory,
   velocity,
   type,
+  sparklineData,
 }: StockCardProps) {
   // Determine sentiment emoji and color
   const getSentimentDisplay = (category: string) => {
@@ -74,6 +77,19 @@ export default function StockCard({
             </p>
           </div>
         </div>
+
+        {/* Sparkline chart */}
+        {sparklineData && sparklineData.length >= 2 && (
+          <div className="mt-3 flex justify-center">
+            <Sparkline
+              data={sparklineData}
+              width={200}
+              height={40}
+              color={isPositiveVelocity ? '#16a34a' : '#dc2626'}
+              fillColor={isPositiveVelocity ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)'}
+            />
+          </div>
+        )}
 
         {/* Mention count */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">

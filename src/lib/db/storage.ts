@@ -309,3 +309,105 @@ export async function getStockEvidence(ticker: string, limit: number = 10): Prom
 
   return (result.Items || []) as StoredEvidence[];
 }
+
+/**
+ * Get historical data for charts (mention count and sentiment over time)
+ */
+export async function getStockHistory(ticker: string, days: number = 7): Promise<{
+  mentions: { label: string; value: number }[];
+  sentiment: { label: string; value: number }[];
+}> {
+  const now = Date.now();
+  const startTime = now - days * 24 * 60 * 60 * 1000;
+
+  const result = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      KeyConditionExpression: 'ticker = :ticker AND #ts BETWEEN :start AND :end',
+      ExpressionAttributeNames: {
+        '#ts': 'timestamp',
+      },
+      ExpressionAttributeValues: {
+        ':ticker': ticker,
+        ':start': startTime,
+        ':end': now,
+      },
+      ScanIndexForward: true,
+    })
+  );
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const mentionBuckets = new Map<string, number>();
+  const sentimentBuckets = new Map<string, { total: number; count: number }>();
+
+  // Initialize buckets for each day
+  for (let d = 0; d < days; d++) {
+    const dayTs = startTime + d * 24 * 60 * 60 * 1000;
+    const date = new Date(dayTs);
+    const label = `${dayNames[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
+    mentionBuckets.set(label, 0);
+    sentimentBuckets.set(label, { total: 0, count: 0 });
+  }
+
+  for (const item of result.Items || []) {
+    const date = new Date(item.timestamp);
+    const label = `${dayNames[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
+    mentionBuckets.set(label, (mentionBuckets.get(label) || 0) + (item.mentionCount || 0));
+    const entry = sentimentBuckets.get(label) || { total: 0, count: 0 };
+    entry.total += item.avgSentimentScore || 0;
+    entry.count += 1;
+    sentimentBuckets.set(label, entry);
+  }
+
+  const mentions = Array.from(mentionBuckets.entries()).map(([label, value]) => ({ label, value }));
+  const sentiment = Array.from(sentimentBuckets.entries()).map(([label, { total, count }]) => ({
+    label,
+    value: count > 0 ? Math.round((total / count) * 100) / 100 : 0,
+  }));
+
+  return { mentions, sentiment };
+}
+
+/**
+ * Get sparkline data for a ticker (mention counts over last 7 days)
+ * Returns an array of daily mention counts, oldest first
+ */
+export async function getSparklineData(ticker: string, days: number = 7): Promise<number[]> {
+  const now = Date.now();
+  const startTime = now - days * 24 * 60 * 60 * 1000;
+
+  const result = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      KeyConditionExpression: 'ticker = :ticker AND #ts BETWEEN :start AND :end',
+      ExpressionAttributeNames: {
+        '#ts': 'timestamp',
+      },
+      ExpressionAttributeValues: {
+        ':ticker': ticker,
+        ':start': startTime,
+        ':end': now,
+      },
+      ScanIndexForward: true,
+    })
+  );
+
+  if (!result.Items || result.Items.length === 0) {
+    return [];
+  }
+
+  // Aggregate into daily buckets
+  const dailyBuckets = new Map<number, number>();
+  for (let d = 0; d < days; d++) {
+    const dayStart = startTime + d * 24 * 60 * 60 * 1000;
+    const dayKey = Math.floor(dayStart / (24 * 60 * 60 * 1000));
+    dailyBuckets.set(dayKey, 0);
+  }
+
+  for (const item of result.Items) {
+    const dayKey = Math.floor(item.timestamp / (24 * 60 * 60 * 1000));
+    dailyBuckets.set(dayKey, (dailyBuckets.get(dayKey) || 0) + (item.mentionCount || 0));
+  }
+
+  return Array.from(dailyBuckets.values());
+}

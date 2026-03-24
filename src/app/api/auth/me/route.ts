@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/jwt';
 import { getUserById } from '@/lib/db/users';
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Auth check error:', error);
+    logger.error('Auth check error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
