@@ -121,6 +121,44 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* How It Works Section */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">How Trends Are Calculated</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">📊</span>
+                <h3 className="font-semibold text-gray-900">Data Collection</h3>
+              </div>
+              <p className="text-gray-600">
+                Scans Reddit every <span className="font-medium text-purple-600">5 minutes</span> from r/wallstreetbets, r/stocks, and r/investing
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">📈</span>
+                <h3 className="font-semibold text-gray-900">Trending Algorithm</h3>
+              </div>
+              <p className="text-gray-600">
+                Ranked by <span className="font-medium text-purple-600">velocity</span> - the % increase in mentions compared to the previous hour
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">💭</span>
+                <h3 className="font-semibold text-gray-900">Sentiment Analysis</h3>
+              </div>
+              <p className="text-gray-600">
+                Analyzes keywords like 🚀 &ldquo;to the moon&rdquo;, 💎🙌 &ldquo;diamond hands&rdquo;, 📄 &ldquo;paper hands&rdquo; to gauge sentiment
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (

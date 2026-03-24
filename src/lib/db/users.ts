@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { docClient, PutCommand, QueryCommand, GetCommand, DeleteCommand } from './client';
+import { docClient, PutCommand, QueryCommand, GetCommand, DeleteCommand, UpdateCommand } from './client';
 
 const USERS_TABLE = process.env.USERS_TABLE_NAME || 'users';
 
@@ -102,11 +102,12 @@ export async function getUserById(userId: string): Promise<User | null> {
  */
 export async function updateLastLogin(userId: string): Promise<void> {
   await docClient.send(
-    new PutCommand({
+    new UpdateCommand({
       TableName: USERS_TABLE,
-      Item: {
-        userId,
-        lastLoginAt: Date.now(),
+      Key: { userId },
+      UpdateExpression: 'SET lastLoginAt = :ts',
+      ExpressionAttributeValues: {
+        ':ts': Date.now(),
       },
     })
   );

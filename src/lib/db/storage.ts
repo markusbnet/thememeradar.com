@@ -3,7 +3,7 @@
  * Handles saving and retrieving stock mentions from DynamoDB
  */
 
-import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand } from './dynamodb';
+import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand } from './client';
 import { ScanResult, TickerMention } from '@/lib/scanner/scanner';
 
 // Types for stored data

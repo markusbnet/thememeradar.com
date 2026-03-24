@@ -6,6 +6,8 @@ import {
   QueryCommand,
   UpdateCommand,
   DeleteCommand,
+  ScanCommand,
+  BatchWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 // Configuration from environment
@@ -36,5 +38,13 @@ export const docClient = DynamoDBDocumentClient.from(client, {
   },
 });
 
+// Table names
+const TABLE_PREFIX = useLocalDb ? '' : 'memeradar-';
+export const TABLES = {
+  STOCK_MENTIONS: `${TABLE_PREFIX}stock_mentions`,
+  STOCK_EVIDENCE: `${TABLE_PREFIX}stock_evidence`,
+  SCAN_HISTORY: `${TABLE_PREFIX}scan_history`,
+};
+
 // Export commands for easy access
-export { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand };
+export { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand, BatchWriteCommand };

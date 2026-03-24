@@ -3,9 +3,24 @@ import { hashPassword, validatePassword } from '@/lib/auth/password';
 import { generateToken } from '@/lib/auth/jwt';
 import { validateEmail, sanitizeInput } from '@/lib/auth/validation';
 import { createUser } from '@/lib/db/users';
+import { authRateLimiter } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = authRateLimiter.check(ip);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many attempts. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimit.retryAfterMs || 0) / 1000)),
+          },
+        }
+      );
+    }
     const body = await request.json();
     const { email, password } = body;
 

@@ -81,11 +81,17 @@ jest.mock('uuid', () => ({
   v4: () => `test-uuid-${Date.now()}-${Math.random()}`,
 }));
 
+// Reset rate limiter between tests to prevent cross-test interference
+beforeEach(async () => {
+  const { authRateLimiter } = await import('@/lib/rate-limit');
+  authRateLimiter.reset();
+});
+
 // Mock environment variables for tests
 process.env.JWT_SECRET = 'test-secret-key-for-testing-only';
 process.env.NODE_ENV = 'test';
 // Use DYNAMODB_ENDPOINT from env if set (for CI), otherwise default to local dev port
-process.env.DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080';
+process.env.DYNAMODB_ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
 process.env.AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 process.env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
 process.env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
