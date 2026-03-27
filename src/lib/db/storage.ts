@@ -51,7 +51,7 @@ export interface TrendingStock {
  * Round timestamp to 15-minute intervals
  * This groups data into consistent time buckets
  */
-function roundToInterval(timestamp: number, intervalMs: number = 15 * 60 * 1000): number {
+export function roundToInterval(timestamp: number, intervalMs: number = 15 * 60 * 1000): number {
   return Math.floor(timestamp / intervalMs) * intervalMs;
 }
 

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { checkAuth, logout, type User } from '@/lib/auth/client';
 import StockCard from '@/components/StockCard';
 import RefreshTimer from '@/components/RefreshTimer';
+import SurgeAlert from '@/components/SurgeAlert';
+import type { SurgeStock } from '@/lib/db/surge';
 
 interface TrendingStock {
   ticker: string;
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [stockData, setStockData] = useState<StockData | null>(null);
+  const [surgeData, setSurgeData] = useState<SurgeStock[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,8 +48,8 @@ export default function DashboardPage() {
       setUser(userData || null);
       setIsLoading(false);
 
-      // Fetch stock data
-      await fetchStockData();
+      // Fetch stock data and surge data in parallel
+      await Promise.all([fetchStockData(), fetchSurgeData()]);
     };
 
     verifyAuth();
@@ -65,6 +68,18 @@ export default function DashboardPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Network error');
+    }
+  };
+
+  const fetchSurgeData = async () => {
+    try {
+      const response = await fetch('/api/stocks/surging');
+      const result = await response.json();
+      if (result.success) {
+        setSurgeData(result.data.surging || []);
+      }
+    } catch {
+      // Surge data is non-critical; silently ignore failures
     }
   };
 
@@ -167,6 +182,9 @@ export default function DashboardPage() {
             <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
+
+        {/* Surge Alert */}
+        <SurgeAlert stocks={surgeData} />
 
         {/* Trending Stocks Section */}
         <section className="mb-12">
