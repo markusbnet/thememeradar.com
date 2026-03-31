@@ -43,7 +43,6 @@ const TABLE_PREFIX = useLocalDb ? '' : 'memeradar-';
 export const TABLES = {
   STOCK_MENTIONS: `${TABLE_PREFIX}stock_mentions`,
   STOCK_EVIDENCE: `${TABLE_PREFIX}stock_evidence`,
-  SCAN_HISTORY: `${TABLE_PREFIX}scan_history`,
 };
 
 // Export commands for easy access

@@ -8,9 +8,21 @@ import { logger } from '@/lib/logger';
 
 import { NextResponse } from 'next/server';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
+import { apiCache } from '@/lib/cache';
+
+const CACHE_KEY = 'trending-fading';
 
 export async function GET() {
   try {
+    // Return cached response if available
+    const cached = apiCache.get<{ trending: unknown[]; fading: unknown[]; timestamp: number }>(CACHE_KEY);
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        data: cached,
+      });
+    }
+
     // Fetch trending and fading stocks in parallel
     const [trending, fading] = await Promise.all([
       getTrendingStocks(10),
@@ -31,21 +43,26 @@ export async function GET() {
         sparklineData: sparklineMap.get(stock.ticker) || [],
       }));
 
+    const data = {
+      trending: addSparkline(trending),
+      fading: addSparkline(fading),
+      timestamp: Date.now(),
+    };
+
+    // Cache for 5 minutes
+    apiCache.set(CACHE_KEY, data);
+
     return NextResponse.json({
       success: true,
-      data: {
-        trending: addSparkline(trending),
-        fading: addSparkline(fading),
-        timestamp: Date.now(),
-      },
+      data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Trending stocks API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch trending stocks',
+        error: error instanceof Error ? error.message : 'Failed to fetch trending stocks',
       },
       { status: 500 }
     );

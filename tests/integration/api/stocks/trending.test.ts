@@ -1,6 +1,10 @@
 import { GET } from '@/app/api/stocks/trending/route';
+import { apiCache } from '@/lib/cache';
 
 describe('GET /api/stocks/trending', () => {
+  beforeEach(() => {
+    apiCache.clear();
+  });
   it('should return 200 with success response', async () => {
     const response = await GET();
     const data = await response.json();

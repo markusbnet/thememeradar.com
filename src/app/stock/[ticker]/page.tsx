@@ -79,8 +79,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         } else {
           setError(result.error || 'Stock not found');
         }
-      } catch (err: any) {
-        setError(err.message || 'Failed to load stock details');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load stock details');
       } finally {
         setIsLoading(false);
       }

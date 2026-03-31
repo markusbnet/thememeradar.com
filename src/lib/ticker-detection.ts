@@ -8,7 +8,7 @@ import { TICKER_WHITELIST } from './ticker-list';
 
 // Real tickers that are also common English words — require $ prefix to avoid false positives
 const AMBIGUOUS_TICKERS = new Set([
-  'IT', 'ARE', 'ON', 'ALL', 'A', 'BE', 'AN', 'OR', 'SO', 'DO',
+  'IT', 'ARE', 'ON', 'ALL', 'A', 'I', 'BE', 'AN', 'OR', 'SO', 'DO', 'FOR',
   'AT', 'BY', 'TO', 'IN', 'AI', 'AM', 'PM', 'HR', 'IP',
   'K', 'L', 'J', 'U', 'S', 'W', 'H',
   'NOW', 'SEE', 'HAS', 'ONE', 'TWO', 'NEW', 'OLD', 'DAY',

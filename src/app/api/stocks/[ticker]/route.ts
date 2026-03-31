@@ -46,13 +46,13 @@ export async function GET(
         timestamp: Date.now(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Stock details API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to fetch stock details',
+        error: error instanceof Error ? error.message : 'Failed to fetch stock details',
       },
       { status: 500 }
     );

@@ -26,8 +26,26 @@ export class RateLimiter {
     this.store.clear();
   }
 
+  get size(): number {
+    return this.store.size;
+  }
+
+  private cleanup(now: number): void {
+    for (const [key, entry] of this.store) {
+      if (now - entry.windowStart >= this.config.windowMs) {
+        this.store.delete(key);
+      }
+    }
+  }
+
   check(key: string): RateLimitResult {
     const now = Date.now();
+
+    // Sweep expired entries when store grows to prevent unbounded memory usage
+    if (this.store.size > 100) {
+      this.cleanup(now);
+    }
+
     const entry = this.store.get(key);
 
     if (!entry || now - entry.windowStart >= this.config.windowMs) {

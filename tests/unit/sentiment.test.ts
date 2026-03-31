@@ -60,6 +60,23 @@ describe('Sentiment Analysis', () => {
       expect(strong.score).toBeGreaterThan(weak.score);
     });
 
+    it('should detect standalone squeeze as bullish', () => {
+      const text = 'The squeeze is coming for $GME!';
+      const result = analyzeSentiment(text, 'GME');
+
+      expect(result.bullishKeywords).toContain('squeeze');
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it('should not double-count squeeze in "short squeeze"', () => {
+      const text = '$GME short squeeze incoming!';
+      const result = analyzeSentiment(text, 'GME');
+
+      // Should have "short squeeze" but NOT standalone "squeeze"
+      expect(result.bullishKeywords).toContain('short squeeze');
+      expect(result.bullishKeywords).not.toContain('squeeze');
+    });
+
     it('should detect YOLO', () => {
       const text = 'YOLO $GME calls!';
       const result = analyzeSentiment(text, 'GME');

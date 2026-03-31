@@ -205,7 +205,7 @@
 2. For each mention, analyze surrounding text (±50 words)
 3. Count bullish vs bearish keywords
 4. Apply keyword weights
-5. Calculate sentiment score: `(bullish_weighted - bearish_weighted) / total_mentions`
+5. Calculate sentiment score: `(bullish_weighted - bearish_weighted) / NORMALIZATION_FACTOR` (factor=10, prevents score swings at low mention counts)
 6. Store raw post/comment text for transparency
 
 **Sentiment Categories:**

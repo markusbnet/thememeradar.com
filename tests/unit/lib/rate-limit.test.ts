@@ -54,6 +54,26 @@ describe('RateLimiter', () => {
     });
   });
 
+  it('should clean up expired entries when store exceeds 100 keys', () => {
+    const shortLimiter = new RateLimiter({ maxAttempts: 5, windowMs: 50 });
+
+    // Add 101 entries to trigger cleanup threshold
+    for (let i = 0; i < 101; i++) {
+      shortLimiter.check(`ip-${i}`);
+    }
+    expect(shortLimiter.size).toBe(101);
+
+    // Wait for window to expire, then trigger a new check to trigger cleanup
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        shortLimiter.check('new-ip');
+        // All 101 expired entries should have been cleaned up, leaving only 'new-ip'
+        expect(shortLimiter.size).toBe(1);
+        resolve();
+      }, 100);
+    });
+  });
+
   it('should return retryAfterMs when blocked', () => {
     for (let i = 0; i < 5; i++) {
       limiter.check('10.0.0.1');

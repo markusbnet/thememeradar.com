@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
         email: sanitizedEmail,
         passwordHash,
       });
-    } catch (error: any) {
-      if (error.message === 'Email already registered') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'Email already registered') {
         return NextResponse.json(
           { success: false, error: 'Email already registered' },
           { status: 409 }

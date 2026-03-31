@@ -23,7 +23,6 @@ const TABLES = {
   USERS: 'memeradar-users',
   STOCK_MENTIONS: 'memeradar-stock_mentions',
   STOCK_EVIDENCE: 'memeradar-stock_evidence',
-  SCAN_HISTORY: 'memeradar-scan_history',
 };
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -154,41 +153,6 @@ async function createStockEvidenceTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
-async function createScanHistoryTable() {
-  const tableName = TABLES.SCAN_HISTORY;
-
-  if (await tableExists(tableName)) {
-    console.log(`✓ Table already exists: ${tableName}`);
-    return;
-  }
-
-  console.log(`Creating table: ${tableName}...`);
-
-  await client.send(
-    new CreateTableCommand({
-      TableName: tableName,
-      KeySchema: [
-        { AttributeName: 'scanId', KeyType: 'HASH' },
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'scanId', AttributeType: 'S' },
-        { AttributeName: 'timestamp', AttributeType: 'N' },
-      ],
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'timestamp-index',
-          KeySchema: [{ AttributeName: 'timestamp', KeyType: 'HASH' }],
-          Projection: { ProjectionType: 'ALL' },
-        },
-      ],
-      BillingMode: 'PAY_PER_REQUEST',
-    })
-  );
-
-  await waitForTableActive(tableName);
-  console.log(`✓ Created table: ${tableName}`);
-}
-
 async function main() {
   console.log('=== Initializing Production DynamoDB Tables ===\n');
   console.log(`Region: ${process.env.AWS_REGION || 'us-east-1'}\n`);
@@ -203,14 +167,11 @@ async function main() {
     await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
-    await createScanHistoryTable();
-
     console.log('\n✓ All tables ready!');
     console.log('\nTables:');
     console.log('- memeradar-users (stores user accounts)');
     console.log('- memeradar-stock_mentions (stores aggregated ticker mentions)');
     console.log('- memeradar-stock_evidence (stores sample posts/comments for each ticker)');
-    console.log('- memeradar-scan_history (stores scan metadata)');
     console.log('\nBilling: PAY_PER_REQUEST (on-demand, free tier eligible)');
     console.log('TTL: Enabled (data expires after 30 days automatically)');
   } catch (error: any) {

@@ -10,7 +10,6 @@
   - `memeradar-users`
   - `memeradar-stock_mentions`
   - `memeradar-stock_evidence`
-  - `memeradar-scan_history`
 - [x] TTL enabled (30-day auto-expiry)
 - [x] PAY_PER_REQUEST billing (free tier eligible)
 

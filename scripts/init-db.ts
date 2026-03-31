@@ -24,7 +24,6 @@ const TABLES = {
   USERS: 'users',
   STOCK_MENTIONS: 'stock_mentions',
   STOCK_EVIDENCE: 'stock_evidence',
-  SCAN_HISTORY: 'scan_history',
 };
 
 async function deleteTableIfExists(tableName: string) {
@@ -142,43 +141,6 @@ async function createStockEvidenceTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
-async function createScanHistoryTable() {
-  const tableName = TABLES.SCAN_HISTORY;
-  await deleteTableIfExists(tableName);
-
-  console.log(`Creating table: ${tableName}...`);
-
-  await client.send(
-    new CreateTableCommand({
-      TableName: tableName,
-      KeySchema: [
-        { AttributeName: 'scanId', KeyType: 'HASH' },
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'scanId', AttributeType: 'S' },
-        { AttributeName: 'timestamp', AttributeType: 'N' },
-      ],
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'timestamp-index',
-          KeySchema: [{ AttributeName: 'timestamp', KeyType: 'HASH' }],
-          Projection: { ProjectionType: 'ALL' },
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 5,
-            WriteCapacityUnits: 5,
-          },
-        },
-      ],
-      ProvisionedThroughput: {
-        ReadCapacityUnits: 5,
-        WriteCapacityUnits: 5,
-      },
-    })
-  );
-
-  console.log(`✓ Created table: ${tableName}`);
-}
-
 async function main() {
   console.log('=== Initializing DynamoDB Tables ===\n');
 
@@ -186,14 +148,12 @@ async function main() {
     await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
-    await createScanHistoryTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
     console.log('- users (stores user accounts)');
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
-    console.log('- scan_history (stores scan metadata)');
   } catch (error: any) {
     console.error('\n✗ Error creating tables:', error.message);
     process.exit(1);

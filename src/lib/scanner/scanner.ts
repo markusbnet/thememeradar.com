@@ -104,8 +104,8 @@ export class Scanner {
       let comments: RedditComment[] = [];
       try {
         comments = await this.redditClient.getPostComments(subreddit, post.id);
-      } catch (error: any) {
-        logger.error(`Failed to fetch comments for post ${post.id}:`, error.message);
+      } catch (error: unknown) {
+        logger.error(`Failed to fetch comments for post ${post.id}:`, error instanceof Error ? error.message : 'Unknown error');
         // Continue with empty comments
       }
 
@@ -218,7 +218,7 @@ export class Scanner {
       try {
         const result = await this.scanSubreddit(subreddit, limit);
         results.push(result);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Add error result for failed subreddit
         results.push({
           scannedAt: Date.now(),
@@ -232,7 +232,7 @@ export class Scanner {
             totalMentions: 0,
             subredditBreakdown: {},
           },
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }

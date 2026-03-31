@@ -341,10 +341,10 @@ export async function getStockTimeBreakdown(ticker: string): Promise<{
       );
 
       const items = result.Items || [];
-      const totalMentions = items.reduce((sum: number, i: any) => sum + (i.mentionCount || 0), 0);
-      const totalBullish = items.reduce((sum: number, i: any) => sum + (i.bullishCount || 0), 0);
-      const totalBearish = items.reduce((sum: number, i: any) => sum + (i.bearishCount || 0), 0);
-      const totalNeutral = items.reduce((sum: number, i: any) => sum + (i.neutralCount || 0), 0);
+      const totalMentions = items.reduce((sum: number, i: Record<string, unknown>) => sum + (Number(i.mentionCount) || 0), 0);
+      const totalBullish = items.reduce((sum: number, i: Record<string, unknown>) => sum + (Number(i.bullishCount) || 0), 0);
+      const totalBearish = items.reduce((sum: number, i: Record<string, unknown>) => sum + (Number(i.bearishCount) || 0), 0);
+      const totalNeutral = items.reduce((sum: number, i: Record<string, unknown>) => sum + (Number(i.neutralCount) || 0), 0);
       const total = totalBullish + totalBearish + totalNeutral;
 
       return {

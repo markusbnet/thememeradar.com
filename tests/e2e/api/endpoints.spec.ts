@@ -326,8 +326,8 @@ test.describe('API Endpoints', () => {
     });
   });
 
-  test.describe('Rate Limiting (if implemented)', () => {
-    test.skip('should handle rate limiting on auth endpoints', async ({ request }) => {
+  test.describe('Rate Limiting', () => {
+    test('should handle rate limiting on auth endpoints', async ({ request }) => {
       // Make multiple rapid requests
       const requests = Array(20)
         .fill(null)

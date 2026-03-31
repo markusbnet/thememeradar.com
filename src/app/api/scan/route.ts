@@ -18,10 +18,27 @@ const REDDIT_CONFIG = {
   userAgent: process.env.REDDIT_USER_AGENT || 'MemeRadar/1.0',
 };
 
+function verifyCronAuth(request: NextRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return false;
+
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) return false;
+
+  return authHeader === `Bearer ${cronSecret}`;
+}
+
 // Default subreddits to scan (for cron job)
 const DEFAULT_SUBREDDITS = ['wallstreetbets', 'stocks', 'investing'];
 
 export async function POST(request: NextRequest) {
+  if (!verifyCronAuth(request)) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     // Validate Reddit credentials
     if (!REDDIT_CONFIG.clientId || !REDDIT_CONFIG.clientSecret) {
@@ -96,13 +113,13 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Scan API error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Internal server error',
+        error: error instanceof Error ? error.message : 'Internal server error',
       },
       { status: 500 }
     );
@@ -113,7 +130,14 @@ export async function POST(request: NextRequest) {
  * GET endpoint for automated cron job
  * Scans default subreddits and saves results to DynamoDB
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!verifyCronAuth(request)) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     // Validate Reddit credentials
     if (!REDDIT_CONFIG.clientId || !REDDIT_CONFIG.clientSecret) {
@@ -157,13 +181,13 @@ export async function GET() {
       message: 'Scan completed and saved to database',
       data: summary,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('❌ Automated scan error:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Scan failed',
+        error: error instanceof Error ? error.message : 'Scan failed',
       },
       { status: 500 }
     );

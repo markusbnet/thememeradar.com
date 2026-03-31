@@ -26,6 +26,7 @@ export const BULLISH_KEYWORDS: SentimentKeyword[] = [
   { pattern: /\bhodl\b/gi, weight: 3, label: 'hodl' },
   { pattern: /short\s+squeeze/gi, weight: 3, label: 'short squeeze' },
   { pattern: /gamma\s+squeeze/gi, weight: 3, label: 'gamma squeeze' },
+  { pattern: /(?<!\b(?:short|gamma)\s)\bsqueeze\b/gi, weight: 3, label: 'squeeze' },
 
   // Medium weight (2 points)
   { pattern: /\bapes?\b|🦍/gi, weight: 2, label: 'apes' },
