@@ -70,7 +70,7 @@ export default function RefreshTimer() {
         <p className="text-xs text-gray-500">Last updated</p>
         <p className="text-sm font-medium text-gray-700">{timeAgo}</p>
       </div>
-      <div className="text-right">
+      <div className="hidden sm:block text-right">
         <p className="text-xs text-gray-500">Next update in</p>
         <p className="text-sm font-medium text-purple-600">{nextUpdate}</p>
       </div>

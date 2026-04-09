@@ -51,13 +51,13 @@ export default function StockCard({
 
   return (
     <Link href={`/stock/${ticker}`}>
-      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200 cursor-pointer">
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 sm:p-6 border border-gray-200 cursor-pointer">
         {/* Header with rank and ticker */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-medium text-gray-500">#{rank}</span>
-              <h3 className="text-2xl font-bold text-gray-900">${ticker}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">${ticker}</h3>
             </div>
             <p className={`text-sm font-medium ${sentiment.color}`}>
               {sentiment.emoji} {sentiment.label}
@@ -67,8 +67,8 @@ export default function StockCard({
           {/* Velocity indicator */}
           <div className={`text-right ${isPositiveVelocity ? 'text-green-600' : 'text-red-600'}`}>
             <div className="flex items-center justify-end gap-1">
-              <span className="text-2xl">{isPositiveVelocity ? '↑' : '↓'}</span>
-              <span className="text-xl font-bold">
+              <span className="text-lg sm:text-2xl">{isPositiveVelocity ? '↑' : '↓'}</span>
+              <span className="text-lg sm:text-xl font-bold">
                 {Math.abs(velocity).toFixed(0)}%
               </span>
             </div>

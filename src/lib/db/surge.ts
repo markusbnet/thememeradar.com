@@ -36,6 +36,17 @@ export interface SurgeStock {
 
 /**
  * Pure function: compute whether a stock is surging based on current vs baseline mentions.
+ *
+ * ALGORITHM: Surge score calculation
+ * ───────────────────────────────────
+ * 1. If currentMentions < minAbsoluteMentions (default: 10), return null (not enough signal)
+ * 2. If baselineAvg is 0 (brand new stock), return score = 1.0 (maximum surge)
+ * 3. multiplier = currentMentions / baselineAvg
+ * 4. If multiplier < surgeMultiplier (default: 3x), return null (not surging enough)
+ * 5. score = 1 - 1/(1 + ln(multiplier)/ln(surgeMultiplier))
+ *    → This is a log-scale normalization: 3x ≈ 0.5, 9x ≈ 0.75, 27x ≈ 0.875
+ *    → Score is always between 0 and 1, asymptotically approaching 1
+ *
  * Returns null if not surging.
  */
 export function computeSurgeScore(
@@ -65,7 +76,20 @@ export function computeSurgeScore(
 
 /**
  * Query DynamoDB for currently surging stocks.
- * Compares the current 15-min bucket against the average of the prior 4 buckets (1 hour).
+ *
+ * ALGORITHM: Multi-window baseline comparison
+ * ────────────────────────────────────────────
+ * 1. Get all stock mentions from the CURRENT 15-minute bucket
+ * 2. For each stock, query the PRIOR 4 buckets (1 hour of history)
+ * 3. baselineAvg = total baseline mentions / 4 (always divides by 4, even if
+ *    some buckets are missing — this treats missing data as 0 mentions)
+ * 4. Run computeSurgeScore(current, baselineAvg, config)
+ * 5. Build sparkline: [baseline_1, baseline_2, baseline_3, baseline_4, current]
+ * 6. Sort results by surgeScore descending, return top N
+ *
+ * The surge detection is SEPARATE from the trending algorithm:
+ * - Trending: current vs previous (2 buckets, any positive change)
+ * - Surge: current vs 1-hour average (5 buckets, >= 3x spike required)
  */
 export async function getSurgingStocks(
   limit: number = 5,

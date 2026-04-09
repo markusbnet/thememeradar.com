@@ -116,5 +116,19 @@ describe('/api/scan authentication', () => {
       expect(response.status).toBe(401);
       expect(data.success).toBe(false);
     });
+
+    it('should return 200 and scan results with valid auth', async () => {
+      const { GET } = await import('@/app/api/scan/route');
+      const response = await GET(createGetRequest(`Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.data).toBeDefined();
+      expect(data.data.subreddits).toEqual(['wallstreetbets', 'stocks', 'investing']);
+      expect(typeof data.data.totalPosts).toBe('number');
+      expect(typeof data.data.totalComments).toBe('number');
+      expect(typeof data.data.totalMentions).toBe('number');
+    });
   });
 });

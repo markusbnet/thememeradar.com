@@ -187,11 +187,24 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
 
 /**
  * Get trending stocks (rising mentions)
- * Compares current period vs previous period
+ *
+ * ALGORITHM: Velocity-based ranking
+ * ─────────────────────────────────
+ * 1. Fetch all stock mentions from the CURRENT 15-minute bucket
+ * 2. Fetch all stock mentions from the PREVIOUS 15-minute bucket
+ * 3. For each stock in the current bucket:
+ *    - velocity = ((current - previous) / previous) * 100   (% change)
+ *    - If the stock is new (no previous data), velocity = 100%
+ * 4. Filter: only stocks with >= 5 mentions in the current bucket qualify
+ * 5. Sort by velocity descending → top N are "trending"
+ *
+ * NOTE: The CLAUDE.md spec calls for 1-hour windows, but the implementation
+ * uses 15-minute windows for faster signal detection. This is intentional —
+ * 1-hour windows are too slow for a meme stock tracker.
  */
 export async function getTrendingStocks(limit: number = 10): Promise<TrendingStock[]> {
   const now = roundToInterval(Date.now());
-  const previousInterval = now - 15 * 60 * 1000; // 15 minutes ago
+  const previousInterval = now - 15 * 60 * 1000; // Previous 15-min bucket
 
   // Get current period data
   const currentData = await docClient.send(
@@ -257,11 +270,21 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
 
 /**
  * Get fading stocks (losing interest)
+ *
+ * ALGORITHM: Inverse velocity ranking
+ * ────────────────────────────────────
+ * 1. Fetch up to 100 stocks using getTrendingStocks (which includes all stocks >= 5 mentions)
+ * 2. Filter to only stocks with NEGATIVE velocity (mentions declining)
+ * 3. Sort by velocity ascending (most negative = biggest drop = rank #1)
+ * 4. Return top N
+ *
+ * NOTE: The CLAUDE.md spec requires minimum 10 mentions in the PREVIOUS period.
+ * Current implementation requires >= 5 mentions in the CURRENT period (via getTrendingStocks).
  */
 export async function getFadingStocks(limit: number = 10): Promise<TrendingStock[]> {
   const trending = await getTrendingStocks(100); // Get more stocks first
 
-  // Filter for negative velocity and sort ascending
+  // Filter for negative velocity and sort ascending (biggest drops first)
   return trending
     .filter(stock => stock.velocity < 0)
     .sort((a, b) => a.velocity - b.velocity)

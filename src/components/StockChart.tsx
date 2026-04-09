@@ -80,7 +80,7 @@ export default function StockChart({
               x={paddingLeft - 8}
               y={tick.y + 4}
               textAnchor="end"
-              fontSize="10"
+              fontSize="14"
               fill="#6b7280"
             >
               {valueFormatter(tick.value)}
@@ -109,7 +109,7 @@ export default function StockChart({
               x={p.x}
               y={paddingTop + chartHeight + 20}
               textAnchor="middle"
-              fontSize="10"
+              fontSize="14"
               fill="#6b7280"
             >
               {p.label}

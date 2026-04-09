@@ -17,7 +17,7 @@ export default function Sparkline({
 }: SparklineProps) {
   if (!data || data.length < 2) {
     return (
-      <div style={{ width, height }} className="flex items-center justify-center text-gray-300 text-xs">
+      <div className="w-full h-10 flex items-center justify-center text-gray-300 text-xs">
         No data
       </div>
     );
@@ -42,9 +42,8 @@ export default function Sparkline({
 
   return (
     <svg
-      width={width}
-      height={height}
       viewBox={`0 0 ${width} ${height}`}
+      className="w-full"
       role="img"
       aria-label="Sparkline chart"
     >

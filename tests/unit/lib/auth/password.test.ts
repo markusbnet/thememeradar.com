@@ -19,6 +19,20 @@ describe('Password Utility', () => {
       expect(hash1).not.toBe(hash2); // Different salts = different hashes
     });
 
+    it('should produce unique salts: both hashes must be valid bcrypt and differ from each other', async () => {
+      const password = 'TestPassword123!';
+      const hash1 = await hashPassword(password);
+      const hash2 = await hashPassword(password);
+
+      // Both must be valid bcrypt format
+      expect(hash1).toMatch(/^\$2[aby]\$\d{2}\$/);
+      expect(hash2).toMatch(/^\$2[aby]\$\d{2}\$/);
+      // The salt portion (chars 7-28) must differ, proving unique salts were used
+      const salt1 = hash1.substring(7, 29);
+      const salt2 = hash2.substring(7, 29);
+      expect(salt1).not.toBe(salt2);
+    });
+
     it('should throw error for passwords shorter than 8 characters', async () => {
       const weakPassword = 'short';
 
@@ -119,6 +133,66 @@ describe('Password Utility', () => {
       passwords.forEach(password => {
         const result = validatePassword(password);
         expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('specific error messages per failure type', () => {
+      it('returns the exact too-short error message', () => {
+        // 7 chars, has upper/lower/digit/special — only length fails
+        const result = validatePassword('Abc1!gh');
+        expect(result.valid).toBe(false);
+        expect(result.errors).toEqual(
+          expect.arrayContaining(['Password must be at least 8 characters long'])
+        );
+        expect(result.errors).not.toContain('Password must contain at least one uppercase letter');
+        expect(result.errors).not.toContain('Password must contain at least one lowercase letter');
+        expect(result.errors).not.toContain('Password must contain at least one number');
+        expect(result.errors).not.toContain('Password must contain at least one special character');
+      });
+
+      it('returns the exact no-uppercase error message', () => {
+        // Has lower, digit, special, length ≥ 8 — only uppercase fails
+        const result = validatePassword('lowercase1!');
+        expect(result.valid).toBe(false);
+        expect(result.errors).toEqual(['Password must contain at least one uppercase letter']);
+      });
+
+      it('returns the exact no-lowercase error message', () => {
+        // Has upper, digit, special, length ≥ 8 — only lowercase fails
+        const result = validatePassword('UPPERCASE1!');
+        expect(result.valid).toBe(false);
+        expect(result.errors).toEqual(['Password must contain at least one lowercase letter']);
+      });
+
+      it('returns the exact no-digit error message', () => {
+        // Has upper, lower, special, length ≥ 8 — only digit fails
+        const result = validatePassword('NoDigits!A');
+        expect(result.valid).toBe(false);
+        expect(result.errors).toEqual(['Password must contain at least one number']);
+      });
+
+      it('returns the exact no-special-character error message', () => {
+        // Has upper, lower, digit, length ≥ 8 — only special char fails
+        const result = validatePassword('NoSpecial1A');
+        expect(result.valid).toBe(false);
+        expect(result.errors).toEqual(['Password must contain at least one special character']);
+      });
+
+      it('returns exactly one error when only one rule is violated', () => {
+        // Each password below violates exactly one rule
+        const cases: [string, string][] = [
+          ['Abc1!gh',    'Password must be at least 8 characters long'],
+          ['lowercase1!', 'Password must contain at least one uppercase letter'],
+          ['UPPERCASE1!', 'Password must contain at least one lowercase letter'],
+          ['NoDigits!A',  'Password must contain at least one number'],
+          ['NoSpecial1A', 'Password must contain at least one special character'],
+        ];
+
+        cases.forEach(([password, expectedError]) => {
+          const result = validatePassword(password);
+          expect(result.errors).toHaveLength(1);
+          expect(result.errors[0]).toBe(expectedError);
+        });
       });
     });
   });

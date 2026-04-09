@@ -1,5 +1,5 @@
 import { POST } from '@/app/api/auth/login/route';
-import { createUser } from '@/lib/db/users';
+import { createUser, deleteUserByEmail } from '@/lib/db/users';
 import { hashPassword } from '@/lib/auth/password';
 import { verifyToken } from '@/lib/auth/jwt';
 
@@ -24,6 +24,10 @@ describe('POST /api/auth/login', () => {
       email: testEmail,
       passwordHash,
     });
+  });
+
+  afterAll(async () => {
+    await deleteUserByEmail(testEmail);
   });
 
   describe('Success Cases', () => {

@@ -63,7 +63,7 @@ export default defineConfig({
     url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
     env: {
-      DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8002',
+      DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000',
       AWS_REGION: process.env.AWS_REGION || 'us-east-1',
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || 'test',
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',

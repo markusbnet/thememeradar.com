@@ -159,3 +159,107 @@ describe('middleware — JWT signature verification', () => {
     });
   });
 });
+
+describe('middleware — public route passthrough', () => {
+  beforeEach(() => {
+    mockRedirect.mockClear();
+    mockNext.mockClear();
+  });
+
+  // NOTE: Next.js enforces the matcher config at the platform level, so the
+  // middleware function itself is never invoked for public routes in production.
+  // These tests call the middleware function directly (simulating what happens
+  // when the matcher DOES match) to document expected behavior, and separately
+  // verify that the matcher config does NOT include public paths.
+
+  describe('matcher config only targets protected routes', () => {
+    it('matcher includes /dashboard/:path*', () => {
+      const { config } = require('../../src/middleware');
+      expect(config.matcher).toContain('/dashboard/:path*');
+    });
+
+    it('matcher includes /stock/:path*', () => {
+      const { config } = require('../../src/middleware');
+      expect(config.matcher).toContain('/stock/:path*');
+    });
+
+    it('matcher does not include /login', () => {
+      const { config } = require('../../src/middleware');
+      const hasLogin = config.matcher.some(
+        (pattern: string) => pattern === '/login' || pattern.startsWith('/login')
+      );
+      expect(hasLogin).toBe(false);
+    });
+
+    it('matcher does not include /signup', () => {
+      const { config } = require('../../src/middleware');
+      const hasSignup = config.matcher.some(
+        (pattern: string) => pattern === '/signup' || pattern.startsWith('/signup')
+      );
+      expect(hasSignup).toBe(false);
+    });
+
+    it('matcher does not include / (homepage)', () => {
+      const { config } = require('../../src/middleware');
+      const hasRoot = config.matcher.some((pattern: string) => pattern === '/');
+      expect(hasRoot).toBe(false);
+    });
+
+    it('matcher does not include /api/health', () => {
+      const { config } = require('../../src/middleware');
+      const hasHealth = config.matcher.some(
+        (pattern: string) => pattern === '/api/health' || pattern.startsWith('/api/health')
+      );
+      expect(hasHealth).toBe(false);
+    });
+
+    it('matcher has exactly two entries (only protected routes)', () => {
+      const { config } = require('../../src/middleware');
+      expect(config.matcher).toHaveLength(2);
+    });
+  });
+
+  describe('/login passes through when middleware is invoked with a valid token', () => {
+    it('allows /login with a valid token (no redirect)', async () => {
+      const token = generateValidToken('user-123');
+      const req = createRequest('/login', token);
+      await middleware(req);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('/signup passes through when middleware is invoked with a valid token', () => {
+    it('allows /signup with a valid token (no redirect)', async () => {
+      const token = generateValidToken('user-123');
+      const req = createRequest('/signup', token);
+      await middleware(req);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('/ (homepage) passes through when middleware is invoked with a valid token', () => {
+    it('allows / with a valid token (no redirect)', async () => {
+      const token = generateValidToken('user-123');
+      const req = createRequest('/', token);
+      await middleware(req);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('/api/health passes through when middleware is invoked with a valid token', () => {
+    it('allows /api/health with a valid token (no redirect)', async () => {
+      const token = generateValidToken('user-123');
+      const req = createRequest('/api/health', token);
+      await middleware(req);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+  });
+});

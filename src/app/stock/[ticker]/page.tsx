@@ -147,9 +147,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           >
             ← Back to Dashboard
           </Link>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">${ticker}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">${ticker}</h1>
               <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full ${sentiment.color}`}>
                 <span className="text-xl">{sentiment.emoji}</span>
                 <span className="font-medium">{sentiment.label}</span>
@@ -157,7 +157,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Sentiment Score</p>
-              <p className={`text-3xl font-bold ${sentiment.color.split(' ')[0]}`}>
+              <p className={`text-2xl sm:text-3xl font-bold ${sentiment.color.split(' ')[0]}`}>
                 {stockDetails.avgSentimentScore.toFixed(2)}
               </p>
             </div>
@@ -168,19 +168,19 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Mentions</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.mentionCount.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Unique Posts</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.uniquePosts.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Comments</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.uniqueComments.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Upvotes</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.totalUpvotes.toLocaleString()}</p>
           </div>

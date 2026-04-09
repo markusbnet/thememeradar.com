@@ -39,6 +39,61 @@ describe('RedditClient', () => {
     });
   });
 
+  describe('authenticate', () => {
+    it('should reuse cached token when not expired', async () => {
+      // First call - performs OAuth
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'cached_token',
+          token_type: 'bearer',
+          expires_in: 3600,
+        }),
+      });
+      // Mock posts response for first call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { children: [] } }),
+      });
+
+      await client.getHotPosts('wallstreetbets');
+
+      // Second call - should reuse cached token, not call OAuth again
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { children: [] } }),
+      });
+
+      await client.getHotPosts('stocks');
+
+      // fetch should have been called 3 times total: OAuth + posts + posts
+      // (not 4, which would mean OAuth was called again)
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect((global.fetch as jest.Mock).mock.calls[0][0]).toBe(
+        'https://www.reddit.com/api/v1/access_token'
+      );
+      expect((global.fetch as jest.Mock).mock.calls[1][0]).toContain(
+        'oauth.reddit.com/r/wallstreetbets'
+      );
+      expect((global.fetch as jest.Mock).mock.calls[2][0]).toContain(
+        'oauth.reddit.com/r/stocks'
+      );
+    });
+
+    it('should throw when authentication fails with non-ok response', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => 'Invalid credentials',
+      });
+
+      await expect(client.getHotPosts('wallstreetbets')).rejects.toThrow(
+        'Reddit OAuth failed: Unauthorized'
+      );
+    });
+  });
+
   describe('getHotPosts', () => {
     it('should fetch and parse hot posts from subreddit', async () => {
       // Mock OAuth response
@@ -113,6 +168,29 @@ describe('RedditClient', () => {
       const posts = await client.getHotPosts('wallstreetbets');
       expect(posts).toEqual([]);
     });
+
+    it('should throw when posts request returns non-ok response', async () => {
+      // Mock OAuth success
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'test_token',
+          token_type: 'bearer',
+          expires_in: 3600,
+        }),
+      });
+
+      // Mock non-ok posts response
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+      });
+
+      await expect(client.getHotPosts('wallstreetbets')).rejects.toThrow(
+        'Failed to fetch posts from r/wallstreetbets: Forbidden'
+      );
+    });
   });
 
   describe('getPostComments', () => {
@@ -173,6 +251,29 @@ describe('RedditClient', () => {
         upvotes: 50,
         createdAt: 1234567900,
       });
+    });
+
+    it('should throw when comments request returns non-ok response', async () => {
+      // Mock OAuth success
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'test_token',
+          token_type: 'bearer',
+          expires_in: 3600,
+        }),
+      });
+
+      // Mock non-ok comments response
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      await expect(client.getPostComments('wallstreetbets', 'post123')).rejects.toThrow(
+        'Failed to fetch comments for post post123: Not Found'
+      );
     });
 
     it('should filter out invalid comments (no body)', async () => {
@@ -288,5 +389,79 @@ describe('RedditClient', () => {
       expect(result.posts[0].id).toBe('post1');
       expect(result.comments[0].id).toBe('comment1');
     }, 10000); // Increase timeout due to rate limiting delays
+
+    it('should continue scanning remaining subreddits when one fails', async () => {
+      // Mock OAuth (shared token for all calls)
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'test_token',
+          token_type: 'bearer',
+          expires_in: 3600,
+        }),
+      });
+
+      // First subreddit (wallstreetbets) - fails with non-ok response
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+      });
+
+      // Second subreddit (stocks) - succeeds
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            children: [
+              {
+                data: {
+                  id: 'post_stocks_1',
+                  subreddit: 'stocks',
+                  title: 'AAPL analysis',
+                  selftext: 'Looking good',
+                  author: 'analyst1',
+                  ups: 200,
+                  created_utc: 1234567890,
+                  permalink: '/r/stocks/comments/post_stocks_1',
+                },
+              },
+            ],
+          },
+        }),
+      });
+
+      // Comments for the stocks post
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => [
+          { data: { children: [] } },
+          {
+            data: {
+              children: [
+                {
+                  data: {
+                    id: 'stocks_comment1',
+                    subreddit: 'stocks',
+                    body: 'Great analysis!',
+                    author: 'reader1',
+                    ups: 15,
+                    created_utc: 1234567950,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      const result = await client.scanSubreddits(['wallstreetbets', 'stocks'], 1);
+
+      // Should have posts and comments only from the successful subreddit
+      expect(result.posts).toHaveLength(1);
+      expect(result.posts[0].subreddit).toBe('stocks');
+      expect(result.comments).toHaveLength(1);
+      expect(result.comments[0].subreddit).toBe('stocks');
+    }, 10000);
   });
 });

@@ -23,11 +23,11 @@ describe('Sparkline', () => {
     expect(screen.getByRole('img', { name: /sparkline/i })).toBeInTheDocument();
   });
 
-  it('should apply custom width and height', () => {
+  it('should apply custom width and height via viewBox and be responsive', () => {
     const { container } = render(<Sparkline data={[1, 2, 3]} width={200} height={60} />);
     const svg = container.querySelector('svg');
-    expect(svg).toHaveAttribute('width', '200');
-    expect(svg).toHaveAttribute('height', '60');
+    expect(svg).toHaveAttribute('viewBox', '0 0 200 60');
+    expect(svg).toHaveClass('w-full');
   });
 
   it('should render a line path and a fill path', () => {

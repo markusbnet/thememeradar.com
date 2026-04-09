@@ -101,6 +101,39 @@ async function seedMention(data: {
   );
 }
 
+// Helper to seed stock_evidence data
+async function seedEvidence(data: {
+  ticker: string;
+  evidenceId: string;
+  type: 'post' | 'comment';
+  text: string;
+  keywords: string[];
+  sentimentScore: number;
+  sentimentCategory: string;
+  upvotes: number;
+  subreddit: string;
+  createdAt?: number;
+}) {
+  await docClient.send(
+    new PutCommand({
+      TableName: TABLES.STOCK_EVIDENCE,
+      Item: {
+        ticker: data.ticker,
+        evidenceId: data.evidenceId,
+        type: data.type,
+        text: data.text,
+        keywords: data.keywords,
+        sentimentScore: data.sentimentScore,
+        sentimentCategory: data.sentimentCategory,
+        upvotes: data.upvotes,
+        subreddit: data.subreddit,
+        createdAt: data.createdAt ?? Date.now(),
+        ttl: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
+      },
+    })
+  );
+}
+
 describe('Storage Layer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -386,12 +419,103 @@ describe('Storage Layer', () => {
       const result = await getStockDetails('NONEXISTENT');
       expect(result).toBeNull();
     });
+
+    it('should return a StoredStockMention when a record exists for the current interval', async () => {
+      const now = roundToInterval(Date.now());
+      await seedMention({
+        ticker: 'AAPL',
+        timestamp: now,
+        mentionCount: 42,
+        bullishCount: 20,
+        bearishCount: 5,
+        neutralCount: 17,
+        avgSentimentScore: 0.45,
+        sentimentCategory: 'bullish',
+      });
+
+      const result = await getStockDetails('AAPL');
+
+      expect(result).not.toBeNull();
+      expect(result!.ticker).toBe('AAPL');
+      expect(result!.timestamp).toBe(now);
+      expect(result!.mentionCount).toBe(42);
+      expect(result!.bullishCount).toBe(20);
+      expect(result!.bearishCount).toBe(5);
+      expect(result!.neutralCount).toBe(17);
+      expect(result!.avgSentimentScore).toBe(0.45);
+      expect(result!.sentimentCategory).toBe('bullish');
+    });
   });
 
   describe('getStockEvidence', () => {
     it('should return an array', async () => {
       const result = await getStockEvidence('GME', 10);
       expect(Array.isArray(result)).toBe(true);
+    });
+
+    it('should return evidence items with correct field values', async () => {
+      await seedEvidence({
+        ticker: 'TSLA',
+        evidenceId: 'post_tsla_1',
+        type: 'post',
+        text: 'TSLA to the moon! Buying calls.',
+        keywords: ['to the moon', 'calls'],
+        sentimentScore: 0.75,
+        sentimentCategory: 'bullish',
+        upvotes: 320,
+        subreddit: 'wallstreetbets',
+      });
+      await seedEvidence({
+        ticker: 'TSLA',
+        evidenceId: 'comment_tsla_1',
+        type: 'comment',
+        text: 'Paper hands everywhere, holding my TSLA.',
+        keywords: ['paper hands'],
+        sentimentScore: -0.3,
+        sentimentCategory: 'bearish',
+        upvotes: 50,
+        subreddit: 'stocks',
+      });
+
+      const result = await getStockEvidence('TSLA', 10);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+
+      const postEvidence = result.find(e => e.evidenceId === 'post_tsla_1');
+      expect(postEvidence).toBeDefined();
+      expect(postEvidence!.ticker).toBe('TSLA');
+      expect(postEvidence!.type).toBe('post');
+      expect(postEvidence!.text).toBe('TSLA to the moon! Buying calls.');
+      expect(postEvidence!.keywords).toEqual(['to the moon', 'calls']);
+      expect(postEvidence!.sentimentScore).toBe(0.75);
+      expect(postEvidence!.upvotes).toBe(320);
+      expect(postEvidence!.subreddit).toBe('wallstreetbets');
+
+      const commentEvidence = result.find(e => e.evidenceId === 'comment_tsla_1');
+      expect(commentEvidence).toBeDefined();
+      expect(commentEvidence!.type).toBe('comment');
+      expect(commentEvidence!.sentimentScore).toBe(-0.3);
+    });
+
+    it('should pass the limit to the DynamoDB query', async () => {
+      await getStockEvidence('NVDA', 3);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const queryCall = sendCalls
+        .filter((c: unknown[]) => (c[0] as { constructor: { name: string } }).constructor.name === 'QueryCommand')
+        .find((c: unknown[]) => {
+          const input = (c[0] as { input: { ExpressionAttributeValues?: Record<string, unknown> } }).input;
+          return input.ExpressionAttributeValues?.[':ticker'] === 'NVDA';
+        });
+
+      expect(queryCall).toBeDefined();
+      expect((queryCall![0] as { input: { Limit: number } }).input.Limit).toBe(3);
+    });
+
+    it('should return an empty array for a ticker with no evidence', async () => {
+      const result = await getStockEvidence('ZZZNOTREAL', 10);
+      expect(result).toEqual([]);
     });
   });
 });

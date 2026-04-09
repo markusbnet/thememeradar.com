@@ -1,11 +1,12 @@
 import { POST } from '@/app/api/auth/signup/route';
-import { getUserByEmail } from '@/lib/db/users';
+import { getUserByEmail, deleteUserByEmail } from '@/lib/db/users';
 import { verifyPassword } from '@/lib/auth/password';
 import { verifyToken } from '@/lib/auth/jwt';
 
 describe('POST /api/auth/signup', () => {
   const validEmail = 'test@example.com';
   const validPassword = 'ValidPass123!';
+  const createdEmails: string[] = [];
 
   // Helper to create request
   const createRequest = (body: any) => {
@@ -16,15 +17,14 @@ describe('POST /api/auth/signup', () => {
     });
   };
 
-  // Clean up test user after each test
-  afterEach(async () => {
-    // Note: In a real test, we'd delete the test user from DB
-    // For now, we'll use unique emails per test
+  afterAll(async () => {
+    await Promise.all(createdEmails.map((email) => deleteUserByEmail(email)));
   });
 
   describe('Success Cases', () => {
     it('should create new user with valid email + password', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -43,6 +43,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should return JWT token in response', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -62,6 +63,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should hash password in database (not plain text)', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -82,6 +84,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should set httpOnly cookie with JWT token', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -98,6 +101,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should trim whitespace from email', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: `  ${uniqueEmail}  `,
         password: validPassword,
@@ -112,6 +116,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should normalize email to lowercase', async () => {
       const uniqueEmail = `TEST-${Date.now()}@EXAMPLE.COM`;
+      createdEmails.push(uniqueEmail.toLowerCase());
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -126,6 +131,7 @@ describe('POST /api/auth/signup', () => {
 
     it('should not return passwordHash in response', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
       const request = createRequest({
         email: uniqueEmail,
         password: validPassword,
@@ -141,6 +147,7 @@ describe('POST /api/auth/signup', () => {
   describe('Error Cases', () => {
     it('should reject duplicate email (409 Conflict)', async () => {
       const uniqueEmail = `test-${Date.now()}@example.com`;
+      createdEmails.push(uniqueEmail);
 
       // Create first user
       const request1 = createRequest({

@@ -59,6 +59,19 @@ export const BEARISH_KEYWORDS: SentimentKeyword[] = [
 
 /**
  * Analyze sentiment of text for a specific ticker
+ *
+ * ALGORITHM: Keyword-weighted sentiment scoring
+ * ──────────────────────────────────────────────
+ * 1. Scan text for bullish keywords (diamond hands, YOLO, etc.) — each has weight 1-3
+ * 2. Scan text for bearish keywords (paper hands, puts, etc.) — each has weight 1-3
+ * 3. totalScore = sum(bullish weights) - sum(bearish weights)
+ * 4. normalizedScore = totalScore / NORMALIZATION_FACTOR (10)
+ *    → 10 points of weighted keywords = score of 1.0 (maximum)
+ *    → Fixed factor prevents extreme swings at low mention counts
+ * 5. Clamp to [-1, 1] range
+ * 6. Categorize: >0.6 strong_bullish, >=0.2 bullish, >=-0.2 neutral, >=-0.6 bearish, else strong_bearish
+ *
+ * Each keyword match contributes weight * occurrences (multiple matches stack).
  */
 export function analyzeSentiment(text: string, ticker: string): SentimentResult {
   const lowerText = text.toLowerCase();

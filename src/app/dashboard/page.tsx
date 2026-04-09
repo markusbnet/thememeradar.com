@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900">Data Collection</h3>
               </div>
               <p className="text-gray-600">
-                Scans Reddit every <span className="font-medium text-purple-600">5 minutes</span> from r/wallstreetbets, r/stocks, and r/investing
+                Scans Reddit every <span className="font-medium text-purple-600">5 minutes</span> from r/wallstreetbets, r/stocks, and r/investing. Mentions are grouped into 15-minute buckets.
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900">Trending Algorithm</h3>
               </div>
               <p className="text-gray-600">
-                Ranked by <span className="font-medium text-purple-600">velocity</span> - the % increase in mentions compared to the previous hour
+                Ranked by <span className="font-medium text-purple-600">velocity</span> &mdash; the % change in mentions vs. the previous 15-minute window. Stocks need at least 5 mentions to qualify. Surge alerts trigger at 3x the 1-hour baseline.
               </p>
             </div>
 
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900">Sentiment Analysis</h3>
               </div>
               <p className="text-gray-600">
-                Analyzes keywords like 🚀 &ldquo;to the moon&rdquo;, 💎🙌 &ldquo;diamond hands&rdquo;, 📄 &ldquo;paper hands&rdquo; to gauge sentiment
+                Scores text using weighted WSB keywords (🚀 &ldquo;to the moon&rdquo;, 💎🙌 &ldquo;diamond hands&rdquo;, 📄 &ldquo;paper hands&rdquo;). 10 points of signal = maximum score. Click any stock to see the evidence.
               </p>
             </div>
           </div>

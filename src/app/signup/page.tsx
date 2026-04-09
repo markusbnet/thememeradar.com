@@ -156,11 +156,11 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8 sm:py-12">
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
             The Meme Radar
           </h1>
           <p className="text-slate-300">
@@ -169,7 +169,7 @@ export default function SignupPage() {
         </div>
 
         {/* Signup Card */}
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <div className="bg-white rounded-lg shadow-xl p-5 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">
             Sign Up
           </h2>
