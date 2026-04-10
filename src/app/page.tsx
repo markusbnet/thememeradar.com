@@ -9,13 +9,13 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <a
             href="/login"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition"
+            className="rounded-lg bg-purple-600 min-h-[44px] px-6 py-3 text-white font-semibold hover:bg-purple-700 transition flex items-center justify-center"
           >
             Log In
           </a>
           <a
             href="/signup"
-            className="rounded-lg border-2 border-blue-600 px-6 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition"
+            className="rounded-lg border-2 border-purple-600 min-h-[44px] px-6 py-3 text-purple-600 font-semibold hover:bg-purple-50 transition flex items-center justify-center"
           >
             Sign Up
           </a>

@@ -12,13 +12,13 @@ export default function NotFound() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/"
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition"
+            className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition"
           >
             Go Home
           </Link>
           <Link
             href="/dashboard"
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+            className="min-h-[44px] px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
           >
             Dashboard
           </Link>
