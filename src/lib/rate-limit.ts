@@ -64,6 +64,6 @@ export class RateLimiter {
 }
 
 export const authRateLimiter = new RateLimiter({
-  maxAttempts: 5,
+  maxAttempts: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) : 5,
   windowMs: 15 * 60 * 1000,
 });

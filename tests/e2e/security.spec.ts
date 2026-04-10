@@ -193,11 +193,11 @@ test.describe('Security Tests', () => {
 
       for (const weakPwd of weakPasswords) {
         await page.getByLabel(/email/i).fill(`test-${Date.now()}@example.com`);
-        await page.getByRole('textbox', { name: /password/i }).fill(weakPwd);
+        await page.locator('#password').fill(weakPwd);
         await page.getByRole('button', { name: /sign up/i }).click();
 
-        // Should show password error
-        await expect(page.getByText(/password|weak|strength/i)).toBeVisible();
+        // Should show password validation error
+        await expect(page.getByText(/must be at least 8 characters/i)).toBeVisible();
 
         await page.reload();
       }
@@ -322,11 +322,11 @@ test.describe('Security Tests', () => {
 
       for (const email of invalidEmails) {
         await page.getByLabel(/email/i).fill(email);
-        await page.getByRole('textbox', { name: /password/i }).fill('ValidPass123!');
+        await page.locator('#password').fill('ValidPass123!');
         await page.getByRole('button', { name: /sign up/i }).click();
 
-        // Should show validation error
-        await expect(page.getByText(/email|invalid/i)).toBeVisible();
+        // Should show email validation error
+        await expect(page.getByText(/invalid email/i)).toBeVisible();
 
         await page.reload();
       }

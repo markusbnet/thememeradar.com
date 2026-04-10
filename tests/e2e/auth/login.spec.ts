@@ -141,13 +141,13 @@ test.describe('Login Page', () => {
     await expect(passwordInput).toHaveAttribute('type', 'password');
 
     // Click the show/hide toggle button
-    await page.getByRole('button', { name: /toggle visibility/i }).click();
+    await page.getByRole('button', { name: /show password/i }).click();
 
     // Password should now be visible (type="text")
     await expect(passwordInput).toHaveAttribute('type', 'text');
 
     // Click the toggle again
-    await page.getByRole('button', { name: /toggle visibility/i }).click();
+    await page.getByRole('button', { name: /hide password/i }).click();
 
     // Password should be hidden again
     await expect(passwordInput).toHaveAttribute('type', 'password');

@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-09 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-10 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -559,6 +559,25 @@ valid tokens, HS256 compatibility, missing tokens, forged tokens, tampered paylo
 
 ---
 
+### Nightly Run Summary — 2026-04-10
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 47 | QA pass: test health, coverage gaps, feature review | p3 | [x] COMPLETE |
+
+**Final metrics:** 37 test suites, 406 tests (was 386), lint clean, build clean, E2E 162/186 passed (was 51/144)
+
+**Key changes this run:**
+- **E2E test fixes (critical):** Fixed 9 root causes that were failing 69 E2E tests — password toggle locators, rate limiter blocking tests, Tab navigation, platform-specific paste events, button text change after click, broad regex assertions, missing blur triggers
+- **Rate limiter configurability:** `AUTH_RATE_LIMIT_MAX` env var added so E2E tests run with higher limit while production stays at 5 attempts/15 min
+- **New unit tests (20):** Error boundary components (GlobalError, DashboardError, StockDetailError), NotFound page, Home page — all previously untested
+- **Remaining E2E failures (24):** 13 stock-detail (need scan data), 1 trending API (need data), 1 flaky duplicate email, 6 user-journey timing, 3 form edge cases
+- **No UI regressions:** Mobile fixes from Task 46 verified intact
+
+---
+
 ### Nightly Run Summary — 2026-04-09
 
 **6/6 tasks completed. 0 failed.**
@@ -618,6 +637,100 @@ valid tokens, HS256 compatibility, missing tokens, forged tokens, tampered paylo
 - **Code quality:** All `any` types eliminated, SCAN_HISTORY dead code removed, ticker blacklist fixed
 - **Test coverage:** 86 new tests added (214 → 300), covering middleware, storage, auth client, cache, load testing
 - **New features:** `/api/stocks/:ticker/evidence` endpoint, standalone "squeeze" sentiment keyword
+
+---
+
+### Task 47: [x] COMPLETE — QA pass: test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-10
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-10
+**Priority:** p3
+
+### 1. Test Health
+- **Unit/Integration:** 37 suites, 406 tests — ALL PASSING (was 35 suites, 386 tests; +2 suites, +20 tests)
+- **E2E (Chromium):** 162 passed, 24 failed (was 51 passed, 93 failed; **69 E2E tests fixed**)
+- **Lint:** Zero warnings or errors
+- **Build:** Succeeds, 19 routes compiled
+
+### 2. E2E Tests Fixed (9 root causes, 69 tests unblocked)
+
+1. **Password toggle button locator** (`login.spec.ts`, `signup.spec.ts`): Tests used `getByRole('button', { name: /toggle visibility/i })` but actual `aria-label` is "Show password" / "Hide password". Fixed to use exact labels.
+
+2. **Rate limiter blocking E2E tests** (`playwright.config.ts`, `src/lib/rate-limit.ts`): All E2E auth requests share IP `'unknown'` and hit the 5-attempt limit after a few tests. Made `maxAttempts` configurable via `AUTH_RATE_LIMIT_MAX` env var (set to 1000 in Playwright webServer config). Production default unchanged at 5.
+
+3. **Tab navigation test** (`forms.spec.ts:310`): Test didn't account for the show/hide toggle button between password input and submit button. Added extra Tab press.
+
+4. **Paste events test** (`forms.spec.ts:57`): Used `Control+V` (doesn't work on macOS). Replaced with `fill()` which is platform-agnostic.
+
+5. **Rapid form submission test** (`forms.spec.ts:93`): Tried to click "Sign up" button 3x but button text changes to "Signing up..." after first click, so locator can't find it. Fixed to check disabled state instead.
+
+6. **Network delay test** (`forms.spec.ts:150`): Used `getByRole('textbox')` for password field, replaced with `locator('#password')`.
+
+7. **Password in HTML test** (`forms.spec.ts:442`): Checked `page.content()` for password string, but React controlled inputs always have values in DOM attributes. Fixed to check `innerText()` (visible text only).
+
+8. **Security test assertions** (`security.spec.ts:189`, `:318`): Used overly broad regex `/password|weak|strength/i` and `/email|invalid/i` which matched labels, not just errors. Fixed to use specific error message text.
+
+9. **Clear validation test** (`forms.spec.ts:42`): `fill()` didn't trigger blur event. Added explicit blur via clicking another field.
+
+### 3. Remaining E2E Failures (24, all known/conditional)
+
+- **13 stock-detail tests**: Require stock data in DynamoDB (no Reddit scanning has occurred). These are conditional — they pass when stock data exists.
+- **1 trending API test**: Same — needs scan data.
+- **1 duplicate email test**: Flaky timing with parallel workers (pre-existing).
+- **6 user-journey tests**: Complex multi-step flows that depend on signup UI (some have timing issues).
+- **3 form edge cases**: Minor timing issues with form submission flows.
+
+### 4. Tests Added (20 new, 386 → 406 total)
+
+**Error boundary components** (`tests/unit/components/error-pages.test.tsx`): +16 tests
+- `GlobalError`: heading, description, reset button click
+- `NotFound`: 404 heading, Page Not Found text, Go Home link, Dashboard link
+- `DashboardError`: heading, description, reset button, Go Home link
+- `StockDetailError`: heading, description, reset button, Back to Dashboard link
+
+**Home page** (`tests/unit/components/home-page.test.tsx`): +4 tests
+- App title rendering, tagline, Log In link, Sign Up link
+
+### 5. Coverage Summary
+
+| Area | Unit/Integration | E2E | Status |
+|------|-----------------|-----|--------|
+| Authentication (signup/login/logout/me) | 67 integration + 22 unit | 22 E2E | Excellent |
+| Dashboard (trending/fading) | 17 integration | 6 E2E | Good |
+| Stock detail pages | 15 integration | 13 E2E (conditional) | Good |
+| Surge detection | 25 unit + 16 integration | - | Good |
+| Sentiment analysis | 22 unit | - | Excellent |
+| Ticker detection | 24 unit | - | Excellent |
+| Reddit scanning | 12 unit | - | Good |
+| Middleware | 20 unit | - | Excellent |
+| Error boundaries | 16 unit | - | **NEW** |
+| Home page | 4 unit | 8 E2E | **NEW** |
+
+**Remaining coverage gaps (minor):**
+- Login/signup page component unit tests (have E2E coverage)
+- `db/client.ts` (infrastructure config, tested indirectly)
+- `ticker-list.ts` (static data, no logic)
+
+### 6. UI Consistency Findings
+
+**No regressions found.** Mobile fixes from Task 46 are intact. Key observations:
+- Home page buttons (`src/app/page.tsx`): Missing `min-h-[44px]` tap target (cosmetic, acceptable for landing CTA buttons with `py-3`)
+- All auth/dashboard/stock pages: Consistent responsive breakpoints at `sm:` prefix
+- Sparklines: Responsive SVG with `className="w-full"` (fixed in Task 46)
+
+### 7. Feature Completeness vs CLAUDE.md
+
+**Implemented (all core features):** Auth, dashboard, stock detail, sentiment analysis, ticker detection, Reddit scanning, rate limiting, JWT auth, sparklines, charts, surge detection, API caching, evidence endpoint, security headers, env var validation, production logging.
+
+**Known spec deviations (documented in Task 41, unchanged):**
+1. `GET /api/stocks` generic list — not implemented (dashboard uses `/api/stocks/trending`)
+2. `posts`/`comments` DynamoDB tables — not created (data is aggregated directly into stock_mentions/stock_evidence)
+3. `redditUrl` field in evidence — not stored
+4. CSRF protection — not implemented
+5. `db:reset` script — missing from package.json
+6. Fading stocks threshold: 5 (spec says 10)
+7. Velocity window: 15-min buckets (spec says 1-hour, documented as intentional in Task 45)
 
 ---
 

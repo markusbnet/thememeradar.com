@@ -68,6 +68,7 @@ export default defineConfig({
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || 'test',
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',
       USERS_TABLE_NAME: process.env.USERS_TABLE_NAME || 'users',
+      AUTH_RATE_LIMIT_MAX: '1000',
     },
   },
 });
