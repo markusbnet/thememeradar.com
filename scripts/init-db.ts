@@ -11,12 +11,37 @@ import {
   DeleteTableCommand,
 } from '@aws-sdk/client-dynamodb';
 
+// Fail fast if required env vars are missing. No silent defaults for the
+// endpoint — a wrong default is how port 8000 vs 8080 drift happens.
+const requiredEnv = [
+  'DYNAMODB_ENDPOINT',
+  'AWS_REGION',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+];
+const missing = requiredEnv.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+  console.error(
+    `\n✗ Missing required environment variables: ${missing.join(', ')}\n\n` +
+      `This script loads .env.local via tsx --env-file. Make sure that file ` +
+      `exists at the repo root and defines every variable listed above.\n\n` +
+      `If you're running the script directly (not via 'npm run db:init'), ` +
+      `either export the variables or use: tsx --env-file=.env.local scripts/init-db.ts\n`
+  );
+  process.exit(1);
+}
+
+const endpoint = process.env.DYNAMODB_ENDPOINT!;
+const region = process.env.AWS_REGION!;
+
+console.log(`Using DynamoDB endpoint: ${endpoint} (region: ${region})`);
+
 const client = new DynamoDBClient({
-  region: process.env.AWS_REGION || 'us-east-1',
-  endpoint: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8080',
+  region,
+  endpoint,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -27,15 +52,14 @@ const TABLES = {
 };
 
 async function deleteTableIfExists(tableName: string) {
-  try {
-    const listResult = await client.send(new ListTablesCommand({}));
-    if (listResult.TableNames?.includes(tableName)) {
-      console.log(`Deleting existing table: ${tableName}...`);
-      await client.send(new DeleteTableCommand({ TableName: tableName }));
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  } catch (error: any) {
-    console.error(`Error checking/deleting table ${tableName}:`, error.message);
+  // Deliberately not catching here — if listing tables fails (e.g. DynamoDB
+  // Local is down), we want the error to propagate so main() can print a
+  // clear diagnostic instead of silently falling through to CreateTable.
+  const listResult = await client.send(new ListTablesCommand({}));
+  if (listResult.TableNames?.includes(tableName)) {
+    console.log(`Deleting existing table: ${tableName}...`);
+    await client.send(new DeleteTableCommand({ TableName: tableName }));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
@@ -155,7 +179,36 @@ async function main() {
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
   } catch (error: any) {
-    console.error('\n✗ Error creating tables:', error.message);
+    // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
+    // with an empty top-level message — inspect nested errors for something useful.
+    const details: string[] = [];
+    if (error?.name) details.push(`name=${error.name}`);
+    if (error?.code) details.push(`code=${error.code}`);
+    if (error?.$metadata?.httpStatusCode)
+      details.push(`httpStatus=${error.$metadata.httpStatusCode}`);
+    if (Array.isArray(error?.errors) && error.errors.length > 0) {
+      const inner = error.errors
+        .map((e: any) => e?.code || e?.message || String(e))
+        .filter(Boolean)
+        .join(', ');
+      if (inner) details.push(`inner=[${inner}]`);
+    }
+
+    console.error('\n✗ Error creating tables');
+    console.error(`  endpoint: ${endpoint}`);
+    console.error(`  message:  ${error?.message || '(empty)'}`);
+    if (details.length > 0) console.error(`  details:  ${details.join(' ')}`);
+
+    const isConnRefused =
+      error?.name === 'AggregateError' ||
+      /ECONNREFUSED|internalConnectMultiple/i.test(error?.stack || '');
+    if (isConnRefused) {
+      console.error(
+        `\n  Cannot reach DynamoDB at ${endpoint}. Is DynamoDB Local running?\n` +
+          `  Start it with: docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local`
+      );
+    }
+
     process.exit(1);
   }
 }

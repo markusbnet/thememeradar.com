@@ -308,7 +308,7 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-purple-600 hover:text-purple-700 font-semibold"
+              className="inline-flex items-center min-h-[44px] text-purple-600 hover:text-purple-700 font-semibold"
             >
               Log in
             </Link>

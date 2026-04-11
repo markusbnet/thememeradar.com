@@ -132,8 +132,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForTimeout(1000);
 
       // Check for either stock data or error state
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // If no error, should show ticker
@@ -146,8 +146,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should display ticker symbol in header
@@ -161,8 +161,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should show sentiment label (Bullish, Bearish, or Neutral)
@@ -192,8 +192,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should show sentiment score label
@@ -207,8 +207,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should show statistic labels
@@ -224,8 +224,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should show sentiment breakdown heading
@@ -239,8 +239,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Should show subreddit breakdown heading
@@ -254,8 +254,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Check if keywords section exists
@@ -272,8 +272,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Check if evidence section exists
@@ -299,9 +299,9 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      // Should show error message
-      const errorMessage = page.getByText(/Error|Stock not found/i);
-      await expect(errorMessage).toBeVisible();
+      // Should show error heading
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      await expect(errorHeading).toBeVisible();
     });
 
     test('should show back to dashboard button on error', async ({ page }) => {
@@ -368,7 +368,7 @@ test.describe('Stock Detail Page', () => {
 
       // Should show either content or error
       const hasContent = await page.getByRole('heading', { name: /\$/i }).isVisible().catch(() => false);
-      const hasError = await page.getByText(/Error|Stock not found/i).isVisible().catch(() => false);
+      const hasError = await page.getByRole('heading', { name: /Error/i }).isVisible().catch(() => false);
 
       expect(hasContent || hasError).toBe(true);
     });
@@ -402,8 +402,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Content should be visible on tablet
@@ -418,8 +418,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Grid container should exist
@@ -443,8 +443,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Check that numbers are formatted properly (with commas for thousands)
@@ -460,8 +460,8 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const errorState = page.getByText(/Stock not found|Error/i);
-      const hasError = await errorState.isVisible().catch(() => false);
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
       if (!hasError) {
         // Sentiment score should be visible (likely near "Sentiment Score" label)
@@ -576,11 +576,19 @@ test.describe('Stock Detail Page', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
 
-      const h1 = await page.locator('h1').count();
-      const h2 = await page.locator('h2').count();
+      const errorHeading = page.getByRole('heading', { name: /Error/i });
+      const hasError = await errorHeading.isVisible().catch(() => false);
 
-      expect(h1).toBeGreaterThanOrEqual(1);
-      expect(h2).toBeGreaterThanOrEqual(0);
+      if (hasError) {
+        // Error state has h2 only (no h1)
+        const h2 = await page.locator('h2').count();
+        expect(h2).toBeGreaterThanOrEqual(1);
+      } else {
+        const h1 = await page.locator('h1').count();
+        const h2 = await page.locator('h2').count();
+        expect(h1).toBeGreaterThanOrEqual(1);
+        expect(h2).toBeGreaterThanOrEqual(0);
+      }
     });
 
     test('should have accessible back button', async ({ page }) => {
@@ -643,7 +651,7 @@ test.describe('Stock Detail Page', () => {
 
       // Should load successfully
       const hasContent = await page.getByRole('heading', { name: /\$/i }).isVisible().catch(() => false);
-      const hasError = await page.getByText(/Error|Stock not found/i).isVisible().catch(() => false);
+      const hasError = await page.getByRole('heading', { name: /Error/i }).isVisible().catch(() => false);
 
       expect(hasContent || hasError).toBe(true);
     });
@@ -655,7 +663,7 @@ test.describe('Stock Detail Page', () => {
 
       // Should load successfully (ticker should be converted to uppercase)
       const hasContent = await page.getByRole('heading', { name: /\$/i }).isVisible().catch(() => false);
-      const hasError = await page.getByText(/Error|Stock not found/i).isVisible().catch(() => false);
+      const hasError = await page.getByRole('heading', { name: /Error/i }).isVisible().catch(() => false);
 
       expect(hasContent || hasError).toBe(true);
     });
@@ -670,7 +678,7 @@ test.describe('Stock Detail Page', () => {
 
         // Should load page for each ticker
         const hasContent = await page.getByRole('heading', { name: /\$/i }).isVisible().catch(() => false);
-        const hasError = await page.getByText(/Error|Stock not found/i).isVisible().catch(() => false);
+        const hasError = await page.getByRole('heading', { name: /Error/i }).isVisible().catch(() => false);
 
         expect(hasContent || hasError).toBe(true);
       }

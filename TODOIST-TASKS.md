@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-10 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-11 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -559,6 +559,99 @@ valid tokens, HS256 compatibility, missing tokens, forged tokens, tampered paylo
 
 ---
 
+### Task 48: [x] COMPLETE — QA pass: test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-11
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-11
+**Priority:** p3
+
+### 1. Test Health
+- **Unit/Integration:** 39 suites, 435 tests — ALL PASSING (was 37 suites, 406 tests; +2 suites, +29 tests)
+- **E2E (Chromium):** 186 passed, 0 failed (was 67 passed, 97 failed; **97 E2E tests fixed**)
+- **Lint:** Zero warnings or errors
+- **Build:** Succeeds, 19 routes compiled
+
+### 2. E2E Tests Fixed (7 root causes, 97 tests unblocked)
+
+1. **Dev server crash under load** (`playwright.config.ts`): Unlimited parallel workers overwhelmed the Next.js dev server, causing it to crash mid-run and fail all subsequent tests with `ERR_CONNECTION_REFUSED`. Fixed by reducing workers from `undefined` (all CPUs) to `3` and adding `timeout: 30000` to webServer config. **75 tests fixed.**
+
+2. **Strict mode violation in stock-detail error detection** (`stock-detail.spec.ts`): `getByText(/Stock not found|Error/i)` matched BOTH the `<h2>Error</h2>` heading AND the `<p>Stock not found</p>` paragraph. Playwright strict mode threw, `.catch(() => false)` swallowed it, test entered wrong branch. Fixed by using `getByRole('heading', { name: /Error/i })` which uniquely matches the h2. **15 tests fixed.**
+
+3. **Signup form hydration race** (`user-journeys.spec.ts`): Navigating from `/` to `/signup` via link click didn't wait for React hydration, causing native form submission (`/signup?`) instead of React's `handleSubmit`. Fixed by adding `waitForLoadState('networkidle')` after link navigation. **3 tests fixed.**
+
+4. **Keyboard tab order skipping toggle button** (`user-journeys.spec.ts`): Test tabbed email → password → Enter, but the toggle password visibility button sits between password and submit. Added extra Tab press. **1 test fixed.**
+
+5. **Mobile journey using `tap()` without touch** (`user-journeys.spec.ts`): Test used `tap()` on Desktop Chrome which doesn't have `hasTouch` enabled. Changed to `click()`. **1 test fixed.**
+
+6. **Strict mode on password text** (`user-journeys.spec.ts`): `getByText(/password/i)` matched both label and error message. Changed to `getByText(/Password must be at least/i)`. **1 test fixed.**
+
+7. **Autofill and network retry timing** (`user-journeys.spec.ts`): Autofill used `evaluate` to set DOM values without triggering React state; changed to Playwright `fill()`. Network retry didn't re-fill fields after error state. **1 test fixed.**
+
+### 3. Tests Added (29 new tests)
+
+**Dashboard page** (`tests/unit/components/dashboard-page.test.tsx`): +14 tests
+- Loading spinner, auth redirect, welcome message with email, trending/fading sections
+- Empty state messages, error banner on API/network failure, logout flow
+- SurgeAlert rendering, RefreshTimer presence, "How Trends Are Calculated" section
+
+**Stock detail page** (`tests/unit/components/stock-detail-page.test.tsx`): +15 tests
+- Loading spinner, auth redirect, error state with "Back to Dashboard" link
+- Stock header with $TICKER, 4 statistics cards with formatted values
+- Sentiment badge mapping for all 5 categories (strong_bullish → strong_bearish)
+- Chart titles, CollapsibleSection rendering, sentiment score formatting
+- Ticker uppercasing (lowercase URL → uppercase display), network error handling
+
+### 4. Coverage Summary by Feature
+- Authentication (signup/login/logout/me): 67 integration + 22 unit tests + E2E
+- Dashboard (trending/fading/surge): 17 integration + 14 unit tests + E2E
+- Stock detail pages: 15 integration + 15 unit tests + E2E
+- Surge detection: 25 unit + 16 integration tests
+- Sentiment analysis: 22 unit tests
+- Ticker detection: 24 unit tests
+- Reddit scanning: 12 unit tests
+- Middleware: 20 unit tests
+- **Remaining gaps:** Login page and signup page have no unit tests (fully covered by E2E)
+
+### 5. UI Issues Found and Fixed (3)
+
+1. **"Back to Dashboard" link tap target** (`src/app/stock/[ticker]/page.tsx`): Inline text link with no min-height. Added `min-h-[44px]` on both error and header instances.
+
+2. **Auth cross-link tap targets** (`src/app/login/page.tsx`, `src/app/signup/page.tsx`): "Sign up" and "Log in" text links at bottom of forms had no padding to reach 44px. Added `inline-flex items-center min-h-[44px]`.
+
+3. **Evidence metadata overflow** (`src/app/stock/[ticker]/page.tsx`): Inner flex row holding sentiment badge + type + subreddit had no `flex-wrap`, could overflow at 375px. Added `flex-wrap`.
+
+### 6. Feature Completeness (unchanged from Task 41)
+All core features implemented. Same spec gaps remain:
+- `GET /api/stocks` generic list endpoint (dashboard uses `/api/stocks/trending` instead)
+- `posts` and `comments` DynamoDB tables (raw data not persisted, only aggregated)
+- `redditUrl` field in StoredEvidence
+- CSRF protection
+- Velocity display on stock detail header
+- `db:reset` script
+- Fading stocks minimum threshold (5 vs spec's 10)
+- Velocity window (15-min vs spec's 1-hour)
+
+---
+
+### Nightly Run Summary — 2026-04-11
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 48 | QA pass: test health, coverage gaps, feature review | p3 | [x] COMPLETE |
+
+**Final metrics:** 39 test suites, 435 tests (was 406), lint clean, build clean, E2E 186/186 passed (was 67/186)
+
+**Key changes this run:**
+- **E2E test fixes (critical):** Fixed 7 root causes that were failing 97 E2E tests — dev server crash under parallel load (workers unlimited→3), strict mode violations on error state detection (getByText→getByRole), signup hydration race condition (added networkidle wait), keyboard tab order, mobile tap→click, password locator specificity, autofill/retry timing
+- **New unit tests (29):** Dashboard page (14 tests) and stock detail page (15 tests) — both previously untested
+- **UI fixes (3):** "Back to Dashboard" link tap target (44px), auth cross-link tap targets (44px), evidence metadata flex-wrap
+- **No regressions:** All previous test fixes intact, mobile UI changes from Task 46 verified
+
+---
+
 ### Nightly Run Summary — 2026-04-10
 
 **1/1 tasks completed. 0 failed.**
@@ -888,6 +981,35 @@ valid tokens, HS256 compatibility, missing tokens, forged tokens, tampered paylo
 ---
 
 ## Sync Log
+
+### Nightly Cowork Sync — 2026-04-11 04:40
+
+**Log summary:** Claude Code nightly cron ran successfully on Apr 10 (exit code 0). Completed Task 47 (QA pass — E2E test fixes). 37 suites, 406 tests passing. E2E improved from 51/144 → 162/186. 9 E2E root causes fixed, 20 new unit tests added. No errors or blockers.
+
+**Completed tasks processed:** 7 tasks (41-47) verified complete and added to Notion:
+- Task 41: QA pass (test health, coverage gaps) → [Notion](https://www.notion.so/33f77a7f9e6681f0ae02cedf0e34a86b)
+- Task 42: Verify app runs locally → [Notion](https://www.notion.so/33f77a7f9e6681998978f15af5ecdffb)
+- Task 43: Fix login flow & test framework review → [Notion](https://www.notion.so/33f77a7f9e668170aadbdd26f1e3658d)
+- Task 44: Comprehensive user tests → [Notion](https://www.notion.so/33f77a7f9e6681938bd9d09b295ffebb)
+- Task 45: Stock algorithm documentation → [Notion](https://www.notion.so/33f77a7f9e66812bb422eb8dbade141c)
+- Task 46: Mobile UI review and fixes → [Notion](https://www.notion.so/33f77a7f9e66813bb0f5c5e657e3b51e)
+- Task 47: QA pass (E2E fixes, error boundaries) → [Notion](https://www.notion.so/33f77a7f9e6681628ee1cc92d6625d5d)
+
+**Notion pages created:** 7 new pages (tasks 41-47). Total: 32 pages in shipped features database.
+
+**New Todoist tasks added:** None — 0 open tasks in memeradar Todoist project.
+
+**QA task injected:** Yes — queue was empty, QA pass task added as Task 48.
+
+**Notion items needing testing:** 32 pages — all confirmed Testing Complete = __NO__ (25 existing checked via sample + 7 new created today).
+
+---
+
+### Nightly Cowork Sync — 2026-04-10 04:40 (retroactive)
+
+**Note:** This sync ran but did not complete fully — no sync log was written. Tasks 41-47 were not processed. Retroactively covered by the 2026-04-11 sync above.
+
+---
 
 ### Nightly Cowork Sync — 2026-04-09 04:40
 

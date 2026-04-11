@@ -280,7 +280,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link
               href="/signup"
-              className="text-purple-600 hover:text-purple-700 font-semibold"
+              className="inline-flex items-center min-h-[44px] text-purple-600 hover:text-purple-700 font-semibold"
             >
               Sign up
             </Link>
