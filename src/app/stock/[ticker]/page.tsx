@@ -167,7 +167,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Mentions</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.mentionCount.toLocaleString()}</p>
@@ -203,7 +203,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
 
         {/* Time Breakdown */}
         {timeBreakdown && timeBreakdown.periods.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistics by Time Period</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -293,7 +293,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 const itemSentiment = getSentimentDisplay(item.sentimentCategory);
                 return (
                   <div key={item.evidenceId} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-2 flex-wrap gap-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${itemSentiment.color}`}>
                           {itemSentiment.emoji} {itemSentiment.label}
