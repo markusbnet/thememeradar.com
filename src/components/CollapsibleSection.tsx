@@ -21,6 +21,7 @@ export default function CollapsibleSection({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-6 min-h-[44px] text-left"
         aria-expanded={isOpen}
+        aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${title}`}
       >
         <h2 className="text-base sm:text-xl font-semibold text-gray-900">{title}</h2>
         <span className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>

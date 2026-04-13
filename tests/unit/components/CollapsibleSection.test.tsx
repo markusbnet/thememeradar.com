@@ -55,6 +55,19 @@ describe('CollapsibleSection', () => {
     expect(button.className).toContain('min-h-[44px]');
   });
 
+  it('should have aria-label describing the section', () => {
+    render(
+      <CollapsibleSection title="Evidence" defaultOpen={true}>
+        <p>Content</p>
+      </CollapsibleSection>
+    );
+    const button = screen.getByRole('button');
+    expect(button).toHaveAttribute('aria-label', 'Collapse Evidence');
+
+    fireEvent.click(button);
+    expect(button).toHaveAttribute('aria-label', 'Expand Evidence');
+  });
+
   it('should have aria-expanded attribute', () => {
     render(
       <CollapsibleSection title="Aria Test" defaultOpen={true}>

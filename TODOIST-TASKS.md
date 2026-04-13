@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-12 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-13 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -631,6 +631,83 @@ All core features implemented. Same spec gaps remain:
 - `db:reset` script
 - Fading stocks minimum threshold (5 vs spec's 10)
 - Velocity window (15-min vs spec's 1-hour)
+
+---
+
+### Task 50: [x] COMPLETE — QA pass: test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-13
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-13
+**Priority:** p3
+
+### 1. Test Health
+- **Unit/Integration:** 41 suites, 485 tests — ALL PASSING (was 465, +20 new)
+- **E2E (Chromium):** 186 passed, 0 failed
+- **Lint:** Zero warnings or errors
+- **Build:** Succeeds, 19 routes compiled
+
+### 2. Tests Added (20 new tests)
+
+**Storage layer** (`tests/unit/lib/db/storage.test.ts`): +10 tests
+- `getTrendingStocks`: velocity calculation (% change from previous period), new stock velocity (100%), 5-mention minimum filter, descending sort order, all TrendingStock fields present
+- `roundToInterval`: rounding to 15-min boundary, already-on-boundary passthrough, custom interval size, midnight edge case
+- `saveScanResults`: empty results array handling
+
+**Home/Landing page** (`tests/unit/components/home-page.test.tsx`): +9 tests
+- Exactly two navigation links, `<main>` landmark, radar emoji in heading, 44px tap targets on Log In and Sign Up links, responsive text sizing classes, flex-col to flex-row button layout, min-h-screen layout, full tagline text
+
+**CollapsibleSection** (`tests/unit/components/CollapsibleSection.test.tsx`): +1 test
+- Dynamic aria-label ("Collapse/Expand {title}") updates on toggle
+
+### 3. UI Issues Found and Fixed (2)
+
+1. **CollapsibleSection missing aria-label** (`src/components/CollapsibleSection.tsx`): Button had `aria-expanded` but no `aria-label`, making it unclear to screen readers. Added dynamic `aria-label={Collapse/Expand ${title}}`.
+
+2. **Logout button off-brand color** (`src/app/dashboard/page.tsx`): Used `bg-gray-700` while all other CTAs use purple theme. Changed to `bg-purple-600 hover:bg-purple-700`.
+
+### 4. Coverage Summary by Feature
+- Authentication (signup/login/logout/me): 67 integration + 22 unit tests + E2E
+- Dashboard (trending/fading/surge): 17 integration + 14 unit tests + E2E
+- Stock detail pages: 15 integration + 15 unit tests + E2E
+- Surge detection: 25 unit + 16 integration tests
+- Storage layer: 51 unit tests (was 41, +10 new velocity/roundToInterval/edge cases)
+- Sentiment analysis: 22 unit tests
+- Ticker detection: 24 unit tests
+- Reddit scanning: 12 unit tests
+- Middleware: 20 unit tests
+- Components: all 6 components have comprehensive tests
+- Error pages: 4 error boundary components fully tested (14 tests)
+- Home page: 13 tests (was 4, +9 new)
+
+### 5. Feature Completeness (unchanged from Task 49)
+All core features implemented. Same spec gaps remain:
+- `GET /api/stocks` generic list endpoint (dashboard uses `/api/stocks/trending` instead)
+- `posts` and `comments` DynamoDB tables (raw data not persisted, only aggregated)
+- `redditUrl` field in StoredEvidence
+- CSRF protection
+- Velocity display on stock detail header
+- `db:reset` script
+- Fading stocks minimum threshold (5 vs spec's 10)
+- Velocity window (15-min vs spec's 1-hour)
+
+---
+
+### Nightly Run Summary — 2026-04-13
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 50 | QA pass: test health, coverage gaps, feature review | p3 | [x] COMPLETE |
+
+**Final metrics:** 41 test suites, 485 tests (was 465), lint clean, build clean, E2E Chromium 186/186 passed
+
+**Key changes this run:**
+- **New unit tests (20):** Storage velocity logic (5 tests — % change calculation, new-stock velocity, 5-mention filter, sort order, field completeness), roundToInterval (4 tests — boundary rounding, custom intervals, midnight edge case), saveScanResults empty input (1 test), home page (9 tests — navigation links, accessibility landmarks, tap targets, responsive classes), CollapsibleSection aria-label (1 test)
+- **UI fixes (2):** CollapsibleSection added dynamic aria-label for screen reader clarity; logout button color changed from gray to purple to match brand theme
+- **No regressions:** All previous test fixes and mobile UI changes from Tasks 46-49 verified intact
+- **Feature completeness:** Same 8 spec gaps remain from Task 49 — no new gaps, no regressions
 
 ---
 

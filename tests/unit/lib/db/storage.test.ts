@@ -251,6 +251,12 @@ describe('Storage Layer', () => {
       );
       expect(mentionPut[0].input.Item.sentimentCategory).toBe('strong_bullish');
     });
+
+    it('should handle empty results array without throwing', async () => {
+      await expect(saveScanResults([])).resolves.not.toThrow();
+      // Should not call DynamoDB at all for empty input
+      expect(docClient.send).not.toHaveBeenCalled();
+    });
   });
 
   describe('getTrendingStocks', () => {
@@ -262,6 +268,77 @@ describe('Storage Layer', () => {
     it('should respect the limit parameter', async () => {
       const result = await getTrendingStocks(5);
       expect(result.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should calculate velocity as % change from previous to current period', async () => {
+      const now = roundToInterval(Date.now());
+      const prev = now - 15 * 60 * 1000;
+
+      // Seed previous: GME had 10 mentions, current: GME has 20 mentions
+      await seedMention({ ticker: 'GME', timestamp: prev, mentionCount: 10, sentimentCategory: 'bullish' });
+      await seedMention({ ticker: 'GME', timestamp: now, mentionCount: 20, sentimentCategory: 'bullish' });
+
+      const result = await getTrendingStocks(10);
+      const gme = result.find(s => s.ticker === 'GME');
+      expect(gme).toBeDefined();
+      expect(gme!.velocity).toBe(100); // (20-10)/10 * 100 = 100%
+    });
+
+    it('should assign 100% velocity to new stocks with no previous data', async () => {
+      const now = roundToInterval(Date.now());
+
+      // Only seed current period (no previous data)
+      await seedMention({ ticker: 'NEWSTOCK', timestamp: now, mentionCount: 8, sentimentCategory: 'neutral' });
+
+      const result = await getTrendingStocks(10);
+      const newStock = result.find(s => s.ticker === 'NEWSTOCK');
+      expect(newStock).toBeDefined();
+      expect(newStock!.velocity).toBe(100);
+    });
+
+    it('should filter out stocks with fewer than 5 mentions', async () => {
+      const now = roundToInterval(Date.now());
+
+      // Seed: LOW has only 3 mentions, HIGH has 10
+      await seedMention({ ticker: 'LOW', timestamp: now, mentionCount: 3, sentimentCategory: 'neutral' });
+      await seedMention({ ticker: 'HIGH', timestamp: now, mentionCount: 10, sentimentCategory: 'bullish' });
+
+      const result = await getTrendingStocks(10);
+      const tickers = result.map(s => s.ticker);
+      expect(tickers).not.toContain('LOW');
+      expect(tickers).toContain('HIGH');
+    });
+
+    it('should sort by velocity descending', async () => {
+      const now = roundToInterval(Date.now());
+      const prev = now - 15 * 60 * 1000;
+
+      // SLOW: 10->15 (50%), FAST: 5->20 (300%)
+      await seedMention({ ticker: 'SLOW', timestamp: prev, mentionCount: 10 });
+      await seedMention({ ticker: 'SLOW', timestamp: now, mentionCount: 15 });
+      await seedMention({ ticker: 'FAST', timestamp: prev, mentionCount: 5 });
+      await seedMention({ ticker: 'FAST', timestamp: now, mentionCount: 20 });
+
+      const result = await getTrendingStocks(10);
+      const velocities = result.map(s => s.velocity);
+      for (let i = 1; i < velocities.length; i++) {
+        expect(velocities[i]).toBeLessThanOrEqual(velocities[i - 1]);
+      }
+    });
+
+    it('should include all TrendingStock fields in results', async () => {
+      const now = roundToInterval(Date.now());
+      await seedMention({ ticker: 'FIELDS', timestamp: now, mentionCount: 10, avgSentimentScore: 0.45, sentimentCategory: 'bullish' });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'FIELDS');
+      expect(stock).toBeDefined();
+      expect(stock).toHaveProperty('ticker');
+      expect(stock).toHaveProperty('mentionCount');
+      expect(stock).toHaveProperty('sentimentScore');
+      expect(stock).toHaveProperty('sentimentCategory');
+      expect(stock).toHaveProperty('velocity');
+      expect(stock).toHaveProperty('timestamp');
     });
   });
 
@@ -516,6 +593,34 @@ describe('Storage Layer', () => {
     it('should return an empty array for a ticker with no evidence', async () => {
       const result = await getStockEvidence('ZZZNOTREAL', 10);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('roundToInterval', () => {
+    it('should round timestamp down to nearest 15-minute interval', () => {
+      // 10:07 should round to 10:00
+      const ts = new Date('2026-01-01T10:07:30.000Z').getTime();
+      const rounded = roundToInterval(ts);
+      expect(rounded).toBe(new Date('2026-01-01T10:00:00.000Z').getTime());
+    });
+
+    it('should not change timestamp already on interval boundary', () => {
+      const ts = new Date('2026-01-01T10:15:00.000Z').getTime();
+      const rounded = roundToInterval(ts);
+      expect(rounded).toBe(ts);
+    });
+
+    it('should support custom interval sizes', () => {
+      const ts = new Date('2026-01-01T10:25:00.000Z').getTime();
+      const hourMs = 60 * 60 * 1000;
+      const rounded = roundToInterval(ts, hourMs);
+      expect(rounded).toBe(new Date('2026-01-01T10:00:00.000Z').getTime());
+    });
+
+    it('should handle timestamps at exact midnight', () => {
+      const ts = new Date('2026-01-01T00:00:00.000Z').getTime();
+      const rounded = roundToInterval(ts);
+      expect(rounded).toBe(ts);
     });
   });
 });

@@ -117,7 +117,7 @@ export default function DashboardPage() {
               <RefreshTimer />
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 min-h-[44px] bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition"
+                className="px-4 py-2 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md transition"
               >
                 Log Out
               </button>
