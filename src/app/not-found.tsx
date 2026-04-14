@@ -9,7 +9,7 @@ export default function NotFound() {
         <p className="text-gray-600 mb-6">
           The page you are looking for does not exist or has been moved.
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-wrap gap-4 justify-center">
           <Link
             href="/"
             className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition"
@@ -18,7 +18,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/dashboard"
-            className="min-h-[44px] px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+            className="min-h-[44px] px-4 py-2 border-2 border-purple-600 text-purple-600 hover:bg-purple-50 rounded-md transition"
           >
             Dashboard
           </Link>

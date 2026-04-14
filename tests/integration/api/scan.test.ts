@@ -84,6 +84,38 @@ describe('/api/scan authentication', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
     });
+
+    it('should accept a valid subreddits array with valid auth', async () => {
+      const { POST } = await import('@/app/api/scan/route');
+      const response = await POST(createRequest({ subreddits: ['wallstreetbets', 'stocks'] }, `Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('should return 500 when Reddit credentials are missing', async () => {
+      const savedClientId = process.env.REDDIT_CLIENT_ID;
+      const savedClientSecret = process.env.REDDIT_CLIENT_SECRET;
+      delete process.env.REDDIT_CLIENT_ID;
+      delete process.env.REDDIT_CLIENT_SECRET;
+
+      try {
+        let POST: typeof import('@/app/api/scan/route').POST;
+        jest.isolateModules(() => {
+          ({ POST } = require('@/app/api/scan/route'));
+        });
+        const response = await POST!(createRequest({ subreddit: 'wallstreetbets' }, `Bearer ${TEST_CRON_SECRET}`) as any);
+        const data = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(data.success).toBe(false);
+        expect(data.error).toMatch(/credentials/i);
+      } finally {
+        process.env.REDDIT_CLIENT_ID = savedClientId;
+        process.env.REDDIT_CLIENT_SECRET = savedClientSecret;
+      }
+    });
   });
 
   describe('GET /api/scan', () => {
@@ -129,6 +161,52 @@ describe('/api/scan authentication', () => {
       expect(typeof data.data.totalPosts).toBe('number');
       expect(typeof data.data.totalComments).toBe('number');
       expect(typeof data.data.totalMentions).toBe('number');
+    });
+
+    it('should return 500 when Reddit credentials are missing', async () => {
+      const savedClientId = process.env.REDDIT_CLIENT_ID;
+      const savedClientSecret = process.env.REDDIT_CLIENT_SECRET;
+      delete process.env.REDDIT_CLIENT_ID;
+      delete process.env.REDDIT_CLIENT_SECRET;
+
+      try {
+        let GET: typeof import('@/app/api/scan/route').GET;
+        jest.isolateModules(() => {
+          ({ GET } = require('@/app/api/scan/route'));
+        });
+        const response = await GET!(createGetRequest(`Bearer ${TEST_CRON_SECRET}`) as any);
+        const data = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(data.success).toBe(false);
+        expect(data.error).toMatch(/credentials/i);
+      } finally {
+        process.env.REDDIT_CLIENT_ID = savedClientId;
+        process.env.REDDIT_CLIENT_SECRET = savedClientSecret;
+      }
+    });
+  });
+
+  describe('verifyCronAuth', () => {
+    it('should return 401 when CRON_SECRET is not set', async () => {
+      const savedCronSecret = process.env.CRON_SECRET;
+      delete process.env.CRON_SECRET;
+
+      try {
+        const { GET } = await import('@/app/api/scan/route');
+        const request = new Request('http://localhost:3000/api/scan', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${TEST_CRON_SECRET}` },
+        });
+        const response = await GET(request as any);
+        const data = await response.json();
+
+        expect(response.status).toBe(401);
+        expect(data.success).toBe(false);
+        expect(data.error).toMatch(/unauthorized/i);
+      } finally {
+        process.env.CRON_SECRET = savedCronSecret;
+      }
     });
   });
 });

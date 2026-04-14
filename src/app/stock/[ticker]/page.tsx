@@ -305,7 +305,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                       </div>
                       <span className="text-sm text-gray-500">⬆️ {item.upvotes}</span>
                     </div>
-                    <p className="text-gray-700 mb-2 whitespace-pre-wrap">{item.text}</p>
+                    <p className="text-gray-700 mb-2 whitespace-pre-wrap break-words">{item.text}</p>
                     {item.keywords.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {item.keywords.map((keyword, idx) => (

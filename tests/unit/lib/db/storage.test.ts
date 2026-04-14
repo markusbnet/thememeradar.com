@@ -257,6 +257,143 @@ describe('Storage Layer', () => {
       // Should not call DynamoDB at all for empty input
       expect(docClient.send).not.toHaveBeenCalled();
     });
+
+    it('should save top 5 evidence items by upvotes', async () => {
+      const mentions = Array.from({ length: 7 }, (_, i) => ({
+        ticker: 'EVID',
+        source: 'post' as const,
+        sourceId: `p${i}`,
+        text: `EVID mention ${i}`,
+        subreddit: 'wallstreetbets',
+        upvotes: (i + 1) * 10, // 10, 20, 30, 40, 50, 60, 70
+        sentiment: { score: 0.3, category: 'bullish', bullishKeywords: [], bearishKeywords: [] },
+      }));
+
+      const mockResult: ScanResult = {
+        subreddit: 'wallstreetbets',
+        tickers: new Map([['EVID', mentions]]),
+        stats: { totalPosts: 7, totalComments: 0, totalMentions: 7 },
+      };
+
+      await saveScanResults([mockResult]);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const evidencePuts = sendCalls.filter(
+        (c: any) => c[0].constructor.name === 'PutCommand' &&
+          c[0].input.TableName === TABLES.STOCK_EVIDENCE
+      );
+      expect(evidencePuts.length).toBe(5);
+    });
+
+    it('should classify bearish sentiment category (score < -0.2)', async () => {
+      const mockResult: ScanResult = {
+        subreddit: 'wallstreetbets',
+        tickers: new Map([['BEAR', [{
+          ticker: 'BEAR', source: 'post' as const, sourceId: 'bear1',
+          text: 'BEAR puts dump', subreddit: 'wallstreetbets', upvotes: 10,
+          sentiment: { score: -0.5, category: 'bearish', bullishKeywords: [], bearishKeywords: ['puts', 'dump'] },
+        }]]]),
+        stats: { totalPosts: 1, totalComments: 0, totalMentions: 1 },
+      };
+
+      await saveScanResults([mockResult]);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const mentionPut = sendCalls.find(
+        (c: any) => c[0].constructor.name === 'PutCommand' &&
+          c[0].input.TableName === TABLES.STOCK_MENTIONS &&
+          c[0].input.Item.ticker === 'BEAR'
+      );
+      expect(mentionPut).toBeDefined();
+      expect(mentionPut[0].input.Item.sentimentCategory).toBe('bearish');
+    });
+
+    it('should classify strong_bearish sentiment category (score < -0.6)', async () => {
+      const mockResult: ScanResult = {
+        subreddit: 'wallstreetbets',
+        tickers: new Map([['SBEAR', [{
+          ticker: 'SBEAR', source: 'post' as const, sourceId: 'sbear1',
+          text: 'SBEAR rug pull crash', subreddit: 'wallstreetbets', upvotes: 5,
+          sentiment: { score: -0.7, category: 'strong_bearish', bullishKeywords: [], bearishKeywords: ['rug pull', 'crash'] },
+        }]]]),
+        stats: { totalPosts: 1, totalComments: 0, totalMentions: 1 },
+      };
+
+      await saveScanResults([mockResult]);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const mentionPut = sendCalls.find(
+        (c: any) => c[0].constructor.name === 'PutCommand' &&
+          c[0].input.TableName === TABLES.STOCK_MENTIONS &&
+          c[0].input.Item.ticker === 'SBEAR'
+      );
+      expect(mentionPut).toBeDefined();
+      expect(mentionPut[0].input.Item.sentimentCategory).toBe('strong_bearish');
+    });
+
+    it('should classify neutral sentiment category (-0.2 to 0.2)', async () => {
+      const mockResult: ScanResult = {
+        subreddit: 'wallstreetbets',
+        tickers: new Map([['NEUT', [{
+          ticker: 'NEUT', source: 'post' as const, sourceId: 'neut1',
+          text: 'NEUT just sitting here', subreddit: 'wallstreetbets', upvotes: 8,
+          sentiment: { score: 0.1, category: 'neutral', bullishKeywords: [], bearishKeywords: [] },
+        }]]]),
+        stats: { totalPosts: 1, totalComments: 0, totalMentions: 1 },
+      };
+
+      await saveScanResults([mockResult]);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const mentionPut = sendCalls.find(
+        (c: any) => c[0].constructor.name === 'PutCommand' &&
+          c[0].input.TableName === TABLES.STOCK_MENTIONS &&
+          c[0].input.Item.ticker === 'NEUT'
+      );
+      expect(mentionPut).toBeDefined();
+      expect(mentionPut[0].input.Item.sentimentCategory).toBe('neutral');
+    });
+
+    it('should calculate topKeywords from mention keywords', async () => {
+      const mockResult: ScanResult = {
+        subreddit: 'wallstreetbets',
+        tickers: new Map([['KEYS', [
+          {
+            ticker: 'KEYS', source: 'post' as const, sourceId: 'k1',
+            text: 'KEYS to the moon diamond hands', subreddit: 'wallstreetbets', upvotes: 50,
+            sentiment: { score: 0.6, category: 'bullish', bullishKeywords: ['to the moon', 'diamond hands'], bearishKeywords: [] },
+          },
+          {
+            ticker: 'KEYS', source: 'comment' as const, sourceId: 'k2',
+            text: 'KEYS paper hands dump', subreddit: 'wallstreetbets', upvotes: 20,
+            sentiment: { score: -0.4, category: 'bearish', bullishKeywords: [], bearishKeywords: ['paper hands', 'dump'] },
+          },
+          {
+            ticker: 'KEYS', source: 'post' as const, sourceId: 'k3',
+            text: 'KEYS diamond hands HODL', subreddit: 'wallstreetbets', upvotes: 30,
+            sentiment: { score: 0.7, category: 'bullish', bullishKeywords: ['diamond hands'], bearishKeywords: [] },
+          },
+        ]]]),
+        stats: { totalPosts: 2, totalComments: 1, totalMentions: 3 },
+      };
+
+      await saveScanResults([mockResult]);
+
+      const sendCalls = (docClient.send as jest.Mock).mock.calls;
+      const mentionPut = sendCalls.find(
+        (c: any) => c[0].constructor.name === 'PutCommand' &&
+          c[0].input.TableName === TABLES.STOCK_MENTIONS &&
+          c[0].input.Item.ticker === 'KEYS'
+      );
+      expect(mentionPut).toBeDefined();
+      const topKeywords: string[] = mentionPut[0].input.Item.topKeywords;
+      expect(Array.isArray(topKeywords)).toBe(true);
+      // 'diamond hands' appears 2x, others 1x each — it should be first
+      expect(topKeywords[0]).toBe('diamond hands');
+      expect(topKeywords).toContain('to the moon');
+      expect(topKeywords).toContain('paper hands');
+      expect(topKeywords).toContain('dump');
+    });
   });
 
   describe('getTrendingStocks', () => {

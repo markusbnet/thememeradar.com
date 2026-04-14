@@ -219,7 +219,7 @@ test.describe('Security Tests', () => {
       await passwordInput.fill('TestPassword123!');
 
       // Look for toggle button
-      const toggleButton = page.getByRole('button', { name: /show|hide|eye/i });
+      const toggleButton = page.getByRole('button', { name: /show password|hide password/i });
       const hasToggle = await toggleButton.isVisible().catch(() => false);
 
       if (hasToggle) {

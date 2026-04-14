@@ -74,8 +74,9 @@ test.describe('Stock Detail Page', () => {
       const { email } = await loginAsNewUser(page);
       testUsers.push(email);
 
-      // Wait for dashboard to load
-      await page.waitForTimeout(1000);
+      // Wait for dashboard content to render (either stock cards or empty state)
+      const stockCardOrEmpty = page.locator('a[href^="/stock/"]').or(page.getByText(/No trending stocks found/i));
+      await stockCardOrEmpty.first().waitFor({ timeout: 10000 });
 
       // Check if there are any stock cards
       const stockCards = page.locator('a[href^="/stock/"]');
@@ -674,7 +675,9 @@ test.describe('Stock Detail Page', () => {
       for (const ticker of tickers) {
         await page.goto(`/stock/${ticker}`);
         await page.waitForLoadState('domcontentloaded');
-        await page.waitForTimeout(500);
+
+        // Wait for the page to finish loading — either stock content or error heading appears
+        await page.waitForSelector('h2:has-text("Error"), h1:has-text("$")', { timeout: 10000 });
 
         // Should load page for each ticker
         const hasContent = await page.getByRole('heading', { name: /\$/i }).isVisible().catch(() => false);

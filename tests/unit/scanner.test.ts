@@ -174,6 +174,30 @@ describe('Scanner', () => {
       expect(result.stats.totalComments).toBe(0);
     });
 
+    it('should handle comment fetch throwing a non-Error object gracefully', async () => {
+      const mockPosts = [
+        {
+          id: 'post1',
+          subreddit: 'wallstreetbets',
+          title: '$GME discussion',
+          body: 'YOLO',
+          author: 'user1',
+          upvotes: 100,
+          createdAt: 1234567890,
+          url: 'https://reddit.com/r/wallstreetbets/comments/post1',
+        },
+      ];
+
+      mockRedditClient.getHotPosts.mockResolvedValue(mockPosts);
+      mockRedditClient.getPostComments.mockRejectedValue('timeout');
+
+      // Should not throw - continues with empty comments
+      const result = await scanner.scanSubreddit('wallstreetbets', 1);
+
+      expect(result.posts).toHaveLength(1);
+      expect(result.stats.totalComments).toBe(0);
+    });
+
     it('should collect accurate statistics', async () => {
       const mockPosts = [
         {
@@ -234,5 +258,44 @@ describe('Scanner', () => {
       expect(results[0].error).toBeDefined();
       expect(results[1].error).toBeUndefined();
     });
+
+    it('should use "Unknown error" when a non-Error object is thrown', async () => {
+      mockRedditClient.getHotPosts
+        .mockRejectedValueOnce('network failure')
+        .mockResolvedValueOnce([]);
+
+      mockRedditClient.getPostComments.mockResolvedValue([]);
+
+      const results = await scanner.scanMultipleSubreddits(['wallstreetbets', 'stocks'], 1);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].error).toBe('Unknown error');
+      expect(results[1].error).toBeUndefined();
+    });
+  });
+});
+
+describe('createScanner', () => {
+  beforeEach(() => {
+    (RedditClient as jest.Mock).mockImplementation(() => ({
+      getHotPosts: jest.fn(),
+      getPostComments: jest.fn(),
+    }));
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return a Scanner instance with scanSubreddit and scanMultipleSubreddits methods', () => {
+    const scanner = createScanner({
+      clientId: 'test_id',
+      clientSecret: 'test_secret',
+      userAgent: 'test_agent',
+    });
+
+    expect(scanner).toBeInstanceOf(Scanner);
+    expect(typeof scanner.scanSubreddit).toBe('function');
+    expect(typeof scanner.scanMultipleSubreddits).toBe('function');
   });
 });
