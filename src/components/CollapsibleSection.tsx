@@ -19,7 +19,7 @@ export default function CollapsibleSection({
     <div className="bg-white rounded-lg shadow">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-6 min-h-[44px] text-left"
+        className="w-full flex items-center justify-between p-4 sm:p-6 min-h-[44px] text-left"
         aria-expanded={isOpen}
         aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${title}`}
       >
@@ -28,7 +28,7 @@ export default function CollapsibleSection({
           ▼
         </span>
       </button>
-      {isOpen && <div className="px-6 pb-6">{children}</div>}
+      {isOpen && <div className="px-4 pb-4 sm:px-6 sm:pb-6">{children}</div>}
     </div>
   );
 }

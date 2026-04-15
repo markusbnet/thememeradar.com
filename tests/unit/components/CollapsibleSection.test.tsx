@@ -80,4 +80,29 @@ describe('CollapsibleSection', () => {
     fireEvent.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'false');
   });
+
+  it('should have responsive padding on button (p-4 sm:p-6)', () => {
+    render(
+      <CollapsibleSection title="Padding Test">
+        <p>Content</p>
+      </CollapsibleSection>
+    );
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('p-4');
+    expect(button.className).toContain('sm:p-6');
+  });
+
+  it('should have responsive padding on content area', () => {
+    const { container } = render(
+      <CollapsibleSection title="Content Padding" defaultOpen={true}>
+        <p>Inner content</p>
+      </CollapsibleSection>
+    );
+    // Content div is a sibling of the button inside the shadow container
+    const button = container.querySelector('button');
+    const contentDiv = button!.nextElementSibling as HTMLElement;
+    expect(contentDiv).not.toBeNull();
+    expect(contentDiv.className).toContain('px-4');
+    expect(contentDiv.className).toContain('sm:px-6');
+  });
 });

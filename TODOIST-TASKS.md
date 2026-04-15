@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-14 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-15 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -758,6 +758,111 @@ All CLAUDE.md-specified features are implemented:
 - **Build:** Succeeds, 19 routes
 - **E2E:** 572 passed across chromium/firefox/webkit/mobile-safari — ALL PASSING
 - **No regressions from prior QA passes confirmed**
+
+---
+
+### Task 52: [x] COMPLETE — QA pass — test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-15
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-15
+**Priority:** p3
+**Description:** The task queue is currently empty. Use this session to do a thorough QA pass across the codebase.
+
+### 1. Test Health
+- **Unit/Integration:** 41 suites, 514 tests — ALL PASSING (was 497, +17 new)
+- **E2E (Chromium):** 186 passed, 0 failed
+- **Lint:** Zero warnings or errors
+- **Build:** Succeeds, 19 routes compiled
+
+### 2. Tests Added (17 new tests)
+
+**StockChart** (`tests/unit/components/StockChart.test.tsx`): +6 tests
+- Responsive SVG: viewBox attribute matches dimensions, w-full class present
+- Empty data array renders "not enough data" message without SVG
+- Custom height prop changes viewBox dimensions
+- valueFormatter applied to y-axis tick labels
+- Grid lines: 5 dashed lines rendered for y-axis
+- Handles identical data values (flat line) without crashing
+
+**Error & Not-Found pages** (`tests/unit/components/error-pages.test.tsx`): +6 tests
+- Tap target verification: NotFound links, DashboardError button/link, StockDetailError button/link all have min-h-[44px]
+- Purple theme verification: NotFound "Go Home" button, DashboardError "Try Again" button, StockDetailError "Try Again" button all use bg-purple-600
+- Fixed Link mock to forward className prop for accurate rendering
+
+**CollapsibleSection** (`tests/unit/components/CollapsibleSection.test.tsx`): +2 tests
+- Button has responsive padding (p-4 sm:p-6)
+- Content area has responsive padding (px-4 sm:px-6)
+
+**Logout API** (`tests/integration/api/auth/logout.test.ts`): +2 tests
+- Cookie includes httpOnly flag
+- Custom SESSION_COOKIE_NAME env var is respected
+
+**Health API** (`tests/integration/api/health.test.ts`): +1 test
+- Response content-type is application/json
+
+### 3. UI Issues Found and Fixed (3)
+
+1. **CollapsibleSection padding not responsive** (`src/components/CollapsibleSection.tsx`): Button used `p-6` on all breakpoints; content used `px-6 pb-6`. Changed to `p-4 sm:p-6` and `px-4 pb-4 sm:px-6 sm:pb-6` for better mobile spacing at 375px.
+
+2. **Table headers missing scope attribute** (`src/app/stock/[ticker]/page.tsx`): All 5 `<th>` elements in the time breakdown table lacked `scope="col"`, reducing screen reader clarity. Added `scope="col"` to all.
+
+3. **Stock detail header "Back to Dashboard" link missing tap target** (`src/app/stock/[ticker]/page.tsx`): The header's "Back to Dashboard" link (line 144) lacked `min-h-[44px]` unlike the identical link in the error state (line 122). Added `min-h-[44px]`.
+
+### 4. Coverage Summary by Feature
+- Authentication (signup/login/logout/me): 67 integration + 22 unit tests + E2E
+- Dashboard (trending/fading/surge): 17 integration + 14 unit tests + E2E
+- Stock detail pages: 15 integration + 15 unit tests + E2E
+- Surge detection: 25 unit + 16 integration tests
+- Storage layer: 51 unit tests
+- Sentiment analysis: 22 unit tests
+- Ticker detection: 24 unit tests
+- Reddit scanning: 12 unit tests
+- Middleware: 20 unit tests
+- Components: all 6 components have comprehensive tests (StockChart now 13 tests)
+- Error pages: 4 error boundary components fully tested (20 tests, was 14)
+
+### 5. Remaining Coverage Gaps (not regressions)
+- Debug endpoints (`/api/diagnostic`, `/api/test-signup`, `/api/test/delete-user`) have no tests — these are development utilities
+- `src/lib/db/client.ts` (DynamoDB config) has no direct tests — indirectly tested through all DB operations
+- `src/lib/ticker-list.ts` (static whitelist) has no direct tests — indirectly tested through ticker detection
+
+### 6. Feature Completeness (unchanged from Task 51)
+All core features implemented. Same spec gaps remain:
+- `GET /api/stocks` generic list endpoint (dashboard uses `/api/stocks/trending` instead)
+- `posts` and `comments` DynamoDB tables (raw data not persisted, only aggregated)
+- `redditUrl` field in StoredEvidence
+- CSRF protection
+- Velocity display on stock detail header
+- `db:reset` script
+- Fading stocks minimum threshold (5 vs spec's 10)
+- Velocity window (15-min vs spec's 1-hour)
+
+### Review
+- **Unit/Integration:** 41 suites, 514 tests — ALL PASSING
+- **Lint:** Zero warnings or errors
+- **Build:** Succeeds, 19 routes
+- **E2E:** 186 passed on Chromium — ALL PASSING
+- **No regressions from prior QA passes confirmed**
+
+---
+
+### Nightly Run Summary — 2026-04-15
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 52 | QA pass: test health, coverage gaps, and feature review | p3 | [x] COMPLETE |
+
+**Final metrics:** 41 test suites, 514 tests (was 497, +17 new), lint clean, build clean, E2E 186/186 passed (Chromium)
+
+**Key changes this run:**
+- **New tests (17):** StockChart responsive SVG + edge cases (6), error/not-found page tap targets + purple theme (6), CollapsibleSection responsive padding (2), logout cookie attributes (2), health response content-type (1)
+- **UI fixes (3):** CollapsibleSection responsive padding for mobile, table headers `scope="col"` for accessibility, stock detail "Back to Dashboard" link tap target
+- **Test infrastructure fix:** Error pages Link mock updated to forward className prop
+- **Feature completeness:** All CLAUDE.md features verified implemented, same spec gaps as prior runs
+- **No regressions:** All 514 unit/integration tests and 186 E2E tests passing
 
 ---
 

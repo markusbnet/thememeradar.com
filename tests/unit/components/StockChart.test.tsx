@@ -52,4 +52,55 @@ describe('StockChart', () => {
     const path = container.querySelector('path[stroke="#16a34a"]');
     expect(path).toBeInTheDocument();
   });
+
+  it('should have responsive SVG with viewBox and w-full class', () => {
+    const { container } = render(<StockChart data={sampleData} title="Test" />);
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
+    expect(svg!.getAttribute('viewBox')).toBe('0 0 600 200');
+    expect(svg!.classList.contains('w-full')).toBe(true);
+  });
+
+  it('should not render SVG when data is empty', () => {
+    const { container } = render(<StockChart data={[]} title="Test" />);
+    const svg = container.querySelector('svg');
+    expect(svg).not.toBeInTheDocument();
+    expect(screen.getByText(/not enough data/i)).toBeInTheDocument();
+  });
+
+  it('should apply custom height to viewBox and empty state', () => {
+    const { container } = render(
+      <StockChart data={sampleData} title="Test" height={300} />
+    );
+    const svg = container.querySelector('svg');
+    expect(svg!.getAttribute('viewBox')).toBe('0 0 600 300');
+  });
+
+  it('should apply valueFormatter to y-axis tick labels', () => {
+    const formatter = (v: number) => `${v.toFixed(1)}%`;
+    render(
+      <StockChart data={sampleData} title="Test" valueFormatter={formatter} />
+    );
+    // The min value is 10, formatted as "10.0%"
+    expect(screen.getByText('10.0%')).toBeInTheDocument();
+  });
+
+  it('should render grid lines for y-axis ticks', () => {
+    const { container } = render(<StockChart data={sampleData} title="Test" />);
+    const gridLines = container.querySelectorAll('line[stroke-dasharray="4,4"]');
+    expect(gridLines.length).toBe(5);
+  });
+
+  it('should handle data with identical values without crashing', () => {
+    const flatData = [
+      { label: 'Mon', value: 50 },
+      { label: 'Tue', value: 50 },
+      { label: 'Wed', value: 50 },
+    ];
+    const { container } = render(<StockChart data={flatData} title="Flat" />);
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
+    const circles = container.querySelectorAll('circle');
+    expect(circles.length).toBe(3);
+  });
 });

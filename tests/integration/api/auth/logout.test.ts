@@ -45,6 +45,33 @@ describe('POST /api/auth/logout', () => {
     expect(valueMatch?.[1]?.trim()).toBe('');
   });
 
+  it('should set cookie with httpOnly flag', async () => {
+    const response = await POST(createRequest() as any);
+    const setCookie = response.headers.get('set-cookie');
+
+    expect(setCookie).toBeDefined();
+    expect(setCookie).toMatch(/HttpOnly/i);
+  });
+
+  it('should use custom SESSION_COOKIE_NAME from env', async () => {
+    const original = process.env.SESSION_COOKIE_NAME;
+    process.env.SESSION_COOKIE_NAME = 'custom_session';
+
+    try {
+      const response = await POST(createRequest() as any);
+      const setCookie = response.headers.get('set-cookie');
+
+      expect(setCookie).toBeDefined();
+      expect(setCookie).toContain('custom_session=');
+    } finally {
+      if (original !== undefined) {
+        process.env.SESSION_COOKIE_NAME = original;
+      } else {
+        delete process.env.SESSION_COOKIE_NAME;
+      }
+    }
+  });
+
   it('should return 500 when an unexpected error occurs during cookie handling', async () => {
     // Force the route into its catch block by making NextResponse.json throw on
     // the first call (the normal success response construction).

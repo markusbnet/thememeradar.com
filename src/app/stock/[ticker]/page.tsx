@@ -143,7 +143,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <Link
             href="/dashboard"
-            className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-4"
+            className="inline-flex items-center min-h-[44px] text-purple-600 hover:text-purple-700 mb-4"
           >
             ← Back to Dashboard
           </Link>
@@ -209,11 +209,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-500">Period</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-500">Mentions</th>
-                    <th className="text-right py-3 px-4 font-medium text-green-600">Bullish %</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-500">Neutral %</th>
-                    <th className="text-right py-3 px-4 font-medium text-red-600">Bearish %</th>
+                    <th scope="col" className="text-left py-3 px-4 font-medium text-gray-500">Period</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-gray-500">Mentions</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-green-600">Bullish %</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-gray-500">Neutral %</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-red-600">Bearish %</th>
                   </tr>
                 </thead>
                 <tbody>

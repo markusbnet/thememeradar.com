@@ -6,8 +6,8 @@ import StockDetailError from '@/app/stock/[ticker]/error';
 
 // Mock next/link
 jest.mock('next/link', () => {
-  return function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
-    return <a href={href}>{children}</a>;
+  return function MockLink({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) {
+    return <a href={href} className={className}>{children}</a>;
   };
 });
 
@@ -126,5 +126,55 @@ describe('StockDetailError', () => {
     render(<StockDetailError error={mockError} reset={mockReset} />);
     const dashLink = screen.getByRole('link', { name: /back to dashboard/i });
     expect(dashLink.getAttribute('href')).toBe('/dashboard');
+  });
+});
+
+describe('Tap targets (min 44px)', () => {
+  it('NotFound: Go Home and Dashboard links have 44px tap target', () => {
+    const { container } = render(<NotFound />);
+    const links = container.querySelectorAll('a');
+    links.forEach((link) => {
+      expect(link.className).toContain('min-h-[44px]');
+    });
+  });
+
+  it('DashboardError: Try Again button and Go Home link have 44px tap target', () => {
+    const mockReset = jest.fn();
+    const { container } = render(<DashboardError error={new Error('test')} reset={mockReset} />);
+    const button = container.querySelector('button');
+    const link = container.querySelector('a');
+    expect(button!.className).toContain('min-h-[44px]');
+    expect(link!.className).toContain('min-h-[44px]');
+  });
+
+  it('StockDetailError: Try Again button and Back to Dashboard link have 44px tap target', () => {
+    const mockReset = jest.fn();
+    const { container } = render(<StockDetailError error={new Error('test')} reset={mockReset} />);
+    const button = container.querySelector('button');
+    const link = container.querySelector('a');
+    expect(button!.className).toContain('min-h-[44px]');
+    expect(link!.className).toContain('min-h-[44px]');
+  });
+});
+
+describe('Error pages use purple theme for primary actions', () => {
+  it('NotFound: Go Home button uses purple background', () => {
+    const { container } = render(<NotFound />);
+    const homeLink = screen.getByRole('link', { name: /go home/i });
+    expect(homeLink.className).toContain('bg-purple-600');
+  });
+
+  it('DashboardError: Try Again button uses purple background', () => {
+    const mockReset = jest.fn();
+    render(<DashboardError error={new Error('test')} reset={mockReset} />);
+    const button = screen.getByRole('button', { name: /try again/i });
+    expect(button.className).toContain('bg-purple-600');
+  });
+
+  it('StockDetailError: Try Again button uses purple background', () => {
+    const mockReset = jest.fn();
+    render(<StockDetailError error={new Error('test')} reset={mockReset} />);
+    const button = screen.getByRole('button', { name: /try again/i });
+    expect(button.className).toContain('bg-purple-600');
   });
 });

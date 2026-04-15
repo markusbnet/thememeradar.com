@@ -29,6 +29,14 @@ describe('GET /api/health', () => {
     expect(data.data.timestamp).toBeLessThanOrEqual(after);
   });
 
+  it('should return JSON content type', async () => {
+    const request = new Request('http://localhost:3000/api/health');
+    const response = await GET(request);
+    const contentType = response.headers.get('content-type');
+
+    expect(contentType).toContain('application/json');
+  });
+
   it('should match the standard response format', async () => {
     const request = new Request('http://localhost:3000/api/health');
     const response = await GET(request);
