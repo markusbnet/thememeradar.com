@@ -250,4 +250,28 @@ describe('GET /api/stocks/trending', () => {
       expect(second.data.timestamp).toBe(first.data.timestamp);
     });
   });
+
+  describe('error handling', () => {
+    it('should return 500 with the error message when getTrendingStocks throws', async () => {
+      mockGetTrendingStocks.mockRejectedValueOnce(new Error('DynamoDB connection failed'));
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('DynamoDB connection failed');
+    });
+
+    it('should return 500 with fallback message when a non-Error is thrown', async () => {
+      mockGetTrendingStocks.mockRejectedValueOnce('network failure');
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Failed to fetch trending stocks');
+    });
+  });
 });

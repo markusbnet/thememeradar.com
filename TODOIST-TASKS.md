@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-15 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-16 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -847,6 +847,106 @@ All core features implemented. Same spec gaps remain:
 
 ---
 
+### Task 53: [x] COMPLETE — QA pass — test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-16
+**Status:** [x] COMPLETE
+**Priority:** p3
+**Description:** The task queue is currently empty. Use this session to do a thorough QA pass across the codebase.
+
+### Goals
+
+1. **Test health check**
+   - Run the full unit + integration suite (`npm run test`). Any failures must be fixed before moving on.
+   - Run E2E tests (`npm run test:e2e`) against at least Chromium. Any failures must be fixed before moving on.
+   - Run lint (`npm run lint`) and the production build (`npm run build`). Zero warnings/errors required.
+
+2. **Identify coverage gaps**
+   - Walk the codebase and identify any functions, branches, or edge cases that are not exercised by tests.
+   - For each real gap (not a debug/dev-only utility), write failing tests first (TDD), then ensure they pass.
+   - Record any remaining gaps that are intentionally not covered (e.g. debug endpoints, static whitelists) in the task review.
+
+3. **Feature completeness review vs CLAUDE.md**
+   - Re-read CLAUDE.md and compare against the current implementation.
+   - Note any missing features, spec drift, or UI regressions.
+   - If you find a true regression (not a known spec gap), fix it within this task. Otherwise record it for a future task.
+
+4. **Mobile + accessibility spot check**
+   - Sanity check that key flows (dashboard, stock detail, login, signup) look correct at 375px, 768px, and 1280px viewports.
+   - Ensure all interactive elements still meet the 44×44px tap target minimum.
+   - Ensure table headers have `scope` attributes, buttons have accessible names, and any new components have `aria-*` where appropriate.
+
+### Deliverables
+
+- All tests passing (unit + integration + E2E on Chromium).
+- Lint clean. Build clean.
+- A **Review** section on this task summarising: test counts (before → after), new tests added, any bugs/regressions fixed, and any remaining coverage gaps or spec gaps.
+- Commit with a descriptive message. Mark task `[x] COMPLETE` only after all of the above.
+
+### Review
+
+**Test counts**
+- Unit/Integration: 41 suites / 514 tests → **42 suites / 532 tests** (+1 suite, +18 tests)
+- E2E (Chromium): 186/186 passing (unchanged)
+- Lint: clean. Build: clean.
+
+**New tests added (18)**
+- `tests/integration/api/stocks/trending.test.ts` (+2) — error-handling describe: `getTrendingStocks` throws Error → 500 propagates message; non-Error throw → 500 with fallback "Failed to fetch trending stocks".
+- `tests/integration/api/scan.test.ts` (+4) — POST and GET error-handling describes: `saveScanResults` throws Error → 500 propagates message; non-Error throw → 500 with "Internal server error" (POST) / "Scan failed" (GET).
+- `tests/integration/api/stocks/evidence.test.ts` (+1) — non-Error thrown by `getStockEvidence` → 500 with fallback "Failed to fetch evidence".
+- `tests/unit/reddit.test.ts` (+2) — `getRedditClient()` singleton factory: returns `RedditClient` instance; returns same instance on subsequent calls.
+- `tests/unit/lib/rate-limit.test.ts` (+3) — `RateLimiter.reset()` clears store; `authRateLimiter` defaults to 5 when `AUTH_RATE_LIMIT_MAX` unset; respects env override when set.
+- `tests/unit/lib/ticker-list.test.ts` (**new file**, +6) — whitelist is a Set; contains meme stocks (GME/AMC/BB/PLTR/SOFI); contains mega caps (AAPL/MSFT/TSLA/NVDA/GOOGL); contains ETFs (SPY/QQQ/VOO/ARKK); has ≥400 entries guard; does not contain common false-positive English words (FOR/THE/YOU/WHY/HOW).
+
+**Bugs/regressions fixed:** None — all existing tests and flows were already green at baseline.
+
+**Remaining coverage gaps (intentionally uncovered)**
+- Debug/dev-only endpoints (`/api/diagnostic`, `/api/test-signup`, `/api/test/delete-user`) — not tested; gated/dev-only behaviour.
+- DynamoDB client initialisation in `src/lib/db/client.ts` — only exercised indirectly via storage tests.
+- `src/instrumentation.ts` — already has a dedicated test; further branches (actual logger wiring) are Next.js framework concerns.
+
+**Feature-completeness gaps vs CLAUDE.md (unchanged from Task 52)**
+Still outstanding (out of scope for QA task; logged for future work):
+1. **DD Count metric** — not tracked in `stock_mentions` or surfaced in UI.
+2. **Top Subreddit per ticker** — breakdown stored but no "top" field extracted/displayed.
+3. **GET /api/stocks** (list-of-top-stocks endpoint) — only `/api/stocks/trending` exists.
+4. **"Next update in: N minutes"** — rendered but hardcoded 5-min interval, not synced to server scan timestamps.
+5. **Fading stocks min-mentions threshold** — implementation uses ≥5, spec says ≥10 prior.
+6. **"Top keywords associated with ticker"** — present in collapsible section, not in stats table as spec calls for.
+7. **Users/posts/comments tables** — auth works but explicit table provisioning for `posts`/`comments` not in `db:init` (only `users`, `stock_mentions`, `stock_evidence`).
+
+**Mobile + a11y spot check**
+- Responsive breakpoints (`sm:`/`md:`/`lg:`) used mobile-first throughout dashboard, stock detail, auth pages.
+- `StockChart` uses `viewBox` + `className="w-full"` — the internal `width=600` is a coordinate system, not a fixed CSS width; it scales at 375px.
+- 44×44 tap targets confirmed on refresh button, password toggles, back-to-dashboard link, auth submit buttons.
+- Tables have `<th scope="col">` (stock detail stats table).
+- Form inputs have `<label htmlFor>`, `aria-invalid`, `aria-describedby` on errors.
+- SVG chart has `role="img"` + `aria-label`.
+- Minor a11y nits (non-blocking, not filed this pass): no skip-to-content link, `aria-live` not set on `RefreshTimer`, a couple of buttons lack explicit focus rings. These can be picked up as a dedicated a11y polish task if desired.
+
+**No regressions:** 532/532 unit + 186/186 E2E all passing; lint + build clean.
+
+---
+
+### Nightly Run Summary — 2026-04-16
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 53 | QA pass: test health, coverage gaps, and feature review | p3 | [x] COMPLETE |
+
+**Final metrics:** 42 test suites (was 41, +1), 532 tests (was 514, +18 new), lint clean, build clean, E2E 186/186 passed (Chromium)
+
+**Key changes this run:**
+- **New tests (18):** Trending API error paths (2), Scan API POST+GET error paths (4), Evidence API non-Error fallback (1), Reddit client singleton factory (2), RateLimiter.reset() + authRateLimiter env config (3), Ticker whitelist sanity checks — new file (6)
+- **UI fixes:** None needed this pass (no regressions found)
+- **Feature completeness:** Unchanged from prior runs — same 7 known spec gaps (DD count, top subreddit, GET /api/stocks, refresh timer sync, fading threshold, top-keywords placement, missing posts/comments tables)
+- **Mobile + a11y:** StockChart confirmed responsive via viewBox; tap targets, scope attrs, form labels all good; minor a11y polish (aria-live, focus rings, skip-to-content) deferred to a dedicated future task
+- **No regressions:** All 532 unit/integration tests and 186 E2E tests passing
+
+---
+
 ### Nightly Run Summary — 2026-04-15
 
 **1/1 tasks completed. 0 failed.**
@@ -1367,6 +1467,23 @@ All core features implemented. Same spec gaps remain:
 ---
 
 ## Sync Log
+
+### Nightly Cowork Sync — 2026-04-16 04:40
+
+**Log summary:** Claude Code nightly cron ran successfully on Apr 15 (exit code 0). Completed Task 52 (QA pass). 41 suites, 514 tests passing (+17 new). E2E 186/186 on Chromium. Lint clean, build clean (19 routes). Three UI fixes landed: CollapsibleSection responsive padding, table headers `scope="col"`, stock detail "Back to Dashboard" tap target. No errors or blockers.
+
+**Completed tasks processed:** 1 task verified complete and added to Notion:
+- Task 52: QA pass — test health, coverage gaps, and feature review → [Notion](https://www.notion.so/34477a7f9e6681e08d0ac739709cf1d6)
+
+**Notion pages created:** 1 new page (Task 52). Total: 36 pages in shipped features database.
+
+**New Todoist tasks added:** None — 0 open tasks in memeradar Todoist project.
+
+**QA task injected:** Yes — queue was empty, QA pass task added as Task 53.
+
+**Notion items needing testing:** 36 pages — all confirmed Testing Complete = __NO__ (35 existing checked + 1 new created today).
+
+---
 
 ### Nightly Cowork Sync — 2026-04-11 04:40
 

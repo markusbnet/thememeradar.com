@@ -128,4 +128,16 @@ describe('GET /api/stocks/:ticker/evidence', () => {
     expect(data.success).toBe(false);
     expect(data.error).toBe('DynamoDB connection failed');
   });
+
+  it('should return 500 with fallback message when a non-Error is thrown', async () => {
+    (getStockEvidence as jest.Mock).mockRejectedValueOnce('network timeout');
+
+    const [req, ctx] = createRequest('GME');
+    const response = await GET(req, ctx);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('Failed to fetch evidence');
+  });
 });

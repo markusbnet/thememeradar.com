@@ -15,6 +15,10 @@ jest.mock('@/lib/db/storage', () => ({
   saveScanResults: jest.fn().mockResolvedValue(undefined),
 }));
 
+import { saveScanResults } from '@/lib/db/storage';
+
+const mockSaveScanResults = saveScanResults as jest.MockedFunction<typeof saveScanResults>;
+
 const TEST_CRON_SECRET = 'test-cron-secret-12345';
 
 describe('/api/scan authentication', () => {
@@ -207,6 +211,86 @@ describe('/api/scan authentication', () => {
       } finally {
         process.env.CRON_SECRET = savedCronSecret;
       }
+    });
+  });
+
+  describe('POST /api/scan error handling', () => {
+    beforeEach(() => {
+      mockSaveScanResults.mockReset();
+      mockSaveScanResults.mockResolvedValue(undefined);
+    });
+
+    const createRequest = (body: Record<string, unknown>, authHeader: string) => {
+      return new Request('http://localhost:3000/api/scan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify(body),
+      });
+    };
+
+    it('should return 500 with the error message when saveScanResults throws', async () => {
+      mockSaveScanResults.mockRejectedValueOnce(new Error('DynamoDB write failed'));
+
+      const { POST } = await import('@/app/api/scan/route');
+      const response = await POST(createRequest({ subreddit: 'wallstreetbets' }, `Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('DynamoDB write failed');
+    });
+
+    it('should return 500 with fallback message when a non-Error is thrown', async () => {
+      mockSaveScanResults.mockRejectedValueOnce('network failure');
+
+      const { POST } = await import('@/app/api/scan/route');
+      const response = await POST(createRequest({ subreddit: 'wallstreetbets' }, `Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Internal server error');
+    });
+  });
+
+  describe('GET /api/scan error handling', () => {
+    beforeEach(() => {
+      mockSaveScanResults.mockReset();
+      mockSaveScanResults.mockResolvedValue(undefined);
+    });
+
+    const createGetRequest = (authHeader: string) => {
+      return new Request('http://localhost:3000/api/scan', {
+        method: 'GET',
+        headers: { 'Authorization': authHeader },
+      });
+    };
+
+    it('should return 500 with the error message when saveScanResults throws', async () => {
+      mockSaveScanResults.mockRejectedValueOnce(new Error('DynamoDB write failed'));
+
+      const { GET } = await import('@/app/api/scan/route');
+      const response = await GET(createGetRequest(`Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('DynamoDB write failed');
+    });
+
+    it('should return 500 with fallback message when a non-Error is thrown', async () => {
+      mockSaveScanResults.mockRejectedValueOnce('network failure');
+
+      const { GET } = await import('@/app/api/scan/route');
+      const response = await GET(createGetRequest(`Bearer ${TEST_CRON_SECRET}`) as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toBe('Scan failed');
     });
   });
 });

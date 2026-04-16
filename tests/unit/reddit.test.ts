@@ -465,3 +465,32 @@ describe('RedditClient', () => {
     }, 10000);
   });
 });
+
+describe('getRedditClient', () => {
+  beforeEach(() => {
+    process.env.REDDIT_CLIENT_ID = 'test_client_id';
+    process.env.REDDIT_CLIENT_SECRET = 'test_client_secret';
+    process.env.REDDIT_USER_AGENT = 'TestAgent/1.0';
+    // Reset module state so the singleton is recreated per test
+    jest.resetModules();
+  });
+
+  afterEach(() => {
+    delete process.env.REDDIT_CLIENT_ID;
+    delete process.env.REDDIT_CLIENT_SECRET;
+    delete process.env.REDDIT_USER_AGENT;
+  });
+
+  it('should return a RedditClient instance', async () => {
+    const { getRedditClient: getClient, RedditClient: Client } = await import('@/lib/reddit');
+    const instance = getClient();
+    expect(instance).toBeInstanceOf(Client);
+  });
+
+  it('should return the same instance on subsequent calls (singleton)', async () => {
+    const { getRedditClient: getClient } = await import('@/lib/reddit');
+    const first = getClient();
+    const second = getClient();
+    expect(second).toBe(first);
+  });
+});
