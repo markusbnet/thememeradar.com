@@ -50,6 +50,7 @@ const TABLES = {
   STOCK_MENTIONS: 'stock_mentions',
   STOCK_EVIDENCE: 'stock_evidence',
   STOCK_ENRICHMENT: 'stock_enrichment',
+  OPPORTUNITY_SIGNALS: 'opportunity_signals',
 };
 
 async function deleteTableIfExists(tableName: string) {
@@ -191,6 +192,31 @@ async function createStockEnrichmentTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createOpportunitySignalsTable() {
+  const tableName = TABLES.OPPORTUNITY_SIGNALS;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'timestamp', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing DynamoDB Tables ===\n');
 
@@ -199,6 +225,7 @@ async function main() {
     await createStockMentionsTable();
     await createStockEvidenceTable();
     await createStockEnrichmentTable();
+    await createOpportunitySignalsTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
@@ -206,6 +233,7 @@ async function main() {
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
     console.log('- stock_enrichment (LunarCrush social + price data per ticker, TTL 30d)');
+    console.log('- opportunity_signals (composite opportunity scores, TTL 30d)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.
