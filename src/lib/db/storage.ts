@@ -45,6 +45,18 @@ export interface TrendingStock {
   sentimentCategory: string;
   velocity: number; // % change from previous period
   timestamp: number;
+  rank24hAgo: number | null;   // null when < 24h of history or ticker is new
+  rankDelta24h: number | null; // positive = climbed (was rank 5, now rank 2 → +3)
+  rankStatus: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
+  //   climbing = positive delta; falling = negative; steady = 0; new = no prior entry; unknown = < 24h history
+}
+
+// 5-minute in-memory cache for 24h rank snapshots (one entry per timestamp bucket)
+let _rankSnapshotCache: { timestamp: number; data: Map<string, number>; fetchedAt: number } | null = null;
+
+/** For tests only — clears the rank snapshot cache so tests start with a clean slate. */
+export function clearRankSnapshotCache(): void {
+  _rankSnapshotCache = null;
 }
 
 /**
@@ -53,6 +65,40 @@ export interface TrendingStock {
  */
 export function roundToInterval(timestamp: number, intervalMs: number = 15 * 60 * 1000): number {
   return Math.floor(timestamp / intervalMs) * intervalMs;
+}
+
+/**
+ * Build a ticker→rank map for a given timestamp bucket.
+ * Ranks are determined by mentionCount descending (rank 1 = most mentions).
+ * Results are cached for 5 minutes to avoid redundant DynamoDB queries per request.
+ */
+export async function getRankSnapshot(timestamp: number): Promise<Map<string, number>> {
+  if (
+    _rankSnapshotCache &&
+    _rankSnapshotCache.timestamp === timestamp &&
+    Date.now() - _rankSnapshotCache.fetchedAt < 5 * 60 * 1000
+  ) {
+    return _rankSnapshotCache.data;
+  }
+
+  const result = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      IndexName: 'timestamp-index',
+      KeyConditionExpression: '#timestamp = :timestamp',
+      ExpressionAttributeNames: { '#timestamp': 'timestamp' },
+      ExpressionAttributeValues: { ':timestamp': timestamp },
+    })
+  );
+
+  const items = (result.Items || []).slice().sort(
+    (a, b) => (b.mentionCount as number) - (a.mentionCount as number)
+  );
+  const rankMap = new Map<string, number>();
+  items.forEach((item, idx) => rankMap.set(item.ticker as string, idx + 1));
+
+  _rankSnapshotCache = { timestamp, data: rankMap, fetchedAt: Date.now() };
+  return rankMap;
 }
 
 /**
@@ -243,10 +289,10 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
   }
 
   // Calculate velocity for current stocks
-  const trending: TrendingStock[] = [];
+  const trending: Omit<TrendingStock, 'rank24hAgo' | 'rankDelta24h' | 'rankStatus'>[] = [];
   for (const item of currentData.Items || []) {
-    const current = item.mentionCount;
-    const previous = previousMap.get(item.ticker) || 0;
+    const current = item.mentionCount as number;
+    const previous = previousMap.get(item.ticker as string) || 0;
 
     // Calculate velocity (% change)
     const velocity = previous > 0 ? ((current - previous) / previous) * 100 : 100;
@@ -254,18 +300,44 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
     // Only include stocks with at least 5 mentions
     if (current >= 5) {
       trending.push({
-        ticker: item.ticker,
+        ticker: item.ticker as string,
         mentionCount: current,
-        sentimentScore: item.avgSentimentScore,
-        sentimentCategory: item.sentimentCategory,
+        sentimentScore: item.avgSentimentScore as number,
+        sentimentCategory: item.sentimentCategory as string,
         velocity,
         timestamp: now,
       });
     }
   }
 
-  // Sort by velocity (descending) and return top N
-  return trending.sort((a, b) => b.velocity - a.velocity).slice(0, limit);
+  // Sort by velocity descending, slice to limit
+  const sorted = trending.sort((a, b) => b.velocity - a.velocity).slice(0, limit);
+
+  // Compute 24h rank delta: query the snapshot from 24h ago
+  const timestamp24hAgo = now - 24 * 60 * 60 * 1000;
+  const snapshot24h = await getRankSnapshot(timestamp24hAgo);
+  const hasHistory = snapshot24h.size > 0;
+
+  return sorted.map((stock, idx): TrendingStock => {
+    const currentRank = idx + 1;
+    const pastRank = snapshot24h.get(stock.ticker) ?? null;
+
+    let rankDelta24h: number | null = null;
+    let rankStatus: TrendingStock['rankStatus'] = 'unknown';
+
+    if (!hasHistory) {
+      rankStatus = 'unknown';
+    } else if (pastRank === null) {
+      rankStatus = 'new';
+    } else {
+      rankDelta24h = pastRank - currentRank; // positive = climbed
+      if (rankDelta24h > 0) rankStatus = 'climbing';
+      else if (rankDelta24h < 0) rankStatus = 'falling';
+      else rankStatus = 'steady';
+    }
+
+    return { ...stock, rank24hAgo: pastRank, rankDelta24h, rankStatus };
+  });
 }
 
 /**

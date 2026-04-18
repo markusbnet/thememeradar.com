@@ -18,6 +18,8 @@ interface StockCardProps {
   timestamp: number;
   type: 'trending' | 'fading';
   sparklineData?: number[];
+  rankDelta24h?: number | null;
+  rankStatus?: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
 }
 
 export default function StockCard({
@@ -29,6 +31,8 @@ export default function StockCard({
   velocity,
   type,
   sparklineData,
+  rankDelta24h,
+  rankStatus,
 }: StockCardProps) {
   // Determine sentiment emoji and color
   const getSentimentDisplay = (category: string) => {
@@ -58,6 +62,14 @@ export default function StockCard({
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-medium text-gray-500">#{rank}</span>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">${ticker}</h3>
+              {rankStatus === 'new' && (
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">NEW</span>
+              )}
+              {(rankStatus === 'climbing' || rankStatus === 'falling') && rankDelta24h !== null && rankDelta24h !== undefined && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${rankDelta24h > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {rankDelta24h > 0 ? `↑${rankDelta24h}` : `↓${Math.abs(rankDelta24h)}`}
+                </span>
+              )}
             </div>
             <p className={`text-sm font-medium ${sentiment.color}`}>
               {sentiment.emoji} {sentiment.label}

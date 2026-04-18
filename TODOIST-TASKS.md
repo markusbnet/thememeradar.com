@@ -1160,7 +1160,7 @@ Each sub-score normalized to 0–100. Final score 0–100.
 
 ---
 
-### Task 60: [ ] NEW — A1: 24h rank-delta metric on trending
+### Task 60: [x] COMPLETE — A1: 24h rank-delta metric on trending
 **Todoist ID:** 6gQ535G3P4qMjcGc
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
@@ -1208,6 +1208,17 @@ interface TrendingStock {
 - When system-wide history is < 24h, every ticker has `rankStatus: 'unknown'` and no badge rendered
 
 **TDD:** Unit tests for `getRankSnapshot` (empty history, single ticker, ties), unit test for delta computation (climber, faller, new entry, disappeared). Integration test that trending endpoint returns non-null `rankDelta24h` for tickers with history. E2E that the badge renders on the dashboard.
+
+**Implementation:**
+- Extended `TrendingStock` interface with `rank24hAgo`, `rankDelta24h`, `rankStatus` fields
+- Added `getRankSnapshot(timestamp)` with 5-min in-memory cache; `clearRankSnapshotCache()` for tests
+- Extended `getTrendingStocks()` to query 24h-ago snapshot and compute rank deltas per ticker
+- Updated `StockCard` to render NEW (purple), ↑N (green), ↓N (red) badges
+- Updated dashboard to pass rank fields to both trending and fading StockCards
+- 7 new tests: 3 for `getRankSnapshot`, 4 for rank-delta in `getTrendingStocks`
+- **Files changed:** `src/lib/db/storage.ts`, `src/components/StockCard.tsx`, `src/app/dashboard/page.tsx`, `tests/unit/lib/db/storage.test.ts`
+- **Metrics:** 42 suites, 550 tests, lint clean, build clean
+**Completed:** 2026-04-18
 
 ---
 

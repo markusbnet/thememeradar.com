@@ -69,6 +69,8 @@ import {
   getStockHistory,
   getSparklineData,
   roundToInterval,
+  getRankSnapshot,
+  clearRankSnapshotCache,
 } from '@/lib/db/storage';
 import type { ScanResult } from '@/lib/scanner/scanner';
 import { docClient, TABLES, PutCommand } from '@/lib/db/client';
@@ -758,6 +760,103 @@ describe('Storage Layer', () => {
       const ts = new Date('2026-01-01T00:00:00.000Z').getTime();
       const rounded = roundToInterval(ts);
       expect(rounded).toBe(ts);
+    });
+  });
+
+  describe('getRankSnapshot', () => {
+    beforeEach(() => clearRankSnapshotCache());
+
+    it('should return empty map when no data at timestamp', async () => {
+      const snap = await getRankSnapshot(0);
+      expect(snap.size).toBe(0);
+    });
+
+    it('should return rank 1 for a single ticker at the given timestamp', async () => {
+      const ts = roundToInterval(new Date('2020-01-01T00:00:00.000Z').getTime());
+      await seedMention({ ticker: 'SNAP1', timestamp: ts, mentionCount: 100 });
+      const snap = await getRankSnapshot(ts);
+      expect(snap.get('SNAP1')).toBe(1);
+    });
+
+    it('should rank multiple tickers by mentionCount descending', async () => {
+      const ts = roundToInterval(new Date('2020-01-02T00:00:00.000Z').getTime());
+      await seedMention({ ticker: 'SNPA', timestamp: ts, mentionCount: 50 });
+      await seedMention({ ticker: 'SNPB', timestamp: ts, mentionCount: 100 });
+      await seedMention({ ticker: 'SNPC', timestamp: ts, mentionCount: 75 });
+      const snap = await getRankSnapshot(ts);
+      expect(snap.get('SNPB')).toBe(1);
+      expect(snap.get('SNPC')).toBe(2);
+      expect(snap.get('SNPA')).toBe(3);
+    });
+  });
+
+  describe('getTrendingStocks rank-delta', () => {
+    // Use frozen Date.now() so getTrendingStocks queries the exact timestamps we seeded.
+    // Clear the rank snapshot cache before each sub-test to prevent cross-test contamination.
+    afterEach(() => {
+      jest.restoreAllMocks();
+      clearRankSnapshotCache();
+    });
+
+    it('should return rankStatus=unknown when no 24h history exists', async () => {
+      const frozen = roundToInterval(new Date('2025-06-01T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      await seedMention({ ticker: 'RDNW', timestamp: frozen, mentionCount: 20 });
+      await seedMention({ ticker: 'RDNW', timestamp: frozen - 15 * 60 * 1000, mentionCount: 10 });
+      // No data at frozen - 24h → unknown
+      const trending = await getTrendingStocks(10);
+      const stock = trending.find(t => t.ticker === 'RDNW');
+      expect(stock?.rankStatus).toBe('unknown');
+      expect(stock?.rankDelta24h).toBeNull();
+      expect(stock?.rank24hAgo).toBeNull();
+    });
+
+    it('should return rankStatus=new when ticker absent from 24h-ago snapshot but history exists', async () => {
+      const frozen = roundToInterval(new Date('2025-06-02T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const ago24h = frozen - 24 * 60 * 60 * 1000;
+      // Provide 24h-ago history for a different ticker so snapshot is non-empty
+      await seedMention({ ticker: 'RDEX', timestamp: ago24h, mentionCount: 30 });
+      // RDNW2 only exists now
+      await seedMention({ ticker: 'RDNW2', timestamp: frozen, mentionCount: 15 });
+      await seedMention({ ticker: 'RDNW2', timestamp: frozen - 15 * 60 * 1000, mentionCount: 7 });
+      const trending = await getTrendingStocks(10);
+      const stock = trending.find(t => t.ticker === 'RDNW2');
+      expect(stock?.rankStatus).toBe('new');
+      expect(stock?.rankDelta24h).toBeNull();
+    });
+
+    it('should return positive rankDelta24h for a climbing stock', async () => {
+      const frozen = roundToInterval(new Date('2025-06-03T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const ago24h = frozen - 24 * 60 * 60 * 1000;
+      // 24h ago: RDLD was rank 1, RDCL was rank 2
+      await seedMention({ ticker: 'RDLD', timestamp: ago24h, mentionCount: 200 });
+      await seedMention({ ticker: 'RDCL', timestamp: ago24h, mentionCount: 50 });
+      // Now: only RDCL is in current bucket → current rank 1
+      await seedMention({ ticker: 'RDCL', timestamp: frozen, mentionCount: 30 });
+      await seedMention({ ticker: 'RDCL', timestamp: frozen - 15 * 60 * 1000, mentionCount: 10 });
+      const trending = await getTrendingStocks(10);
+      const stock = trending.find(t => t.ticker === 'RDCL');
+      expect(stock?.rankStatus).toBe('climbing');
+      expect(stock?.rank24hAgo).toBe(2);
+      expect(stock?.rankDelta24h).toBe(1); // rank 2 → rank 1 = +1
+    });
+
+    it('should return steady rankStatus when rank is unchanged', async () => {
+      const frozen = roundToInterval(new Date('2025-06-04T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const ago24h = frozen - 24 * 60 * 60 * 1000;
+      // 24h ago: RDST was rank 1 (only ticker)
+      await seedMention({ ticker: 'RDST', timestamp: ago24h, mentionCount: 100 });
+      // Now: RDST still rank 1
+      await seedMention({ ticker: 'RDST', timestamp: frozen, mentionCount: 30 });
+      await seedMention({ ticker: 'RDST', timestamp: frozen - 15 * 60 * 1000, mentionCount: 10 });
+      const trending = await getTrendingStocks(10);
+      const stock = trending.find(t => t.ticker === 'RDST');
+      expect(stock?.rankStatus).toBe('steady');
+      expect(stock?.rankDelta24h).toBe(0);
+      expect(stock?.rank24hAgo).toBe(1);
     });
   });
 });

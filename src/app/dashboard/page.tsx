@@ -16,6 +16,8 @@ interface TrendingStock {
   velocity: number;
   timestamp: number;
   sparklineData?: number[];
+  rankDelta24h?: number | null;
+  rankStatus?: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
 }
 
 interface StockData {
@@ -220,6 +222,8 @@ export default function DashboardPage() {
                   timestamp={stock.timestamp}
                   type="trending"
                   sparklineData={stock.sparklineData}
+                  rankDelta24h={stock.rankDelta24h}
+                  rankStatus={stock.rankStatus}
                 />
               ))}
             </div>
@@ -257,6 +261,8 @@ export default function DashboardPage() {
                   timestamp={stock.timestamp}
                   type="fading"
                   sparklineData={stock.sparklineData}
+                  rankDelta24h={stock.rankDelta24h}
+                  rankStatus={stock.rankStatus}
                 />
               ))}
             </div>
