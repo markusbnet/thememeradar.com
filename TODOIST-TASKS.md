@@ -996,10 +996,11 @@ Still outstanding (out of scope for QA task; logged for future work):
 
 ---
 
-### Task 54: [ ] NEW — LunarCrush API client and type definitions
+### Task 54: [x] COMPLETE — LunarCrush API client and type definitions
 **Todoist ID:** 6gQ2vcqvqFqpcmWc
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
 **Priority:** p1
 **Description:** Create `src/lib/lunarcrush.ts` — a typed client that wraps the LunarCrush API (accessed via MCP in Cowork, but needs a direct HTTP client for the app itself). The client should support:
 
@@ -1018,6 +1019,13 @@ Still outstanding (out of scope for QA task; logged for future work):
 **Environment variables:** `LUNARCRUSH_API_KEY` (add to `.env.local` and document in CLAUDE.md)
 
 **TDD:** Write tests first for the client (mocked HTTP responses), type validation, error handling, and rate limiting.
+
+**Implementation:**
+- Created `src/types/lunarcrush.ts` — 6 TypeScript interfaces: `LunarCrushStockSummary`, `LunarCrushTopicDetail`, `LunarCrushCreator`, `LunarCrushTimeSeriesPoint`, `LunarCrushTimeSeries`, `LunarCrushPost`
+- Created `src/lib/lunarcrush.ts` — `LunarCrushClient` class with `getStocks()`, `getTopic()`, `getTopicTimeSeries()`, `getTopicPosts()` methods; `createLunarCrushClient()` factory that returns null + warns when `LUNARCRUSH_API_KEY` is absent
+- 14 new tests covering: auth header, URL construction, sort/limit params, $ prefix encoding, error handling, null factory, key detection
+- **Files created:** `src/types/lunarcrush.ts`, `src/lib/lunarcrush.ts`, `tests/unit/lib/lunarcrush.test.ts`
+- **Metrics:** 43 suites, 569 tests, lint clean
 
 ---
 
