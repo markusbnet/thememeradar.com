@@ -103,4 +103,36 @@ describe('StockChart', () => {
     const circles = container.querySelectorAll('circle');
     expect(circles.length).toBe(3);
   });
+
+  it('should drop every-other x-axis label when data length > 7', () => {
+    // With 9 points, the rule is: render index 0, 2, 4, 6, 8 (last). Skip 1, 3, 5, 7.
+    const longData = [
+      { label: 'P0', value: 1 },
+      { label: 'P1', value: 2 },
+      { label: 'P2', value: 3 },
+      { label: 'P3', value: 4 },
+      { label: 'P4', value: 5 },
+      { label: 'P5', value: 6 },
+      { label: 'P6', value: 7 },
+      { label: 'P7', value: 8 },
+      { label: 'P8', value: 9 },
+    ];
+    render(<StockChart data={longData} title="Long" />);
+
+    expect(screen.getByText('P0')).toBeInTheDocument();
+    expect(screen.queryByText('P1')).not.toBeInTheDocument();
+    expect(screen.getByText('P2')).toBeInTheDocument();
+    expect(screen.queryByText('P3')).not.toBeInTheDocument();
+    expect(screen.getByText('P4')).toBeInTheDocument();
+    // Last label (P8) is always rendered, even at an odd index
+    expect(screen.getByText('P8')).toBeInTheDocument();
+  });
+
+  it('should render every x-axis label when data length ≤ 7', () => {
+    // 7 points → no label dropping.
+    render(<StockChart data={sampleData} title="Test" />);
+    sampleData.forEach((d) => {
+      expect(screen.getByText(d.label)).toBeInTheDocument();
+    });
+  });
 });

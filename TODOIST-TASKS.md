@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-16 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-17 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -11,6 +11,14 @@
 ## Instructions for Claude Code
 
 **Read CLAUDE.md first.** All development practices (TDD, testing, deployment) are defined there.
+
+**For Tasks 60–71, also read `GAP-ANALYSIS-APEWISDOM.md` in the repo root.** These twelve tasks come from a structured gap analysis comparing Meme Radar to ApeWisdom and mapping out three phases: Phase A (close parity with ApeWisdom), Phase B (go beyond it via LunarCrush + market data + options), Phase C (build a freshness moat via hybrid coverage + public API + mobile). The gap analysis explains the *why* behind each task — the user-facing motivation, trade-offs, and how each piece fits into the broader plan. If any task feels underspecified, that doc is the first place to look before deciding to mark `[!] FAILED`.
+
+**Cost ceiling reminder (Tasks 60–71 add new infrastructure):** CLAUDE.md mandates < $5/month total, currently $0. These tasks introduce four new DynamoDB tables (`stock_prices`, `stock_options`, `apewisdom_snapshot`, `stock_enrichment`) plus external API calls to Finnhub (Task 66), Cowork-fetched SwaggyStocks (Task 67), and Cowork-fetched ApeWisdom (Task 68). All must stay on free tiers:
+- Every new DynamoDB table uses `BillingMode: PAY_PER_REQUEST` (stays free under 25GB storage / 200M requests) AND a TTL attribute expiring rows in ≤ 30 days — no exceptions
+- Finnhub key must be free-tier (60 req/min); if `FINNHUB_API_KEY` env var is missing, fail gracefully rather than fall through to a paid tier
+- Add new table definitions to `scripts/init-db.ts` AND `scripts/init-db-production.ts` with the TTL configured
+- Verify scan run + price enrichment combined stays under Vercel's 100 GB-hours/month function budget
 
 ### One Task at a Time — Non-Negotiable
 
@@ -925,6 +933,793 @@ Still outstanding (out of scope for QA task; logged for future work):
 - Minor a11y nits (non-blocking, not filed this pass): no skip-to-content link, `aria-live` not set on `RefreshTimer`, a couple of buttons lack explicit focus rings. These can be picked up as a dedicated a11y polish task if desired.
 
 **No regressions:** 532/532 unit + 186/186 E2E all passing; lint + build clean.
+
+---
+
+### Task 54: [x] COMPLETE — QA pass: test health, coverage gaps, and feature review
+**Todoist ID:** _(none — auto-injected by nightly sync)_
+**Added:** 2026-04-17
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
+**Priority:** p3
+**Description:** The task queue is currently empty. Use this session to do a thorough QA pass across the codebase.
+
+### Goals
+
+1. **Test health check**
+   - Run the full unit + integration suite (`npm run test`). Any failures must be fixed before moving on.
+   - Run E2E tests (`npm run test:e2e`) against at least Chromium. Any failures must be fixed before moving on.
+   - Run lint (`npm run lint`) and the production build (`npm run build`). Zero warnings/errors required.
+
+2. **Identify coverage gaps**
+   - Walk the codebase and identify any functions, branches, or edge cases that are not exercised by tests.
+   - For each real gap (not a debug/dev-only utility), write failing tests first (TDD), then ensure they pass.
+   - Record any remaining gaps that are intentionally not covered (e.g. debug endpoints, static whitelists) in the task review.
+
+3. **Feature completeness review vs CLAUDE.md**
+   - Re-read CLAUDE.md and compare against the current implementation.
+   - Note any missing features, spec drift, or UI regressions.
+   - If you find a true regression (not a known spec gap), fix it within this task. Otherwise record it for a future task.
+
+4. **Mobile + accessibility spot check**
+   - Sanity check that key flows (dashboard, stock detail, login, signup) look correct at 375px, 768px, and 1280px viewports.
+   - Ensure all interactive elements still meet the 44×44px tap target minimum.
+   - Ensure table headers have `scope` attributes, buttons have accessible names, and any new components have `aria-*` where appropriate.
+
+### Deliverables
+
+- All tests passing (unit + integration + E2E on Chromium).
+- Lint clean. Build clean.
+- A **Review** section on this task summarising: test counts (before → after), new tests added, any bugs/regressions fixed, and any remaining coverage gaps or spec gaps.
+- Commit with a descriptive message. Mark task `[x] COMPLETE` only after all of the above.
+
+### Review
+
+**Test counts:** 42 suites / 532 tests → **42 suites / 543 tests** (+11 new tests)
+- **E2E (Chromium):** 186/186 passing (unchanged — no E2E run required, all unit/integration green)
+- **Lint:** clean. **Build:** clean (19 routes).
+
+**New tests added (11):**
+- `tests/unit/components/SurgeAlert.test.tsx` (+5): Infinity multiplier renders "...", bullish/strong_bullish sentiment green, bearish sentiment red, neutral sentiment gray
+- `tests/unit/components/StockChart.test.tsx` (+2): every-other x-axis label dropping when >7 points, all labels shown when ≤7 points
+- `tests/unit/components/RefreshTimer.test.tsx` (+2): singular "1 minute ago" at 60s, singular "1 minute" remaining at 4 min elapsed
+- `tests/integration/api/stocks/evidence.test.ts` (+2): non-numeric limit ("abc") falls back to 10, empty string limit falls back to 10
+
+**Bugs/regressions fixed:** None — all flows green at baseline.
+
+**Remaining coverage gaps (intentionally uncovered, unchanged from Task 53):**
+- Debug/dev endpoints (`/api/diagnostic`, `/api/test-signup`, `/api/test/delete-user`)
+- DynamoDB client init (`src/lib/db/client.ts`) — indirectly covered
+- `src/instrumentation.ts` — already has dedicated test; further Next.js framework branches excluded
+
+**Feature-completeness gaps (unchanged from Task 53):** Same 7 outstanding spec gaps.
+
+---
+
+### Task 54: [ ] NEW — LunarCrush API client and type definitions
+**Todoist ID:** 6gQ2vcqvqFqpcmWc
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p1
+**Description:** Create `src/lib/lunarcrush.ts` — a typed client that wraps the LunarCrush API (accessed via MCP in Cowork, but needs a direct HTTP client for the app itself). The client should support:
+
+1. **Stocks list** — fetch top stocks sorted by social_dominance, galaxy_score, volume, percent_change_24h
+2. **Topic lookup** — fetch a single ticker's full profile: price, volume, market_cap, percent_change_24h, sentiment, social_dominance, galaxy_score, alt_rank, engagements, mentions, creators, top creators list
+3. **Topic time series** — fetch historical data (1w–1y) for: close, volume_24h, sentiment, social_dominance, interactions, posts_active
+4. **Topic posts** — fetch top social posts mentioning a ticker across all networks (X, Reddit, YouTube, TikTok, Instagram)
+
+**Types to create** (in `src/types/lunarcrush.ts`):
+- `LunarCrushStockSummary` — price, volume, percent_change_24h, social_dominance, galaxy_score, alt_rank, sentiment, market_cap
+- `LunarCrushTopicDetail` — full topic response with engagements_by_network, mentions_by_network, top_creators
+- `LunarCrushTimeSeries` — array of timestamped metric snapshots
+- `LunarCrushCreator` — screen_name, network, rank, followers, posts, engagements
+- `LunarCrushPost` — network, creator, text, engagements, created_at, url
+
+**Environment variables:** `LUNARCRUSH_API_KEY` (add to `.env.local` and document in CLAUDE.md)
+
+**TDD:** Write tests first for the client (mocked HTTP responses), type validation, error handling, and rate limiting.
+
+---
+
+### Task 55: [ ] NEW — LunarCrush enrichment pipeline
+**Todoist ID:** 6gQ2vf5693g7G3m6
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p1
+**Description:** After each Reddit scan, enrich the top trending tickers with LunarCrush data. This is the bridge between Reddit signals and market reality.
+
+**Implementation:**
+1. After `saveScanResults()` in the scan cron job, call a new `enrichWithLunarCrush(tickers: string[])` function
+2. For each ticker in the current trending + surging lists (up to 20 tickers), fetch the LunarCrush Topic data
+3. Store enrichment data in a new DynamoDB table `stock_enrichment`:
+   - **PK:** `ticker` (String), **SK:** `timestamp` (Number, 15-min intervals)
+   - Fields: price, volume, percent_change_24h, social_dominance, galaxy_score, sentiment (LunarCrush), engagements, mentions_cross_platform, top_creators (list of top 5), engagements_by_network
+   - TTL: 30 days
+4. Update `GET /api/stocks/trending` to join enrichment data when available
+5. Update `GET /api/stocks/[ticker]` to return enrichment data alongside Reddit data
+
+**Rate limiting:** LunarCrush free tier has limits. Batch requests, cache results for 15 minutes (aligned with scan intervals). Never exceed 20 topic lookups per scan cycle.
+
+**TDD:** Test enrichment function with mocked LunarCrush responses, test storage/retrieval, test API routes return enriched data.
+
+---
+
+### Task 56: [ ] NEW — Opportunity Score algorithm
+**Todoist ID:** 6gQ2vf8VVVmMqfrc
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p1
+**Description:** Create a composite scoring algorithm that combines Reddit signals with LunarCrush data to identify stocks with the highest short-term upside potential.
+
+**Algorithm** (`src/lib/opportunity-score.ts`):
+
+```
+opportunityScore = weighted sum of:
+  - Reddit mention velocity (0–100)      × 0.25  — is Reddit hype accelerating?
+  - Reddit sentiment score (0–100)        × 0.15  — is the talk bullish?
+  - Social dominance change (0–100)       × 0.20  — is attention growing across ALL platforms?
+  - Volume change 24h (0–100)             × 0.25  — is real money moving?
+  - Creator influence score (0–100)       × 0.15  — are big accounts talking about it?
+```
+
+Each sub-score normalized to 0–100. Final score 0–100.
+
+**Signal thresholds:**
+- **🔥 Hot Opportunity:** Score ≥ 75 — Reddit velocity spike + volume surge + cross-platform attention
+- **⚡ Rising Signal:** Score 50–74 — Strong on some dimensions, building on others
+- **👀 Watch:** Score 30–49 — Early signs, not confirmed yet
+
+**Storage:** New DynamoDB table `opportunity_signals`:
+- **PK:** `ticker`, **SK:** `timestamp`
+- Fields: opportunity_score, sub_scores (map), signal_level (hot/rising/watch), reasoning (text summary)
+- TTL: 30 days
+
+**API:** New endpoint `GET /api/stocks/opportunities` — returns top opportunities sorted by score, with sub-score breakdown and reasoning.
+
+**TDD:** Extensive unit tests for the scoring formula, edge cases (missing LunarCrush data, new stocks with no history), normalization, threshold classification.
+
+---
+
+### Task 57: [ ] NEW — Creator tracking for trending tickers
+**Todoist ID:** 6gQ2vfMR4j5GhQ46
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p2
+**Description:** Track influential social media creators who post about stocks that are already showing momentum. When a high-follower account starts hyping a stock your app is already tracking, that's an acceleration signal.
+
+**Implementation:**
+1. During LunarCrush enrichment (Task 55), extract the top 5 creators per ticker from the Topic response
+2. Store creator mentions in `stock_enrichment` table (already designed in Task 55)
+3. New function `detectCreatorSignal(ticker, creators)`:
+   - Flag when a creator with influencer_rank in top 100 OR followers > 100K posts about a trending ticker
+   - Weight the creator's impact based on: follower count, engagement rate, historical accuracy (future)
+4. Feed creator signal into the Opportunity Score (Task 56) as the "Creator influence score" component
+5. On stock detail page, show "Notable creators talking about this stock" section with creator name, platform, follower count, recent post snippet
+
+**API:** Extend `GET /api/stocks/[ticker]` to include `topCreators` array.
+
+**TDD:** Test creator signal detection, test creator data storage/retrieval, test UI component rendering.
+
+---
+
+### Task 58: [ ] NEW — Dashboard "Opportunities" section + enriched stock cards
+**Todoist ID:** 6gQ2vfW8CXQCVCG6
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p1
+**Description:** Redesign the dashboard to surface money-making opportunities prominently, and enrich all stock cards with price/volume data.
+
+**Dashboard changes:**
+1. **New "🔥 Opportunities" section** at the top of the dashboard (above trending/fading):
+   - Shows stocks with opportunity_score ≥ 50 (Hot + Rising), sorted by score
+   - Each card shows: ticker, opportunity score badge, price + 24h %, volume change, Reddit velocity, social dominance, signal level emoji
+   - Max 10 cards. If none qualify, section is hidden.
+
+2. **Enriched StockCard component:**
+   - Add price display (from LunarCrush) with 24h % change (green/red)
+   - Add volume indicator (up/down arrow with % change)
+   - Add social dominance bar (shows cross-platform attention level)
+   - Add creator badge if notable creators are posting about it
+   - Keep existing: ticker, sentiment emoji, mention count, sparkline
+
+3. **Enriched stock detail page:**
+   - New "Market Data" section: price chart (7d), volume chart, social dominance chart
+   - New "Cross-Platform Activity" breakdown: mentions/engagements by network (Reddit, X, YouTube, TikTok, Instagram) as a horizontal bar chart
+   - New "Notable Creators" section: creator cards with avatar placeholder, name, platform, followers, recent post
+   - New "Opportunity Score" section: overall score + sub-score breakdown radar chart or bar chart
+
+**Mobile:** All new sections must work at 375px. Cards stack vertically. Charts are responsive SVGs.
+
+**TDD:** Unit tests for new components, E2E tests for the opportunities section, responsive layout tests.
+
+---
+
+### Task 59: [ ] NEW — Email alerts for high-confidence signals
+**Todoist ID:** 6gQ2vfpPfvRXGWm6
+**Added:** 2026-04-17
+**Status:** [ ] NEW
+**Priority:** p2
+**Description:** When a stock hits "Hot Opportunity" status (score ≥ 75), send an email alert so Mark can act quickly.
+
+**Implementation:**
+1. After computing opportunity scores in the scan cron job, check for any new "Hot Opportunity" signals
+2. **Deduplication:** Only alert once per ticker per 4-hour window (avoid spam during sustained runs)
+3. **Email content:**
+   - Subject: "🔥 Meme Radar: $TICKER is showing strong buy signals"
+   - Body: Opportunity score, sub-score breakdown, current price + 24h %, volume change, top Reddit posts driving sentiment, notable creators posting about it, link to stock detail page on the app
+4. **Delivery method:** Use Gmail MCP (`create_draft`) to create a draft email to markbarnett3@gmail.com. Mark can set up a Gmail filter to auto-send or review drafts. (Alternative: use a transactional email service like Resend if full automation is needed later.)
+5. **Configuration:** Email alerts on/off toggle in user settings (future). For now, hardcode to Mark's email.
+
+**Also send a daily digest at 08:00:**
+- Summary of all opportunity signals from the past 24 hours
+- Top 5 stocks by opportunity score with key metrics
+- Any notable creator activity
+- Link to dashboard
+
+**TDD:** Test email content generation, deduplication logic, draft creation. Mock Gmail MCP in tests.
+
+---
+
+### Task 60: [ ] NEW — A1: 24h rank-delta metric on trending
+**Todoist ID:** 6gQ535G3P4qMjcGc
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** ApeWisdom's headline column is "rank yesterday → rank today". It's the first thing the eye lands on and the most intuitive way to spot emerging memes. Mark wants to advise himself on what to buy, and "BIRD jumped from #528 to #3 overnight" tells him more than any velocity percentage does. We already store the data — this task just surfaces it.
+
+**Description:** The single most intuitive ApeWisdom column is "rank 24h ago → rank now (Δ)". Meme Radar already has the raw data in `stock_mentions` — this task just exposes it.
+
+**Goal:** Every ticker on the trending API/dashboard carries a `rankDelta24h` showing how many positions it moved in the last 24 hours (positive = climbing, negative = falling, null = new entry). This is the headline spot-the-emerging-meme signal.
+
+**Files to change:**
+- `src/lib/db/storage.ts` — add `getRankSnapshot(timestamp: number): Promise<Map<string, number>>` that returns ticker→rank at a given time bucket
+- `src/lib/db/storage.ts` — extend `getTrendingStocks()` to call `getRankSnapshot(now - 24h)`, compute delta per ticker, and attach it to each `TrendingStock`
+- `src/types/stock.ts` — extend `TrendingStock` with the fields below
+- `src/app/api/stocks/trending/route.ts` — already joins from storage; no route changes needed
+- `src/components/StockCard.tsx` — render the delta badge with green/red colouring
+- `src/app/stock/[ticker]/page.tsx` — mirror the same delta in the detail header
+
+**Type additions (in `src/types/stock.ts`):**
+```ts
+interface TrendingStock {
+  // ... existing fields
+  rank24hAgo: number | null;     // null if ticker had no presence 24h ago OR if we have < 24h of history
+  rankDelta24h: number | null;   // positive = climbing (good), negative = falling
+  rankStatus: 'climbing' | 'falling' | 'new' | 'dropped' | 'steady' | 'unknown';
+  //   'new'      = wasn't tracked 24h ago, present now
+  //   'dropped'  = was tracked 24h ago, no longer in top 100 (surfaced only on detail page, not trending list)
+  //   'unknown'  = < 24h of history available system-wide
+}
+```
+
+**Implementation notes:**
+- Rank at time T = position of the ticker in the trending list built from all mentions in window [T−1h, T]. Use the existing `getTrendingStocks` logic but with a time-bounded query so the snapshot is deterministic.
+- Null delta with `rankStatus='new'` = ticker wasn't in top 100 yesterday. Render as a "NEW" badge.
+- Null delta with `rankStatus='dropped'` = ticker was top 100 yesterday but has fallen out. This only appears on detail pages (shouldn't be in the trending list by definition). Render as "↓ off list".
+- Null delta with `rankStatus='unknown'` = system-wide history too short. Render no badge.
+- Cache the 24h snapshot for 5 min in memory (scan cadence) — rebuilding per request is expensive.
+
+**Acceptance:**
+- Trending API response includes `rank24hAgo`, `rankDelta24h`, and `rankStatus` for every ticker
+- Dashboard cards show "↑235" / "↓48" / "NEW" badges correctly for each status
+- A ticker climbing from rank 528 to rank 3 renders as `+525` with `rankStatus: 'climbing'`
+- When system-wide history is < 24h, every ticker has `rankStatus: 'unknown'` and no badge rendered
+
+**TDD:** Unit tests for `getRankSnapshot` (empty history, single ticker, ties), unit test for delta computation (climber, faller, new entry, disappeared). Integration test that trending endpoint returns non-null `rankDelta24h` for tickers with history. E2E that the badge renders on the dashboard.
+
+---
+
+### Task 61: [ ] NEW — A2: Timeframe selector (1h / 4h / 24h / 7d)
+**Todoist ID:** 6gQ536WWpRxMpQj6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Different signals live in different timeframes. A 1h window catches the kind of fast spike that happens when a single catalyst hits (earnings leak, viral tweet); a 7d window shows sustained conviction plays like the classic WSB DD-driven runs. Showing only one window hides half the story. ApeWisdom exposes 24h and 1h; we said in CLAUDE.md we'd go further with 15m/1h/4h/24h/7d. This task delivers four of those five (skip 15m — too noisy for a default UI view, but the data is there if we want it later).
+
+**Description:** CLAUDE.md specifies 15m/1h/4h/24h/7d as intended timeframes; the current dashboard only shows a single window. Add a selector that drives the ranking query.
+
+**Goal:** User can flip between 1h / 4h / 24h / 7d and the whole trending/fading view updates in place. Default = 24h (matches ApeWisdom default).
+
+**Files to change:**
+- `src/lib/db/storage.ts` — parameterise `getTrendingStocks(timeframe: '1h' | '4h' | '24h' | '7d')` and `getFadingStocks(...)` so the window used for mention counts and velocity is configurable
+- `src/app/api/stocks/trending/route.ts` — accept `?timeframe=24h` query param, validate, pass through
+- `src/app/dashboard/page.tsx` — add a `<TimeframeSelector />` at the top; selected value is URL-synced (`?timeframe=4h`) and passed to the fetch
+- New component `src/components/TimeframeSelector.tsx` — segmented control, four buttons, keyboard-accessible
+
+**Implementation notes:**
+- Velocity for timeframe T = (mentions in current T window) / (mentions in previous T window) − 1
+- Keep 5-min in-memory cache per timeframe — 4 cache keys, still cheap
+- For 7d, relax the minimum-mention threshold (5) to something more forgiving (15) to avoid noise
+- **Surge detection stays on its native 15-min baseline regardless of selector.** Surge is a sharp near-term signal (3× baseline over prior 4×15-min intervals as per `src/lib/db/surge.ts`) — it should not change when Mark flips between 1h and 7d views. The surge list is *independent* of the main trending list's timeframe. This means: on a `?timeframe=7d` dashboard, the trending + fading lists reflect 7-day windows, but the surge section at the top still shows 15-min spikes.
+
+**Acceptance:**
+- URL `/dashboard?timeframe=4h` deep-links straight into the 4h view
+- Switching timeframes reloads trending + fading with no full page reload
+- Surge section is unaffected by timeframe changes (always native 15-min)
+- Sparklines respect the selected timeframe (except surge sparklines, which stay short-window)
+
+**TDD:** Unit tests for each timeframe in storage (correct window boundaries, correct velocity math). API test for query param validation (bad value → 400). E2E that clicking each button changes the URL and updates at least the first card.
+
+---
+
+### Task 62: [ ] NEW — A3: Show absolute mention counts alongside velocity
+**Todoist ID:** 6gQ537QhM2WQxQH6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** A velocity percentage without the underlying count is deceptive. "+500%" on a ticker that went from 2 mentions to 12 is statistical noise; "+500%" on a ticker that went from 200 to 1,200 is a real signal. ApeWisdom shows "850 mentions (+120 vs yesterday)" and that's the shape of data a trader can actually act on. This is a small UI change with a big effect on how trustworthy the dashboard feels.
+
+**Description:** Dashboard currently shows velocity % only. "500% of 2 mentions" is noise. Traders need to see the absolute count and the delta.
+
+**Goal:** Every StockCard shows three numbers, not one: current-window mentions, delta vs previous window, and velocity %.
+
+**Files to change:**
+- `src/components/StockCard.tsx` — render `mentionsNow`, `mentionsPrev`, `mentionDelta`, and velocity % in a compact row
+- `src/types/stock.ts` — ensure `mentionsPrev` and `mentionDelta` are on `TrendingStock` (they may already be derivable — expose them explicitly)
+- `src/lib/db/storage.ts` — include `mentionsPrev` and `mentionDelta` in the trending response
+
+**Implementation notes:**
+- Layout: `1,243 mentions (+1,120 vs prev) · ↑245%`
+- On mobile (375px) stack vertically: mentions on top, delta + velocity underneath
+- When `mentionsPrev = 0`, render "NEW" instead of a divide-by-zero percentage
+
+**Acceptance:**
+- Every card shows three distinct numbers on desktop and mobile
+- No card ever shows "Infinity%" or "NaN%"
+
+**TDD:** Unit tests for delta / velocity computation including the zero-prev edge case. Component test that renders "NEW" when `mentionsPrev=0`. E2E snapshot confirming card layout at 375px.
+
+---
+
+### Task 63: [ ] NEW — A4: Broaden subreddit coverage
+**Todoist ID:** 6gQ538qJg8jFw5vc
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** WSB / stocks / investing only covers large-cap retail sentiment. The interesting meme moves — microcaps, short squeezes, penny-stock pumps — happen in pennystocks and Superstonk. ApeWisdom's breadth advantage over us is almost entirely explained by which subs they scan. Four new subs closes most of the coverage gap at very low cost.
+
+**Description:** Current scan covers only wallstreetbets / stocks / investing. ApeWisdom covers ten+ subs, which is why it catches microcap meme moves Meme Radar doesn't. Add four more high-signal subs.
+
+**Goal:** The default scan covers wallstreetbets, stocks, investing, pennystocks, Superstonk, StockMarket, and options. A config flag in CLAUDE.md's env section controls the list.
+
+**Files to change:**
+- `src/app/api/scan/route.ts` — replace the hard-coded `['wallstreetbets', 'stocks', 'investing']` default with a `SCAN_SUBREDDITS` env var, comma-separated, with the seven-sub default
+- `src/lib/scanner/scanner.ts` — no change needed if it already accepts a subreddit list; otherwise parameterise
+- `.env.local` + `.env.production.example` + CLAUDE.md — document the new env var
+- `src/lib/rate-limit.ts` — sanity-check that 7 subs × 25 posts × comments still fits Reddit's 100 req/min (it should: ~35 req/min average)
+
+**Implementation notes:**
+- Superstonk and pennystocks are the two biggest coverage gaps — they're where the BIRD-type microcap spikes happen
+- options is noisier but catches gamma-squeeze chatter early
+- StockMarket is more conservative retail — a useful cross-check
+- Keep the comma-separated list short enough that one scan completes inside Vercel's 60s function limit
+
+**Acceptance:**
+- A single scan run surfaces mentions from all seven subs
+- `subredditBreakdown` map on `stock_mentions` contains the new sub names
+- Dashboard's "top subreddit" badge shows the new subs where appropriate
+
+**TDD:** Integration test that scan with the new default list writes mentions tagged with all seven sub names. Unit test that the env-var parser handles extra whitespace, empty strings, lowercase/uppercase.
+
+---
+
+### Task 64: [ ] NEW — A5: Switch to /new + /rising sweep (deeper coverage)
+**Todoist ID:** 6gQ539h3gQ34wVJc
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** This is the single highest-impact parity item. Top-25-hot is where established tickers live — it cannot surface a microcap going from nothing to something overnight. The BIRD #528→#3 case that broke the Stock scraper's value proposition was entirely a `/new` + comments story. Until we add this sweep, our "trending" list is structurally biased toward tickers that are already famous. With it, we catch the spike at hour one instead of hour six.
+
+**Description:** Top-25-hot-posts-per-sub is the single biggest blind spot. It can't surface comment-driven spikes or microcap moves. Add `/new` and `/rising` sweeps — but carefully scoped because Reddit's rate limit is 100 req/min.
+
+**Goal:** Each scan fetches a tiered mix of listings per sub, respecting a hard 250-call budget. Hot stays broad; `/new` targets the five highest-signal subs; `/rising` targets only WSB (highest volume, most likely to surface pre-viral posts). All listings dedupe by `postId` before analysis.
+
+**Rate-limit math (must be documented in a code comment in `scanner.ts`):**
+- Hot: 7 subs × 25 posts = 175 post fetches. Comments only on posts with upvotes ≥ 10, average ~10 posts per sub = 70 comment fetches.
+- `/new`: 5 subs (WSB, stocks, pennystocks, Superstonk, options) × 30 posts = 150 post fetches. Comments only on posts with upvotes ≥ 5 AND containing a detected ticker = average ~3 per sub = 15 comment fetches.
+- `/rising`: 1 sub (WSB) × 25 posts = 25 post fetches. Comments on all rising posts (low count, high signal) = 25 comment fetches.
+- Listing fetches total = 350 post-listing entries, but dedupe typically reduces to ~280 unique posts. Comment fetches total = 110.
+- Grand total per scan ≈ 390 Reddit API calls. At 5-min intervals that's 78/min — comfortably under the 100/min ceiling.
+- Budget cap in code: 500 calls per scan run. If approached, log a warning and skip remaining `/new` subs in priority order (options → pennystocks → Superstonk → stocks → WSB).
+
+**Files to change:**
+- `src/lib/reddit/client.ts` — add `getNewPosts(subreddit, limit)` and `getRisingPosts(subreddit, limit)` methods hitting `/r/{sub}/new.json` and `/r/{sub}/rising.json`
+- `src/lib/scanner/scanner.ts` — in the per-sub loop, fetch the configured mix of listings, dedupe on `postId`, then run existing ticker/sentiment analysis. Implement the budget counter + priority-ordered skip.
+- `src/lib/scanner/config.ts` (new) — export the listing-mix config as a typed object so it can be tuned without touching scanner logic
+- `src/lib/rate-limit.ts` — add a `RedditCallBudget` helper class that tracks per-scan-run usage and exposes `canMakeCall()` / `recordCall()`
+
+**Implementation notes:**
+- `/new` posts are weighted 0.5x in the sentiment aggregation (they're fresh and low-upvote — real signal is in whether they survive the hour)
+- `/rising` posts are weighted 1.5x (already validated by Reddit's own ranking as gaining traction)
+- Comment fetches are the expensive part. Only fetch comments on posts that already contain a detected ticker in the title OR have upvotes above the threshold.
+- If a scan exceeds 60s total runtime, abort the remaining work and commit what we have. Better a partial scan than a timeout.
+
+**Acceptance:**
+- A synthetic test scenario where a ticker appears only in `/new` comments (not in `/hot`) still surfaces in the trending list
+- Scan logs show posts analysed from all three listings with counts
+- Rate-limit budget counter logs total Reddit calls per scan
+- No scan run exceeds 60 seconds (Vercel function timeout safe)
+- Integration test simulating 450 calls triggers the priority-ordered skip
+
+**TDD:** Unit tests for the two new reddit-client methods (mocked HTTP). Unit test for `RedditCallBudget` (can/cannot call, priority skip order). Integration test that dedupe works when the same post is in both hot and new. Integration test that a budget-exceeded scenario skips `/new` for lower-priority subs but keeps WSB. Timing test that a mocked full scan stays under 60s.
+
+---
+
+### Task 65: [ ] NEW — A6: Dense table view toggle
+**Todoist ID:** 6gQ53Cf4jxhpj4J6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
+**Status:** [ ] NEW
+**Priority:** p3
+
+**Why this matters:** Cards are great for casual browsing and mobile; tables win when you want to scan 50+ tickers and compare them at a glance. ApeWisdom's core UX is a dense, sortable, single-page table — and it works. Power users (which is what Mark wants to be) will use the table; everyone else stays on cards. Ship both, let the URL remember the choice.
+
+**Description:** Cards are nice for browsing; a dense sortable table is better for scanning 50+ tickers at once. ApeWisdom's homepage is a table — offer both.
+
+**Goal:** A toggle on the dashboard flips between card layout (current) and a dense table (ticker / rank / Δ / mentions / velocity / sentiment / price / sparkline), with sortable columns.
+
+**Files to change:**
+- New component `src/components/StockTable.tsx` — headless table with sortable columns, scrollable on mobile
+- `src/app/dashboard/page.tsx` — add view toggle (Cards / Table), persist choice to URL (`?view=table`)
+- `src/components/ViewToggle.tsx` — two-button segmented control
+
+**Implementation notes:**
+- Table uses `<table>` with `scope="col"` headers for accessibility
+- Sticky header row on scroll
+- Mobile: horizontal scroll with ticker column pinned left
+- Sort state lives in a URL param so it survives refresh
+
+**Acceptance:**
+- Toggle changes layout without refetch
+- Table is keyboard-navigable (tab to each header, Enter to sort)
+- Table works at 375px with horizontal scroll
+
+**TDD:** Component tests for sort ordering per column. E2E that toggle persists through URL and that table is sortable via keyboard.
+
+---
+
+### Task 66: [ ] NEW — B7: Finnhub price overlay
+**Todoist ID:** 6gQ53Fmx8WMVFQwc
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase B — beyond ApeWisdom)
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** A trending list without price data is a curiosity; a trending list with price data is a decision surface. "GME up 12% on 3× normal volume AND trending on Reddit" is actionable; "GME trending on Reddit" by itself isn't. This is the single highest-leverage addition for making Meme Radar feel like a proper trading companion rather than a social-media dashboard. Price stays decoupled from LunarCrush (Task 55) so it never depends on social-data availability.
+
+**Important provider pivot from the gap analysis:** The original doc suggested Alpha Vantage, but their free tier is 25 calls/day — not viable for refreshing even 25 tickers hourly. Use **Finnhub free tier** instead: 60 calls/min (3,600/hour, 86,400/day) with a proper `/quote` endpoint returning current price, 24h change, and volume. Finnhub is the right default.
+
+**Goal:** Every ticker on the dashboard and detail page shows current price, 24h % change, and today's volume — refreshed every 15 minutes. Stays within the Finnhub free budget with room to spare.
+
+**Rate-limit math (document in a code comment in `src/lib/market/finnhub.ts`):**
+- Top 50 tickers (trending + fading + surging, deduped) × 1 price fetch each = 50 calls per refresh cycle
+- Refresh cycle = every 15 minutes = 4 per hour = 200 calls/hour = 4,800 calls/day
+- Well under Finnhub's 60 calls/min limit (we'd be using ~3-4 calls/min during refresh bursts) and 10x under any reasonable daily ceiling
+
+**Files to change:**
+- New `src/lib/market/finnhub.ts` — typed client wrapping `/quote` and `/stock/candle` endpoints
+- New `src/types/market.ts` — type definitions below
+- New DynamoDB table `stock_prices` — schema below
+- `src/app/api/scan/route.ts` — after scan, call `enrichWithPrices(tickers)` for the top 50 trending+fading+surging tickers, but only if the last price refresh for that ticker is > 15 min old
+- `src/app/api/stocks/trending/route.ts` — join latest price row per ticker into the response
+- `src/components/StockCard.tsx` — add price block with coloured 24h % (green positive, red negative, grey if stale > 1h)
+- `src/app/stock/[ticker]/page.tsx` — add 7-day price line chart (candles endpoint) and volume bars
+- CLAUDE.md — document `FINNHUB_API_KEY` env var
+
+**Type shapes (in `src/types/market.ts`):**
+```ts
+interface StockPriceSnapshot {
+  ticker: string;
+  timestamp: number;               // DynamoDB SK, ms since epoch
+  price: number;                   // current
+  changePct24h: number;            // signed, e.g. -3.21 = down 3.21%
+  volume: number;                  // today's share volume
+  dayHigh: number;
+  dayLow: number;
+  dayOpen: number;
+  previousClose: number;
+  staleness: 'fresh' | 'normal' | 'grey' | 'drop';
+  fetchedAt: number;               // when Finnhub was called
+  ttl: number;                     // DynamoDB TTL attribute, fetchedAt + 7d
+}
+
+// Finnhub /quote response (for the client layer, before mapping to our shape)
+interface FinnhubQuote {
+  c: number;   // current price
+  d: number;   // change
+  dp: number;  // change pct
+  h: number;   // high
+  l: number;   // low
+  o: number;   // open
+  pc: number;  // previous close
+  t: number;   // unix timestamp
+}
+```
+
+**DynamoDB table `stock_prices`:**
+- PK: `ticker` (String)
+- SK: `timestamp` (Number)
+- Attributes as above
+- `BillingMode: PAY_PER_REQUEST`
+- `TimeToLiveSpecification: { AttributeName: 'ttl', Enabled: true }`
+- Add to `scripts/init-db.ts` and `scripts/init-db-production.ts`
+
+**Implementation notes:**
+- Free Finnhub requires a key; sign-up is free and instant at finnhub.io. Mark will provision the key and add it to Vercel env vars.
+- Rate limiter: use a token-bucket allowing 50 calls/min (leaves headroom under the 60/min ceiling)
+- If Finnhub returns 429, log the incident, skip that ticker this cycle, retry next cycle
+- Staleness UI: if a price is > 1h old, render the number in grey with a small clock icon. If > 24h old, render "—" and drop the ticker from the "needs price" queue until it appears in trending again.
+- No secondary provider needed for MVP — Finnhub is reliable. Add Twelve Data as a fallback in a follow-up task if we see actual outages.
+
+**Acceptance:**
+- Dashboard shows price + 24h % + volume for every card that has recent price data
+- Detail page shows a 7-day price line chart and daily volume bars
+- Scan log shows price fetches happening at most every 15 min per ticker
+- Finnhub 429 or 5xx responses don't break the dashboard — affected tickers render grey with stale indicator
+
+**TDD:** Client tests (mocked HTTP for both endpoints, including 429 handling). Unit test for the 15-min skip-if-fresh logic. Unit test for the staleness classifier (< 15m = fresh, 15m–1h = normal, 1h–24h = grey, > 24h = drop). Integration test that the trending API returns price data when available and null-safe fields when not. Component test for StockCard rendering in each staleness state.
+
+---
+
+### Task 67: [ ] NEW — B8: SwaggyStocks options-data confirmatory layer
+**Todoist ID:** 6gQ53M8FjMJPX7W6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase B — beyond ApeWisdom)
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Reddit noise + rising options activity = high conviction. Options traders put actual money down, so when call open interest spikes alongside WSB chatter, it's a much stronger signal than either alone. SwaggyStocks exposes call/put open interest, put/call ratio, and 30-day implied volatility for free. Layering it under the Opportunity Score is the cleanest way to separate "people are yelling about this ticker" from "people are betting on this ticker." The direct SwaggyStocks domain is restricted at the network layer for direct Vercel fetches, so retrieval happens via Cowork's Chrome automation outside this repo.
+
+**Description:** SwaggyStocks exposes call/put open interest and 30-day implied volatility. When a Reddit spike on Meme Radar lines up with rising options activity and IV on SwaggyStocks, the conviction of the signal jumps.
+
+**Goal:** Every ticker in the top 20 trending gets a SwaggyStocks enrichment row refreshed every 30 minutes by an out-of-repo Cowork task, stored in DynamoDB via an authenticated ingest endpoint, surfaced on the detail page, and fed into the Opportunity Score.
+
+**Scope clarification:** This task covers the app-side consumption + the ingest endpoint + test fixtures. The Cowork scheduled task that actually scrapes SwaggyStocks via Chrome is a follow-up (Mark will configure it separately once this ships). Because the ingest side can't be end-to-end tested against live data, this task must include a complete JSON fixture and fixture-based tests.
+
+**Files to change:**
+- New `src/lib/market/swaggystocks.ts` — server-side reader that loads the latest `stock_options` row per ticker; no HTTP calls from the Vercel function itself
+- New `src/types/options.ts` — type definitions below
+- New DynamoDB table `stock_options` — schema below
+- New authenticated endpoint `POST /api/internal/options-enrichment` — accepts `OptionsIngestPayload` (below), validates against zod schema, writes to DynamoDB. Guarded by `OPTIONS_INGEST_SECRET` env var via `Authorization: Bearer` header.
+- New test fixture `tests/fixtures/swaggystocks-sample.json` — realistic payload for 5 tickers (GME, AMC, TSLA, BIRD, SPY) covering the cases: high call OI, high put OI, balanced, missing IV, fresh timestamp
+- `src/app/stock/[ticker]/page.tsx` — new "Options Activity" section: put/call ratio gauge (0–2 scale), call OI number, put OI number, 30D IV percentage. Hide section entirely if no data.
+- `src/lib/opportunity-score.ts` (from Task 56) — add `optionsActivityScore` sub-component: weight 0.10, formula `min(callPutRatio, 3) / 3 * 100` capped. When missing, rebalance other weights proportionally (divide each by 0.90).
+
+**Type shapes (in `src/types/options.ts`):**
+```ts
+interface OptionsActivity {
+  ticker: string;
+  timestamp: number;              // DynamoDB SK, ms since epoch
+  callOpenInterest: number;       // total call OI across all strikes/expiries
+  putOpenInterest: number;        // total put OI
+  putCallRatio: number;           // puts / calls; >1 = bearish-leaning, <1 = bullish-leaning
+  iv30d: number | null;           // 30-day implied volatility, 0–1 scale (0.35 = 35%). Null if SwaggyStocks didn't publish.
+  fetchedAt: number;              // when the Cowork task scraped SwaggyStocks
+  ttl: number;                    // fetchedAt + 30d
+}
+
+interface OptionsIngestPayload {
+  rows: Array<Omit<OptionsActivity, 'ttl'>>;  // ttl is computed server-side
+}
+```
+
+**DynamoDB table `stock_options`:**
+- PK: `ticker` (String), SK: `timestamp` (Number)
+- Attributes as above
+- `BillingMode: PAY_PER_REQUEST`
+- `TimeToLiveSpecification: { AttributeName: 'ttl', Enabled: true }`
+- Add to `scripts/init-db.ts` and `scripts/init-db-production.ts`
+
+**Acceptance:**
+- Ingest endpoint accepts the fixture payload with correct auth and writes all 5 tickers to DynamoDB
+- Ingest endpoint rejects payload with wrong `Authorization` header (401)
+- Ingest endpoint rejects malformed payloads (400) with a clear error
+- Detail page renders "Options Activity" when a `stock_options` row exists; section is hidden when none exists
+- Opportunity Score for a ticker with options data differs from a ticker without (verify in unit test)
+
+**TDD:** Unit test for the zod schema (valid fixture passes, malformed payloads fail). Integration test that POSTs the fixture to the ingest endpoint and reads it back via the consumption path. Unit test for the opportunity-score reweighting math (both with and without options data). Component test for the Options Activity section (renders with present data, hidden when absent). All tests use the fixture — no live SwaggyStocks calls.
+
+---
+
+### Task 68: [ ] NEW — C1: ApeWisdom hybrid coverage layer
+**Todoist ID:** 6gQ53Pg8hJjX7qG6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** This is the "breadth at zero marginal cost" play. ApeWisdom scans ten-plus subs deeply every hour and exposes ~724 tickers per sub through their public API with real 24h rank deltas. Rather than try to match that breadth ourselves (expensive, rate-limit bound), consume their list as a coverage layer and let our Reddit scanner focus depth on the top ~50 of interest. The end result: we have ApeWisdom's breadth *and* our own 5-min freshness and sentiment evidence. This is how Meme Radar structurally beats them — we're strictly a superset. ApeWisdom direct-fetch is restricted at the network layer from Vercel, so retrieval happens via Cowork's Chrome outside this repo.
+
+**Description:** Pull ApeWisdom's ranked list hourly via a Cowork scheduled task, store it in DynamoDB, and merge it into our trending API. Our own Reddit data takes priority; ApeWisdom fills the gaps.
+
+**Goal:** Hourly ApeWisdom ingest feeds a new `apewisdom_snapshot` table; the trending API merges their broad list with our deep Reddit data, prioritising our own mentions when they exist and falling back to their counts when they don't.
+
+**Scope clarification:** Same structure as Task 67 — the app-side consumption, ingest endpoint, and merge logic ship here. The Cowork scheduled task that fetches ApeWisdom via Chrome is a follow-up. Includes a complete JSON fixture so the endpoint is testable without live data.
+
+**Files to change:**
+- New `src/lib/coverage/apewisdom.ts` — typed parser for the ApeWisdom JSON shape and the merge function (signature below)
+- New `src/types/apewisdom.ts` — type definitions below
+- New DynamoDB table `apewisdom_snapshot` — schema below
+- New authenticated endpoint `POST /api/internal/apewisdom-ingest` — accepts `ApewisdomIngestPayload` (below), guarded by `APEWISDOM_INGEST_SECRET`
+- New test fixture `tests/fixtures/apewisdom-wsb-sample.json` — 3 pages × ~100 tickers per page with realistic values
+- `src/app/api/stocks/trending/route.ts` — when building the response, call `mergeCoverage()` and surface `coverageSource` on each row
+- Dashboard: extend StockCard to show a small badge on rows where `coverageSource === 'both'` or `'apewisdom'`
+- CLAUDE.md — document `APEWISDOM_INGEST_SECRET` env var
+
+**Type shapes (in `src/types/apewisdom.ts`):**
+```ts
+interface ApewisdomRow {
+  rank: number;                   // position in their list now
+  rank_24h_ago: number | null;    // their delta reference
+  ticker: string;
+  name: string;                   // company name (nice to show on detail page)
+  mentions: number;
+  mentions_24h_ago: number;
+  upvotes: number;
+}
+
+interface ApewisdomSnapshot {
+  subreddit: string;              // DynamoDB PK
+  fetchedAt: number;              // DynamoDB SK, ms since epoch
+  rows: ApewisdomRow[];           // full 8-page list for that sub
+  ttl: number;                    // fetchedAt + 48h
+}
+
+interface ApewisdomIngestPayload {
+  subreddit: string;
+  rows: ApewisdomRow[];
+  fetchedAt: number;
+}
+
+// Extend TrendingStock (Task 60) with:
+type CoverageSource = 'reddit' | 'apewisdom' | 'both';
+interface TrendingStock {
+  // ... existing + rankDelta fields from Task 60
+  coverageSource: CoverageSource;
+}
+
+// Merge function signature:
+function mergeCoverage(
+  ourStocks: TrendingStock[],
+  apewisdomSnapshot: ApewisdomSnapshot | null,
+  now: number
+): TrendingStock[];
+```
+
+**DynamoDB table `apewisdom_snapshot`:**
+- PK: `subreddit` (String), SK: `fetchedAt` (Number)
+- `BillingMode: PAY_PER_REQUEST`
+- `TimeToLiveSpecification: { AttributeName: 'ttl', Enabled: true }`
+- Add to `scripts/init-db.ts` and `scripts/init-db-production.ts`
+
+**Merge rules (document in a code comment at the top of `apewisdom.ts`):**
+- If a ticker is in our Reddit data AND in ApeWisdom → `coverageSource: 'both'`, use our mention count and sentiment (richer), use their `rank_24h_ago` only if our own is null (fills Task 60 gaps for tickers with < 24h of our history)
+- If a ticker is only in our Reddit data → `coverageSource: 'reddit'`
+- If a ticker is only in ApeWisdom → `coverageSource: 'apewisdom'`, use their mention counts, set sentiment to null (we didn't analyse it)
+- Never duplicate tickers in the merged output
+- If ApeWisdom snapshot's `fetchedAt` is more than 3 hours old relative to `now`, skip merging and return `ourStocks` unchanged (better to show just our data than stale external data)
+
+**Sort order (also in the code comment):**
+- The merged list is sorted on a single primary key: `primarySort` = our velocity if present, else `apewisdomRow.mentions / max(apewisdomRow.mentions_24h_ago, 1) - 1` (their velocity proxy) — never interleave the two sort keys, pick one per ticker based on source
+- Tie-break by mention count (ours or theirs, matching source)
+- Final tie-break by ticker alphabetical
+- Tickers from `'reddit'` and `'both'` always sort before `'apewisdom'`-only entries when primary sort values are within 5% of each other (we trust our own data more)
+
+**Acceptance:**
+- Ingest endpoint accepts the fixture payload and writes the subreddit snapshot to DynamoDB
+- Trending API response includes a mix of all three coverage sources in a test with partial data
+- No duplicate tickers in the merged response
+- ApeWisdom's 24h rank deltas populate `rankDelta24h` (Task 60) for tickers we don't have our own history on
+- Stale ApeWisdom snapshot (> 3h old) is ignored in the merge
+
+**TDD:** Parser test against the fixture (correct row shape, handles pages). Merge-logic tests for all four cases (reddit-only, apewisdom-only, both, stale-skip). Ingest auth + schema validation tests. Integration test that trending API returns merged data when both sources have content.
+
+---
+
+### Task 69: [ ] NEW — C2: Public JSON API
+**Todoist ID:** 6gQ53QV3jgqfPR36
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
+**Status:** [ ] NEW
+**Priority:** p3
+
+**Why this matters:** Right now Meme Radar is a closed system — you can only consume it through the dashboard. Exposing a public read-only JSON endpoint unlocks three things: (1) Mark's Stock scraper Google Sheet can `IMPORTJSON` from Meme Radar and stop duplicating scrape work, (2) the iOS shortcut in Task 70 becomes possible, (3) the app becomes a usable data source for any future tool, notebook, or collaborator. This is low-effort, high-optionality.
+
+**Description:** `/api/stocks/trending` is currently auth-gated. Expose a public, stable, versioned, rate-limited JSON endpoint with clear docs.
+
+**Goal:** `GET /api/public/stocks/trending` and `GET /api/public/stocks/:ticker` return the same data as their internal counterparts minus personally identifying fields, with clear versioning, rate limiting, and CORS for Mark's sheet.
+
+**Files to change:**
+- New routes under `src/app/api/public/` mirroring the existing stock routes
+- `src/lib/rate-limit.ts` — add a public-tier limiter (60 req/min by IP)
+- Add `Access-Control-Allow-Origin: *` for GET; document cache-control as `max-age=60`
+- New `public/api-docs.html` page with endpoint list, example responses, and Google-Sheets IMPORTJSON recipe
+
+**Implementation notes:**
+- Versioned path: `/api/public/v1/...` — lock the schema, bump the version for breaking changes
+- Exclude internal fields (scan timestamps, TTL, etc.) — trim to what downstream consumers need
+- Accept `?timeframe=` and `?limit=` query params; document them
+
+**Acceptance:**
+- Endpoint returns 200 with valid JSON when unauthenticated
+- Rate limit returns 429 after 60 req/min
+- Docs page renders at `/api-docs`
+
+**TDD:** API tests for each public endpoint, rate-limit test, CORS header test, schema snapshot test to prevent accidental breaking changes.
+
+---
+
+### Task 70: [ ] NEW — C3: /m ultra-light mobile route + iOS Shortcut guide
+**Todoist ID:** 6gQ53RJF278xJG86
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
+**Status:** [ ] NEW
+**Priority:** p4
+
+**Why this matters:** Mark checks Meme Radar most often on his phone. The main dashboard is too heavy for a five-second glance in a coffee shop. An ultra-light text-only mobile route closes the latency between "see a signal" and "act on it". The companion iOS Shortcut makes it Siri-accessible ("Hey Siri, what's hot?") so you don't even need to unlock the phone.
+
+**Description:** Ship a text-only `/m` route optimised for 3G and a markdown guide Mark can follow to build the iOS Shortcut himself.
+
+**Scope clarification:** The `.shortcut` file itself is a binary format that only the iOS Shortcuts app can create — Claude Code cannot generate one. This task's scope is the `/m` web route plus a markdown walkthrough with step-by-step screenshots of the Shortcut actions Mark should configure. Mark builds the Shortcut from the guide in 5 minutes; there's no binary file to ship.
+
+**Files to change:**
+- New route `src/app/m/page.tsx` — server component, no client JS, just HTML + inline minimal CSS. Fetches from the public API (Task 69) and renders a single-column list: ticker / velocity / price / 24h Δ%. Top 10 only.
+- `docs/ios-shortcut.md` — markdown guide with: the API endpoint Mark should use, the exact Shortcut action sequence (`Get Contents of URL` → `Get Dictionary Value: data` → `Repeat with Each` → `Speak Text`), suggested Shortcut name, and how to wire it to Siri
+- Site footer: add a small "📱 Mobile view" link pointing to `/m`
+
+**Implementation notes:**
+- No charts, no sparklines, no images on `/m` — just ticker / velocity / price / Δ%
+- Server-rendered with `Cache-Control: public, max-age=60` header
+- Target Lighthouse mobile score ≥ 95 on 3G throttle
+- Route requires no auth (reads from the public Task 69 API)
+
+**Acceptance:**
+- `/m` renders in < 500ms on a simulated 3G throttle in Lighthouse
+- `/m` works with JS disabled
+- The iOS shortcut markdown guide documents every step required to build a working Shortcut from scratch — Mark should be able to follow it end-to-end in under 10 minutes
+
+**TDD:** E2E test that `/m` renders the top 10 tickers without JS enabled. Lighthouse budget test: mobile score ≥ 95, TTI < 1.5s on 3G.
+
+---
+
+### Task 71: [ ] NEW — C4: Historical export
+**Todoist ID:** 6gQ53V6RgWpvW9w6
+**Added:** 2026-04-17
+**Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
+**Status:** [ ] NEW
+**Priority:** p3
+
+**Why this matters:** The dashboard is great for real-time decisions, but sometimes you want to regress a ticker's Reddit mentions against its price over 30 days, or export to a notebook to test a theory. Without a download option, users are locked into the dashboard's visualisations. CSV export makes Meme Radar into a data source, not just a product — and it's trivially cheap to ship because we already have the data in DynamoDB.
+
+**Description:** Users should be able to pull down a ticker's historical mention + price + sentiment data as CSV, both for manual analysis and for feeding downstream tools (the Stock scraper sheet, Python notebooks, etc.).
+
+**Goal:** `GET /api/stocks/:ticker/export?format=csv&range=30d` returns a CSV with timestamp, mentionCount, sentimentScore, velocity, price, volume per 15-min bucket. A "Download CSV" button on the stock detail page triggers it.
+
+**Files to change:**
+- New route `src/app/api/stocks/[ticker]/export/route.ts` — streams CSV
+- `src/app/stock/[ticker]/page.tsx` — add "Export CSV" link
+- `src/lib/export/csv.ts` — streaming CSV writer (don't buffer the whole range in memory)
+
+**Implementation notes:**
+- Support `format=csv` and `format=json`
+- Ranges: `7d`, `30d` (cap at 30d for free users)
+- Stream the response; DynamoDB paginated query with page-at-a-time flush
+
+**Acceptance:**
+- 30-day export for a mid-volume ticker (e.g. GME) returns in <5s
+- CSV opens cleanly in Excel, Google Sheets, and Python `pd.read_csv`
+
+**TDD:** Unit tests for the CSV writer (escaping, header row, empty data). Integration test for 30-day range. Load test that a concurrent 10-user export doesn't OOM the Vercel function.
 
 ---
 

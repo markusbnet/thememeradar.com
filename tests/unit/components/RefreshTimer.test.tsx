@@ -68,4 +68,27 @@ describe('RefreshTimer', () => {
 
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
+
+  it('should render singular "1 minute ago" at exactly 60 seconds elapsed', () => {
+    render(<RefreshTimer />);
+
+    act(() => {
+      jest.advanceTimersByTime(60_000);
+    });
+
+    expect(screen.getByText('1 minute ago')).toBeInTheDocument();
+    expect(screen.queryByText('1 minutes ago')).not.toBeInTheDocument();
+  });
+
+  it('should render singular "1 minute" remaining when 4 minutes elapsed', () => {
+    render(<RefreshTimer />);
+
+    // After 4 minutes, 1 minute remains until the 5-minute auto-refresh.
+    act(() => {
+      jest.advanceTimersByTime(4 * 60_000);
+    });
+
+    expect(screen.getByText('1 minute')).toBeInTheDocument();
+    expect(screen.queryByText('1 minutes')).not.toBeInTheDocument();
+  });
 });

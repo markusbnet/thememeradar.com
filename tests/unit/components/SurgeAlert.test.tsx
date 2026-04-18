@@ -78,4 +78,35 @@ describe('SurgeAlert', () => {
     expect(screen.queryByText('$BBBY')).not.toBeInTheDocument();
     expect(screen.queryByText('$PLTR')).not.toBeInTheDocument();
   });
+
+  it('should render "..." instead of "Infinityx" when surge multiplier is Infinity', () => {
+    // surgeMultiplier === Infinity occurs when baseline is 0 (new ticker, no prior mentions)
+    render(<SurgeAlert stocks={[makeSurgeStock({ surgeMultiplier: Infinity })]} />);
+    expect(screen.getByText('...')).toBeInTheDocument();
+    expect(screen.queryByText(/infinity/i)).not.toBeInTheDocument();
+  });
+
+  it('should render bullish sentiment in green', () => {
+    render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'bullish' })]} />);
+    const label = screen.getByText('bullish');
+    expect(label.className).toMatch(/text-green-600/);
+  });
+
+  it('should render strong_bullish sentiment in green (substring match)', () => {
+    render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'strong_bullish' })]} />);
+    const label = screen.getByText('strong bullish');
+    expect(label.className).toMatch(/text-green-600/);
+  });
+
+  it('should render bearish sentiment in red', () => {
+    render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'bearish' })]} />);
+    const label = screen.getByText('bearish');
+    expect(label.className).toMatch(/text-red-600/);
+  });
+
+  it('should render neutral sentiment in gray', () => {
+    render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'neutral' })]} />);
+    const label = screen.getByText('neutral');
+    expect(label.className).toMatch(/text-gray-500/);
+  });
 });

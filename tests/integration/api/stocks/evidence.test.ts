@@ -140,4 +140,25 @@ describe('GET /api/stocks/:ticker/evidence', () => {
     expect(data.success).toBe(false);
     expect(data.error).toBe('Failed to fetch evidence');
   });
+
+  it('should default to limit=10 when limit param is non-numeric ("abc")', async () => {
+    // parseInt('abc', 10) returns NaN; the route uses (NaN || 10) which falls back to 10.
+    const [req, ctx] = createRequest('GME', 'abc');
+    const response = await GET(req, ctx);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.data.limit).toBe(10);
+  });
+
+  it('should default to limit=10 when limit param is empty string', async () => {
+    // Empty string ?limit= is truthy as a value but parseInt('') is NaN → fallback 10.
+    const [req, ctx] = createRequest('GME', '');
+    const response = await GET(req, ctx);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    // Empty string is falsy → limitParam is null → ternary picks the literal default 10.
+    expect(data.data.limit).toBe(10);
+  });
 });
