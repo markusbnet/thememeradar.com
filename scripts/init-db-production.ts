@@ -23,6 +23,7 @@ const TABLES = {
   USERS: 'memeradar-users',
   STOCK_MENTIONS: 'memeradar-stock_mentions',
   STOCK_EVIDENCE: 'memeradar-stock_evidence',
+  STOCK_ENRICHMENT: 'memeradar-stock_enrichment',
 };
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -153,6 +154,36 @@ async function createStockEvidenceTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createStockEnrichmentTable() {
+  const tableName = TABLES.STOCK_ENRICHMENT;
+
+  if (await tableExists(tableName)) {
+    console.log(`✓ Table already exists: ${tableName}`);
+    return;
+  }
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'timestamp', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL must be enabled separately via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  await waitForTableActive(tableName);
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing Production DynamoDB Tables ===\n');
   console.log(`Region: ${process.env.AWS_REGION || 'us-east-1'}\n`);
@@ -167,11 +198,13 @@ async function main() {
     await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
+    await createStockEnrichmentTable();
     console.log('\n✓ All tables ready!');
     console.log('\nTables:');
     console.log('- memeradar-users (stores user accounts)');
     console.log('- memeradar-stock_mentions (stores aggregated ticker mentions)');
     console.log('- memeradar-stock_evidence (stores sample posts/comments for each ticker)');
+    console.log('- memeradar-stock_enrichment (LunarCrush social + price data, TTL 30d)');
     console.log('\nBilling: PAY_PER_REQUEST (on-demand, free tier eligible)');
     console.log('TTL: Enabled (data expires after 30 days automatically)');
   } catch (error: any) {

@@ -4,6 +4,10 @@ jest.mock('@/lib/db/storage', () => ({
   getSparklineData: jest.fn(),
 }));
 
+jest.mock('@/lib/db/enrichment', () => ({
+  getEnrichmentMap: jest.fn().mockResolvedValue(new Map()),
+}));
+
 import { GET } from '@/app/api/stocks/trending/route';
 import { apiCache } from '@/lib/cache';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';

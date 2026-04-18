@@ -10,6 +10,8 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createScanner } from '@/lib/scanner/scanner';
 import { saveScanResults } from '@/lib/db/storage';
+import { enrichWithLunarCrush } from '@/lib/lunarcrush';
+import { parseSubredditList } from '@/lib/scan-config';
 
 // Configuration from environment variables
 const REDDIT_CONFIG = {
@@ -28,23 +30,6 @@ function verifyCronAuth(request: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`;
 }
 
-// Default subreddits when SCAN_SUBREDDITS env var is not set.
-// This set covers the highest-signal communities for meme stocks.
-const DEFAULT_SUBREDDITS = [
-  'wallstreetbets', 'stocks', 'investing',
-  'pennystocks', 'Superstonk', 'StockMarket', 'options',
-];
-
-/**
- * Parse the SCAN_SUBREDDITS env var (comma-separated) into a subreddit list.
- * Falls back to DEFAULT_SUBREDDITS when the var is absent or empty.
- * Handles extra whitespace, double commas, and trailing commas gracefully.
- */
-export function parseSubredditList(envVar: string | undefined): string[] {
-  if (!envVar || envVar.trim() === '') return DEFAULT_SUBREDDITS;
-  const parsed = envVar.split(',').map(s => s.trim()).filter(Boolean);
-  return parsed.length > 0 ? parsed : DEFAULT_SUBREDDITS;
-}
 
 export async function POST(request: NextRequest) {
   if (!verifyCronAuth(request)) {
@@ -178,6 +163,12 @@ export async function GET(request: NextRequest) {
 
     // Save results to DynamoDB
     await saveScanResults(results);
+
+    // Enrich top tickers with LunarCrush data (no-op if LUNARCRUSH_API_KEY is absent)
+    const allTickers = [...new Set(results.flatMap(r => Array.from(r.tickers.keys())))];
+    enrichWithLunarCrush(allTickers).catch((err: unknown) =>
+      logger.error('LunarCrush enrichment error:', err)
+    );
 
     // Calculate summary
     const summary = {

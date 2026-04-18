@@ -298,8 +298,8 @@ describe('/api/scan authentication', () => {
 });
 
 describe('parseSubredditList', () => {
-  it('returns the default 7-sub list when env var is undefined', async () => {
-    const { parseSubredditList } = await import('@/app/api/scan/route');
+  it('returns the default 7-sub list when env var is undefined', () => {
+    const { parseSubredditList } = require('@/lib/scan-config');
     const result = parseSubredditList(undefined);
     expect(result).toEqual([
       'wallstreetbets', 'stocks', 'investing',
@@ -307,26 +307,26 @@ describe('parseSubredditList', () => {
     ]);
   });
 
-  it('trims whitespace from each subreddit name', async () => {
-    const { parseSubredditList } = await import('@/app/api/scan/route');
+  it('trims whitespace from each subreddit name', () => {
+    const { parseSubredditList } = require('@/lib/scan-config');
     const result = parseSubredditList('  wsb  ,  stocks  , options');
     expect(result).toEqual(['wsb', 'stocks', 'options']);
   });
 
-  it('filters out empty strings caused by double commas or trailing commas', async () => {
-    const { parseSubredditList } = await import('@/app/api/scan/route');
+  it('filters out empty strings caused by double commas or trailing commas', () => {
+    const { parseSubredditList } = require('@/lib/scan-config');
     const result = parseSubredditList('wsb,,stocks,');
     expect(result).toEqual(['wsb', 'stocks']);
   });
 
-  it('returns a single entry for a single sub with no commas', async () => {
-    const { parseSubredditList } = await import('@/app/api/scan/route');
+  it('returns a single entry for a single sub with no commas', () => {
+    const { parseSubredditList } = require('@/lib/scan-config');
     const result = parseSubredditList('wallstreetbets');
     expect(result).toEqual(['wallstreetbets']);
   });
 
-  it('falls back to default list when env var is an empty string', async () => {
-    const { parseSubredditList } = await import('@/app/api/scan/route');
+  it('falls back to default list when env var is an empty string', () => {
+    const { parseSubredditList } = require('@/lib/scan-config');
     const result = parseSubredditList('');
     expect(result).toEqual([
       'wallstreetbets', 'stocks', 'investing',

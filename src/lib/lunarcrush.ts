@@ -99,3 +99,27 @@ export function createLunarCrushClient(): LunarCrushClient | null {
   }
   return new LunarCrushClient(key);
 }
+
+/**
+ * Enrich up to 20 tickers with LunarCrush data after each Reddit scan.
+ * No-ops silently when the API key is missing. Per-ticker errors are logged
+ * and skipped so a single failed fetch cannot abort the whole batch.
+ */
+export async function enrichWithLunarCrush(tickers: string[]): Promise<void> {
+  const client = createLunarCrushClient();
+  if (!client) return;
+
+  const { saveEnrichment } = await import('@/lib/db/enrichment');
+
+  // Deduplicate and cap at 20 to stay within free-tier rate limits
+  const unique = [...new Set(tickers)].slice(0, 20);
+
+  for (const ticker of unique) {
+    try {
+      const detail = await client.getTopic(ticker);
+      await saveEnrichment(ticker, detail);
+    } catch (error: unknown) {
+      logger.error(`LunarCrush enrichment failed for ${ticker}:`, error);
+    }
+  }
+}

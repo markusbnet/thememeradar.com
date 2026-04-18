@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 
 import { NextResponse } from 'next/server';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
+import { getEnrichmentMap } from '@/lib/db/enrichment';
 import { apiCache } from '@/lib/cache';
 
 const CACHE_KEY = 'trending-fading';
@@ -29,23 +30,25 @@ export async function GET() {
       getFadingStocks(10),
     ]);
 
-    // Fetch sparkline data for all stocks in parallel
+    // Fetch sparkline + enrichment data for all stocks in parallel
     const allTickers = [...trending, ...fading].map(s => s.ticker);
-    const sparklineResults = await Promise.all(
-      allTickers.map(ticker => getSparklineData(ticker, 7))
-    );
+    const [sparklineResults, enrichmentMap] = await Promise.all([
+      Promise.all(allTickers.map(ticker => getSparklineData(ticker, 7))),
+      getEnrichmentMap(allTickers),
+    ]);
     const sparklineMap = new Map<string, number[]>();
     allTickers.forEach((ticker, i) => sparklineMap.set(ticker, sparklineResults[i]));
 
-    const addSparkline = (stocks: typeof trending) =>
+    const addEnrichment = (stocks: typeof trending) =>
       stocks.map(stock => ({
         ...stock,
         sparklineData: sparklineMap.get(stock.ticker) || [],
+        enrichment: enrichmentMap.get(stock.ticker) || null,
       }));
 
     const data = {
-      trending: addSparkline(trending),
-      fading: addSparkline(fading),
+      trending: addEnrichment(trending),
+      fading: addEnrichment(fading),
       timestamp: Date.now(),
     };
 

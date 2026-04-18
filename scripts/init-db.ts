@@ -49,6 +49,7 @@ const TABLES = {
   USERS: 'users',
   STOCK_MENTIONS: 'stock_mentions',
   STOCK_EVIDENCE: 'stock_evidence',
+  STOCK_ENRICHMENT: 'stock_enrichment',
 };
 
 async function deleteTableIfExists(tableName: string) {
@@ -165,6 +166,31 @@ async function createStockEvidenceTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createStockEnrichmentTable() {
+  const tableName = TABLES.STOCK_ENRICHMENT;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'timestamp', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing DynamoDB Tables ===\n');
 
@@ -172,12 +198,14 @@ async function main() {
     await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
+    await createStockEnrichmentTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
     console.log('- users (stores user accounts)');
     console.log('- stock_mentions (stores aggregated ticker mentions)');
     console.log('- stock_evidence (stores sample posts/comments for each ticker)');
+    console.log('- stock_enrichment (LunarCrush social + price data per ticker, TTL 30d)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.

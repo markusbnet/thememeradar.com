@@ -45,9 +45,9 @@ export interface TrendingStock {
   sentimentCategory: string;
   velocity: number; // % change from previous period
   timestamp: number;
-  rank24hAgo: number | null;   // null when < 24h of history or ticker is new
-  rankDelta24h: number | null; // positive = climbed (was rank 5, now rank 2 → +3)
-  rankStatus: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
+  rank24hAgo?: number | null;   // null when < 24h of history or ticker is new; set by getTrendingStocks
+  rankDelta24h?: number | null; // positive = climbed (was rank 5, now rank 2 → +3)
+  rankStatus?: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
   //   climbing = positive delta; falling = negative; steady = 0; new = no prior entry; unknown = < 24h history
 }
 
