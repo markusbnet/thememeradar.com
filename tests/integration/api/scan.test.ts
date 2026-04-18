@@ -161,7 +161,9 @@ describe('/api/scan authentication', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.data).toBeDefined();
-      expect(data.data.subreddits).toEqual(['wallstreetbets', 'stocks', 'investing']);
+      expect(Array.isArray(data.data.subreddits)).toBe(true);
+      expect(data.data.subreddits).toContain('wallstreetbets');
+      expect(data.data.subreddits).toContain('pennystocks');
       expect(typeof data.data.totalPosts).toBe('number');
       expect(typeof data.data.totalComments).toBe('number');
       expect(typeof data.data.totalMentions).toBe('number');
@@ -292,5 +294,43 @@ describe('/api/scan authentication', () => {
       expect(data.success).toBe(false);
       expect(data.error).toBe('Scan failed');
     });
+  });
+});
+
+describe('parseSubredditList', () => {
+  it('returns the default 7-sub list when env var is undefined', async () => {
+    const { parseSubredditList } = await import('@/app/api/scan/route');
+    const result = parseSubredditList(undefined);
+    expect(result).toEqual([
+      'wallstreetbets', 'stocks', 'investing',
+      'pennystocks', 'Superstonk', 'StockMarket', 'options',
+    ]);
+  });
+
+  it('trims whitespace from each subreddit name', async () => {
+    const { parseSubredditList } = await import('@/app/api/scan/route');
+    const result = parseSubredditList('  wsb  ,  stocks  , options');
+    expect(result).toEqual(['wsb', 'stocks', 'options']);
+  });
+
+  it('filters out empty strings caused by double commas or trailing commas', async () => {
+    const { parseSubredditList } = await import('@/app/api/scan/route');
+    const result = parseSubredditList('wsb,,stocks,');
+    expect(result).toEqual(['wsb', 'stocks']);
+  });
+
+  it('returns a single entry for a single sub with no commas', async () => {
+    const { parseSubredditList } = await import('@/app/api/scan/route');
+    const result = parseSubredditList('wallstreetbets');
+    expect(result).toEqual(['wallstreetbets']);
+  });
+
+  it('falls back to default list when env var is an empty string', async () => {
+    const { parseSubredditList } = await import('@/app/api/scan/route');
+    const result = parseSubredditList('');
+    expect(result).toEqual([
+      'wallstreetbets', 'stocks', 'investing',
+      'pennystocks', 'Superstonk', 'StockMarket', 'options',
+    ]);
   });
 });

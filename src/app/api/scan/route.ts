@@ -28,8 +28,23 @@ function verifyCronAuth(request: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`;
 }
 
-// Default subreddits to scan (for cron job)
-const DEFAULT_SUBREDDITS = ['wallstreetbets', 'stocks', 'investing'];
+// Default subreddits when SCAN_SUBREDDITS env var is not set.
+// This set covers the highest-signal communities for meme stocks.
+const DEFAULT_SUBREDDITS = [
+  'wallstreetbets', 'stocks', 'investing',
+  'pennystocks', 'Superstonk', 'StockMarket', 'options',
+];
+
+/**
+ * Parse the SCAN_SUBREDDITS env var (comma-separated) into a subreddit list.
+ * Falls back to DEFAULT_SUBREDDITS when the var is absent or empty.
+ * Handles extra whitespace, double commas, and trailing commas gracefully.
+ */
+export function parseSubredditList(envVar: string | undefined): string[] {
+  if (!envVar || envVar.trim() === '') return DEFAULT_SUBREDDITS;
+  const parsed = envVar.split(',').map(s => s.trim()).filter(Boolean);
+  return parsed.length > 0 ? parsed : DEFAULT_SUBREDDITS;
+}
 
 export async function POST(request: NextRequest) {
   if (!verifyCronAuth(request)) {
@@ -150,14 +165,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const subredditsToScan = parseSubredditList(process.env.SCAN_SUBREDDITS);
+
     logger.info('🔄 Starting automated Reddit scan...');
-    logger.info(`📡 Scanning subreddits: ${DEFAULT_SUBREDDITS.join(', ')}`);
+    logger.info(`📡 Scanning subreddits: ${subredditsToScan.join(', ')}`);
 
     // Create scanner instance
     const scanner = createScanner(REDDIT_CONFIG);
 
-    // Scan default subreddits
-    const results = await scanner.scanMultipleSubreddits(DEFAULT_SUBREDDITS, 25);
+    // Scan configured subreddits
+    const results = await scanner.scanMultipleSubreddits(subredditsToScan, 25);
 
     // Save results to DynamoDB
     await saveScanResults(results);
@@ -165,7 +182,7 @@ export async function GET(request: NextRequest) {
     // Calculate summary
     const summary = {
       scannedAt: new Date().toISOString(),
-      subreddits: DEFAULT_SUBREDDITS,
+      subreddits: subredditsToScan,
       totalPosts: results.reduce((sum, r) => sum + r.stats.totalPosts, 0),
       totalComments: results.reduce((sum, r) => sum + r.stats.totalComments, 0),
       totalUniqueTickers: new Set(
