@@ -1029,10 +1029,11 @@ Still outstanding (out of scope for QA task; logged for future work):
 
 ---
 
-### Task 55: [ ] NEW — LunarCrush enrichment pipeline
+### Task 55: [x] COMPLETE — LunarCrush enrichment pipeline
 **Todoist ID:** 6gQ2vf5693g7G3m6
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
 **Priority:** p1
 **Description:** After each Reddit scan, enrich the top trending tickers with LunarCrush data. This is the bridge between Reddit signals and market reality.
 
@@ -1052,10 +1053,11 @@ Still outstanding (out of scope for QA task; logged for future work):
 
 ---
 
-### Task 56: [ ] NEW — Opportunity Score algorithm
+### Task 56: [x] COMPLETE — Opportunity Score algorithm
 **Todoist ID:** 6gQ2vf8VVVmMqfrc
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
 **Priority:** p1
 **Description:** Create a composite scoring algorithm that combines Reddit signals with LunarCrush data to identify stocks with the highest short-term upside potential.
 
@@ -2135,6 +2137,13 @@ All core features implemented. Same spec gaps remain:
 - `db:reset` script
 - Fading stocks minimum threshold (5 vs spec's 10)
 - Velocity window (15-min vs spec's 1-hour, documented as intentional)
+
+---
+
+<!-- Nightly session summary — 2026-04-18 -->
+<!-- Tasks completed: 55 (LunarCrush enrichment pipeline), 56 (Opportunity Score algorithm) -->
+<!-- Tasks failed: 0 -->
+<!-- Remaining NEW tasks in queue: Task 57 (p2), Task 58–71 (mix of p1–p3) -->
 
 ---
 
