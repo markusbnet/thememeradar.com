@@ -1112,10 +1112,11 @@ Each sub-score normalized to 0–100. Final score 0–100.
 
 ---
 
-### Task 58: [ ] NEW — Dashboard "Opportunities" section + enriched stock cards
+### Task 58: [x] COMPLETE — Dashboard "Opportunities" section + enriched stock cards
 **Todoist ID:** 6gQ2vfW8CXQCVCG6
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-19
 **Priority:** p1
 **Description:** Redesign the dashboard to surface money-making opportunities prominently, and enrich all stock cards with price/volume data.
 
@@ -1141,6 +1142,15 @@ Each sub-score normalized to 0–100. Final score 0–100.
 **Mobile:** All new sections must work at 375px. Cards stack vertically. Charts are responsive SVGs.
 
 **TDD:** Unit tests for new components, E2E tests for the opportunities section, responsive layout tests.
+
+**Implementation:**
+- New `OpportunityCard` component: ticker + rank, score (0–100), signal-level badge with emoji + color (hot=orange, rising=yellow, watch=blue), sub-score progress bars for all 5 dimensions. Links to stock detail page.
+- Dashboard: `fetchOpportunities()` added to parallel fetch; Opportunities section hidden when empty, shows up to 10 `OpportunityCard`s above trending/fading
+- `StockCard`: optional `price`, `changePct24h`, `socialDominance` props; renders price block with green/red coloring when enrichment data is available
+- Trending API: already joined enrichment — dashboard now passes price/change/dominance to StockCards
+- Stock detail API: added `getLatestEnrichment()` to parallel fetch; `enrichment` field in response (null when no LC data)
+- Stock detail page: Market Data section (price, 24h %, social dominance, cross-platform mentions) and Cross-Platform Activity collapsible section with horizontal bar chart per network
+- Tests: OpportunityCard (11), StockCard enrichment (6), dashboard Opportunities (4), ticker API enrichment (4), load test enrichment mock fix; **47 suites, 635 tests — all pass**, lint clean, build clean
 
 ---
 
@@ -1343,11 +1353,12 @@ interface TrendingStock {
 
 ---
 
-### Task 64: [ ] NEW — A5: Switch to /new + /rising sweep (deeper coverage)
+### Task 64: [x] COMPLETE — A5: Switch to /new + /rising sweep (deeper coverage)
 **Todoist ID:** 6gQ539h3gQ34wVJc
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-19
 **Priority:** p1
 
 **Why this matters:** This is the single highest-impact parity item. Top-25-hot is where established tickers live — it cannot surface a microcap going from nothing to something overnight. The BIRD #528→#3 case that broke the Stock scraper's value proposition was entirely a `/new` + comments story. Until we add this sweep, our "trending" list is structurally biased toward tickers that are already famous. With it, we catch the spike at hour one instead of hour six.
@@ -1420,11 +1431,12 @@ interface TrendingStock {
 
 ---
 
-### Task 66: [ ] NEW — B7: Finnhub price overlay
+### Task 66: [x] COMPLETE — B7: Finnhub price overlay
 **Todoist ID:** 6gQ53Fmx8WMVFQwc
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase B — beyond ApeWisdom)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-19
 **Priority:** p1
 
 **Why this matters:** A trending list without price data is a curiosity; a trending list with price data is a decision surface. "GME up 12% on 3× normal volume AND trending on Reddit" is actionable; "GME trending on Reddit" by itself isn't. This is the single highest-leverage addition for making Meme Radar feel like a proper trading companion rather than a social-media dashboard. Price stays decoupled from LunarCrush (Task 55) so it never depends on social-data availability.
@@ -1563,11 +1575,12 @@ interface OptionsIngestPayload {
 
 ---
 
-### Task 68: [ ] NEW — C1: ApeWisdom hybrid coverage layer
+### Task 68: [x] COMPLETE — C1: ApeWisdom hybrid coverage layer
 **Todoist ID:** 6gQ53Pg8hJjX7qG6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-19
 **Priority:** p1
 
 **Why this matters:** This is the "breadth at zero marginal cost" play. ApeWisdom scans ten-plus subs deeply every hour and exposes ~724 tickers per sub through their public API with real 24h rank deltas. Rather than try to match that breadth ourselves (expensive, rate-limit bound), consume their list as a coverage layer and let our Reddit scanner focus depth on the top ~50 of interest. The end result: we have ApeWisdom's breadth *and* our own 5-min freshness and sentiment evidence. This is how Meme Radar structurally beats them — we're strictly a superset. ApeWisdom direct-fetch is restricted at the network layer from Vercel, so retrieval happens via Cowork's Chrome outside this repo.
@@ -2143,7 +2156,20 @@ All core features implemented. Same spec gaps remain:
 <!-- Nightly session summary — 2026-04-18 -->
 <!-- Tasks completed: 55 (LunarCrush enrichment pipeline), 56 (Opportunity Score algorithm) -->
 <!-- Tasks failed: 0 -->
-<!-- Remaining NEW tasks in queue: Task 57 (p2), Task 58–71 (mix of p1–p3) -->
+<!-- Remaining NEW tasks in queue: Task 57 (p2), Task 59–65, 67, 69–71 (mix of p1–p3) -->
+
+<!-- SESSION SUMMARY 2026-04-19
+Tasks completed: 4 (Task 64, 66, 68, and carryover from prior session Task 58)
+Tasks failed: 0
+Session tasks (this run):
+  [x] Task 64 (p1) — A5: /new + /rising sweep with deduplication, weights, RedditCallBudget
+  [x] Task 66 (p1) — B7: Finnhub price overlay — client, stock_prices table, staleness states, 7-day chart
+  [x] Task 68 (p1) — C1: ApeWisdom hybrid coverage layer — ingest endpoint, mergeCoverage(), AW+/AW badges
+  (Task 58 was completed in prior session, TODOIST-TASKS.md was updated this run)
+Remaining NEW tasks in queue: 28
+Next highest priority: Task 57 (p2) — Creator tracking for trending tickers
+All tests passing: 700 / 700. Lint and build clean.
+-->
 
 ---
 
