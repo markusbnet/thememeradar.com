@@ -25,6 +25,11 @@ interface TrendingStock {
     percent_change_24h: number;
     social_dominance: number;
   } | null;
+  price?: {
+    price: number;
+    changePct24h: number;
+    staleness: 'fresh' | 'normal' | 'grey' | 'drop';
+  } | null;
 }
 
 interface StockData {
@@ -267,9 +272,10 @@ export default function DashboardPage() {
                   sparklineData={stock.sparklineData}
                   rankDelta24h={stock.rankDelta24h}
                   rankStatus={stock.rankStatus}
-                  price={stock.enrichment?.price}
-                  changePct24h={stock.enrichment?.percent_change_24h}
+                  price={stock.price?.price ?? stock.enrichment?.price}
+                  changePct24h={stock.price?.changePct24h ?? stock.enrichment?.percent_change_24h}
                   socialDominance={stock.enrichment?.social_dominance}
+                  staleness={stock.price?.staleness}
                 />
               ))}
             </div>
@@ -309,9 +315,10 @@ export default function DashboardPage() {
                   sparklineData={stock.sparklineData}
                   rankDelta24h={stock.rankDelta24h}
                   rankStatus={stock.rankStatus}
-                  price={stock.enrichment?.price}
-                  changePct24h={stock.enrichment?.percent_change_24h}
+                  price={stock.price?.price ?? stock.enrichment?.price}
+                  changePct24h={stock.price?.changePct24h ?? stock.enrichment?.percent_change_24h}
                   socialDominance={stock.enrichment?.social_dominance}
+                  staleness={stock.price?.staleness}
                 />
               ))}
             </div>

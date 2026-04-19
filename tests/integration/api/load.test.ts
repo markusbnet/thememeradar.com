@@ -14,6 +14,12 @@ jest.mock('@/lib/db/enrichment', () => ({
   getEnrichmentMap: jest.fn().mockResolvedValue(new Map()),
 }));
 
+jest.mock('@/lib/db/prices', () => ({
+  getLatestPrice: jest.fn().mockResolvedValue(null),
+  getPriceHistory: jest.fn().mockResolvedValue([]),
+  getLatestPriceMap: jest.fn().mockResolvedValue(new Map()),
+}));
+
 import { apiCache } from '@/lib/cache';
 
 describe('API Load Testing', () => {

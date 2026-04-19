@@ -8,6 +8,10 @@ jest.mock('@/lib/db/enrichment', () => ({
   getEnrichmentMap: jest.fn().mockResolvedValue(new Map()),
 }));
 
+jest.mock('@/lib/db/prices', () => ({
+  getLatestPriceMap: jest.fn().mockResolvedValue(new Map()),
+}));
+
 import { GET } from '@/app/api/stocks/trending/route';
 import { apiCache } from '@/lib/cache';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
@@ -252,6 +256,62 @@ describe('GET /api/stocks/trending', () => {
       const second = await (await GET()).json();
 
       expect(second.data.timestamp).toBe(first.data.timestamp);
+    });
+  });
+
+  describe('price data join', () => {
+    beforeEach(() => {
+      const { getLatestPriceMap } = jest.requireMock('@/lib/db/prices');
+      mockGetTrendingStocks.mockResolvedValue(mockTrendingStocks);
+      mockGetFadingStocks.mockResolvedValue([]);
+      mockGetSparklineData.mockResolvedValue([]);
+      getLatestPriceMap.mockResolvedValue(
+        new Map([['GME', {
+          ticker: 'GME',
+          price: 24.50,
+          changePct24h: 3.21,
+          volume: 5000000,
+          dayHigh: 25.0,
+          dayLow: 23.8,
+          dayOpen: 24.0,
+          previousClose: 23.7,
+          staleness: 'fresh',
+          fetchedAt: Date.now() - 5 * 60 * 1000,
+          ttl: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+        }]])
+      );
+    });
+
+    afterEach(() => {
+      const { getLatestPriceMap } = jest.requireMock('@/lib/db/prices');
+      getLatestPriceMap.mockResolvedValue(new Map());
+    });
+
+    it('includes price data for tickers with price rows', async () => {
+      const response = await GET();
+      const data = await response.json();
+
+      const gme = data.data.trending.find((s: any) => s.ticker === 'GME');
+      expect(gme.price).toBeDefined();
+      expect(gme.price.price).toBe(24.50);
+      expect(gme.price.changePct24h).toBe(3.21);
+      expect(gme.price.staleness).toBe('fresh');
+    });
+
+    it('returns null price for tickers with no price row', async () => {
+      const response = await GET();
+      const data = await response.json();
+
+      const amc = data.data.trending.find((s: any) => s.ticker === 'AMC');
+      expect(amc.price).toBeNull();
+    });
+
+    it('response is 200 even when price map is empty', async () => {
+      const { getLatestPriceMap } = jest.requireMock('@/lib/db/prices');
+      getLatestPriceMap.mockResolvedValue(new Map());
+
+      const response = await GET();
+      expect(response.status).toBe(200);
     });
   });
 

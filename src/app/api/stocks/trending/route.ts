@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
 import { getEnrichmentMap } from '@/lib/db/enrichment';
+import { getLatestPriceMap } from '@/lib/db/prices';
 import { apiCache } from '@/lib/cache';
 
 const CACHE_KEY = 'trending-fading';
@@ -30,11 +31,12 @@ export async function GET() {
       getFadingStocks(10),
     ]);
 
-    // Fetch sparkline + enrichment data for all stocks in parallel
+    // Fetch sparkline + enrichment + price data for all stocks in parallel
     const allTickers = [...trending, ...fading].map(s => s.ticker);
-    const [sparklineResults, enrichmentMap] = await Promise.all([
+    const [sparklineResults, enrichmentMap, priceMap] = await Promise.all([
       Promise.all(allTickers.map(ticker => getSparklineData(ticker, 7))),
       getEnrichmentMap(allTickers),
+      getLatestPriceMap(allTickers),
     ]);
     const sparklineMap = new Map<string, number[]>();
     allTickers.forEach((ticker, i) => sparklineMap.set(ticker, sparklineResults[i]));
@@ -44,6 +46,7 @@ export async function GET() {
         ...stock,
         sparklineData: sparklineMap.get(stock.ticker) || [],
         enrichment: enrichmentMap.get(stock.ticker) || null,
+        price: priceMap.get(stock.ticker) || null,
       }));
 
     const data = {

@@ -47,6 +47,24 @@ interface StockEnrichment {
   engagements_by_network: Record<string, number>;
 }
 
+interface PriceSnapshot {
+  price: number;
+  changePct24h: number;
+  volume: number;
+  dayHigh: number;
+  dayLow: number;
+  dayOpen: number;
+  previousClose: number;
+  staleness: 'fresh' | 'normal' | 'grey' | 'drop';
+  fetchedAt: number;
+}
+
+interface PricePoint {
+  timestamp: number;
+  price: number;
+  volume: number;
+}
+
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker: tickerParam } = use(params);
   const ticker = tickerParam.toUpperCase();
@@ -62,6 +80,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
     periods: { label: string; mentions: number; bullishPct: number; neutralPct: number; bearishPct: number }[];
   } | null>(null);
   const [enrichment, setEnrichment] = useState<StockEnrichment | null>(null);
+  const [priceSnapshot, setPriceSnapshot] = useState<PriceSnapshot | null>(null);
+  const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -91,6 +111,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           }
           if (result.data.enrichment) {
             setEnrichment(result.data.enrichment);
+          }
+          if (result.data.priceSnapshot) {
+            setPriceSnapshot(result.data.priceSnapshot);
+          }
+          if (result.data.priceHistory) {
+            setPriceHistory(result.data.priceHistory);
           }
         } else {
           setError(result.error || 'Stock not found');
@@ -202,29 +228,83 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           </div>
         </div>
 
-        {/* Market Data — from LunarCrush enrichment */}
-        {enrichment && (
+        {/* Market Data — Finnhub price (primary) + LunarCrush social */}
+        {(priceSnapshot || enrichment) && (
           <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Market Data</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-gray-400 mb-1">Price</p>
-                <p className="text-xl font-bold text-gray-900">${enrichment.price.toFixed(2)}</p>
+                <div className="flex items-center gap-1">
+                  <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-400' : 'text-gray-900'}`}>
+                    ${(priceSnapshot?.price ?? enrichment?.price ?? 0).toFixed(2)}
+                  </p>
+                  {priceSnapshot?.staleness === 'grey' && (
+                    <span title="stale price" className="text-sm text-gray-400">⏰</span>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">24h Change</p>
-                <p className={`text-xl font-bold ${enrichment.percent_change_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {enrichment.percent_change_24h >= 0 ? '+' : ''}{enrichment.percent_change_24h.toFixed(2)}%
-                </p>
+                {(() => {
+                  const pct = priceSnapshot?.changePct24h ?? enrichment?.percent_change_24h;
+                  return pct !== undefined ? (
+                    <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-400' : pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {pct >= 0 ? '+' : ''}{pct.toFixed(2)}%
+                    </p>
+                  ) : null;
+                })()}
               </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Social Dominance</p>
-                <p className="text-xl font-bold text-purple-700">{enrichment.social_dominance.toFixed(1)}%</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Cross-Platform Mentions</p>
-                <p className="text-xl font-bold text-gray-900">{enrichment.mentions_cross_platform.toLocaleString()}</p>
-              </div>
+              {enrichment && (
+                <>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">Social Dominance</p>
+                    <p className="text-xl font-bold text-purple-700">{enrichment.social_dominance.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">Cross-Platform Mentions</p>
+                    <p className="text-xl font-bold text-gray-900">{enrichment.mentions_cross_platform.toLocaleString()}</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 7-Day Price Chart — from Finnhub price history */}
+        {priceHistory.length >= 2 && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">7-Day Price History</h2>
+            <div className="w-full overflow-x-auto">
+              {(() => {
+                const prices = priceHistory.map(p => p.price);
+                const volumes = priceHistory.map(p => p.volume);
+                const minP = Math.min(...prices);
+                const maxP = Math.max(...prices);
+                const rangeP = maxP - minP || 1;
+                const W = 600, H = 120, VH = 30, PAD = 4;
+                const step = W / (prices.length - 1);
+                const pts = prices.map((p, i) => `${i * step},${PAD + (1 - (p - minP) / rangeP) * (H - 2 * PAD)}`).join(' ');
+                const maxV = Math.max(...volumes, 1);
+                return (
+                  <svg viewBox={`0 0 ${W} ${H + VH}`} className="w-full h-auto">
+                    <polyline points={pts} fill="none" stroke="#7c3aed" strokeWidth="2" />
+                    {volumes.map((v, i) => (
+                      <rect
+                        key={i}
+                        x={i * step - 2}
+                        y={H + VH - (v / maxV) * VH}
+                        width={4}
+                        height={(v / maxV) * VH}
+                        fill="#7c3aed"
+                        opacity={0.4}
+                      />
+                    ))}
+                    <text x={0} y={H - 2} fontSize={10} fill="#9ca3af">${minP.toFixed(2)}</text>
+                    <text x={0} y={PAD + 10} fontSize={10} fill="#9ca3af">${maxP.toFixed(2)}</text>
+                  </svg>
+                );
+              })()}
             </div>
           </div>
         )}

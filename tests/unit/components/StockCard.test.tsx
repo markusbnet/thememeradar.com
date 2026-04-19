@@ -129,4 +129,40 @@ describe('StockCard', () => {
       expect(screen.queryByText(/Social/i)).not.toBeInTheDocument();
     });
   });
+
+  describe('staleness display', () => {
+    const priceProps = { price: 24.50, changePct24h: 3.21 };
+
+    it('shows price normally when staleness is fresh', () => {
+      render(<StockCard {...defaultProps} {...priceProps} staleness="fresh" />);
+      expect(screen.getByText('$24.50')).toBeInTheDocument();
+    });
+
+    it('shows price normally when staleness is normal', () => {
+      render(<StockCard {...defaultProps} {...priceProps} staleness="normal" />);
+      expect(screen.getByText('$24.50')).toBeInTheDocument();
+    });
+
+    it('shows price in grey when staleness is grey', () => {
+      render(<StockCard {...defaultProps} {...priceProps} staleness="grey" />);
+      const priceEl = screen.getByText('$24.50');
+      expect(priceEl).toBeInTheDocument();
+      expect(priceEl.className).toContain('text-gray');
+    });
+
+    it('shows stale indicator when staleness is grey', () => {
+      render(<StockCard {...defaultProps} {...priceProps} staleness="grey" />);
+      expect(screen.getByTitle(/stale/i)).toBeInTheDocument();
+    });
+
+    it('hides price block when staleness is drop', () => {
+      render(<StockCard {...defaultProps} {...priceProps} staleness="drop" />);
+      expect(screen.queryByText('$24.50')).not.toBeInTheDocument();
+    });
+
+    it('renders normally when staleness prop is not provided', () => {
+      render(<StockCard {...defaultProps} {...priceProps} />);
+      expect(screen.getByText('$24.50')).toBeInTheDocument();
+    });
+  });
 });

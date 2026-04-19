@@ -15,6 +15,15 @@ jest.mock('@/lib/db/storage', () => ({
   saveScanResults: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock LunarCrush and Finnhub enrichment (fire-and-forget, not tested here)
+jest.mock('@/lib/lunarcrush', () => ({
+  enrichWithLunarCrush: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/lib/market/finnhub', () => ({
+  enrichWithPrices: jest.fn().mockResolvedValue(undefined),
+}));
+
 import { saveScanResults } from '@/lib/db/storage';
 
 const mockSaveScanResults = saveScanResults as jest.MockedFunction<typeof saveScanResults>;

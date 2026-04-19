@@ -13,6 +13,11 @@ jest.mock('@/lib/db/enrichment', () => ({
   getLatestEnrichment: jest.fn(),
 }));
 
+jest.mock('@/lib/db/prices', () => ({
+  getLatestPrice: jest.fn().mockResolvedValue(null),
+  getPriceHistory: jest.fn().mockResolvedValue([]),
+}));
+
 import {
   getStockDetails,
   getStockEvidence,

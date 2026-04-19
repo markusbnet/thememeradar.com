@@ -24,6 +24,8 @@ interface StockCardProps {
   price?: number;
   changePct24h?: number;
   socialDominance?: number;
+  // Finnhub price staleness (fresh/normal = normal color, grey = muted, drop = hide)
+  staleness?: 'fresh' | 'normal' | 'grey' | 'drop';
 }
 
 export default function StockCard({
@@ -40,6 +42,7 @@ export default function StockCard({
   price,
   changePct24h,
   socialDominance,
+  staleness,
 }: StockCardProps) {
   // Determine sentiment emoji and color
   const getSentimentDisplay = (category: string) => {
@@ -110,18 +113,25 @@ export default function StockCard({
           </div>
         )}
 
-        {/* Enrichment: price + social dominance */}
-        {price !== undefined && (
+        {/* Enrichment: price + social dominance (hidden when staleness is 'drop') */}
+        {price !== undefined && staleness !== 'drop' && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-400">Price</p>
-                <p className="text-sm font-semibold text-gray-900">${price.toFixed(2)}</p>
+                <div className="flex items-center gap-1">
+                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-400' : 'text-gray-900'}`}>
+                    ${price.toFixed(2)}
+                  </p>
+                  {staleness === 'grey' && (
+                    <span title="stale price" className="text-xs text-gray-400">⏰</span>
+                  )}
+                </div>
               </div>
               {changePct24h !== undefined && (
                 <div className="text-right">
                   <p className="text-xs text-gray-400">24h</p>
-                  <p className={`text-sm font-semibold ${changePct24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-400' : changePct24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {changePct24h >= 0 ? '+' : ''}{changePct24h.toFixed(2)}%
                   </p>
                 </div>

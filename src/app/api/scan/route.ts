@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createScanner } from '@/lib/scanner/scanner';
 import { saveScanResults } from '@/lib/db/storage';
 import { enrichWithLunarCrush } from '@/lib/lunarcrush';
+import { enrichWithPrices } from '@/lib/market/finnhub';
 import { parseSubredditList } from '@/lib/scan-config';
 
 // Configuration from environment variables
@@ -168,6 +169,12 @@ export async function GET(request: NextRequest) {
     const allTickers = [...new Set(results.flatMap(r => Array.from(r.tickers.keys())))];
     enrichWithLunarCrush(allTickers).catch((err: unknown) =>
       logger.error('LunarCrush enrichment error:', err)
+    );
+
+    // Enrich top 50 tickers with Finnhub price data (no-op if FINNHUB_API_KEY is absent)
+    const topTickers = allTickers.slice(0, 50);
+    enrichWithPrices(topTickers).catch((err: unknown) =>
+      logger.error('Finnhub price enrichment error:', err)
     );
 
     // Calculate summary
