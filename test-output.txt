@@ -1,0 +1,2037 @@
+
+Running 150 tests using 5 workers
+
+  ✘    2 [chromium] › tests/e2e/api/endpoints.spec.ts:270:9 › API Endpoints › /api/stocks/trending › should return trending stocks data (0ms)
+  -    6 [chromium] › tests/e2e/api/endpoints.spec.ts:281:9 › API Endpoints › /api/stocks/trending › should return array for trending stocks
+  -    7 [chromium] › tests/e2e/api/endpoints.spec.ts:289:9 › API Endpoints › /api/stocks/trending › should handle empty stock data gracefully
+  -    8 [chromium] › tests/e2e/api/endpoints.spec.ts:301:9 › API Endpoints › Error Handling › should return 404 for non-existent endpoints
+  -    9 [chromium] › tests/e2e/api/endpoints.spec.ts:306:9 › API Endpoints › Error Handling › should handle malformed JSON gracefully
+  ✘    5 [chromium] › tests/e2e/api/endpoints.spec.ts:317:9 › API Endpoints › Error Handling › should reject requests with invalid Content-Type (0ms)
+  -   10 [chromium] › tests/e2e/api/endpoints.spec.ts:330:10 › API Endpoints › Rate Limiting (if implemented) › should handle rate limiting on auth endpoints
+  ✘    1 [chromium] › tests/e2e/api/endpoints.spec.ts:32:9 › API Endpoints › /api/auth/signup › should create new user with valid data (0ms)
+  -   11 [chromium] › tests/e2e/api/endpoints.spec.ts:53:9 › API Endpoints › /api/auth/signup › should return 400 for missing email
+  -   12 [chromium] › tests/e2e/api/endpoints.spec.ts:66:9 › API Endpoints › /api/auth/signup › should return 400 for missing password
+  -   13 [chromium] › tests/e2e/api/endpoints.spec.ts:79:9 › API Endpoints › /api/auth/signup › should return 400 for invalid email format
+  -   14 [chromium] › tests/e2e/api/endpoints.spec.ts:92:9 › API Endpoints › /api/auth/signup › should return 400 for weak password
+  ✘    4 [chromium] › tests/e2e/api/endpoints.spec.ts:106:9 › API Endpoints › /api/auth/signup › should return 400 for duplicate email (0ms)
+  -   15 [chromium] › tests/e2e/api/endpoints.spec.ts:139:9 › API Endpoints › /api/auth/login › should login with valid credentials
+  -   16 [chromium] › tests/e2e/api/endpoints.spec.ts:157:9 › API Endpoints › /api/auth/login › should return 401 for invalid email
+  -   17 [chromium] › tests/e2e/api/endpoints.spec.ts:170:9 › API Endpoints › /api/auth/login › should return 401 for incorrect password
+  -   18 [chromium] › tests/e2e/api/endpoints.spec.ts:183:9 › API Endpoints › /api/auth/login › should return 400 for missing credentials
+  ✘    3 [chromium] › tests/e2e/api/endpoints.spec.ts:193:9 › API Endpoints › /api/auth/logout › should logout successfully with valid session (0ms)
+  -   19 [chromium] › tests/e2e/api/endpoints.spec.ts:216:9 › API Endpoints › /api/auth/logout › should handle logout without session gracefully
+  -   20 [chromium] › tests/e2e/api/endpoints.spec.ts:225:9 › API Endpoints › /api/auth/me › should return user data with valid session
+  -   21 [chromium] › tests/e2e/api/endpoints.spec.ts:250:9 › API Endpoints › /api/auth/me › should return 401 without valid session
+  -   22 [chromium] › tests/e2e/api/endpoints.spec.ts:258:9 › API Endpoints › /api/auth/me › should return 401 with invalid session token
+  ✘   27 [chromium] › tests/e2e/auth/login.spec.ts:9:7 › Login Page › should display login form with all required elements (5.7s)
+  ✘   25 [chromium] › tests/e2e/auth/login.spec.ts:65:7 › Login Page › should show error for non-existent user (30.0s)
+  ✘   23 [chromium] › tests/e2e/auth/login.spec.ts:50:7 › Login Page › should show error for invalid email format (30.0s)
+  ✘   24 [chromium] › tests/e2e/auth/login.spec.ts:82:7 › Login Page › should show error for incorrect password (30.0s)
+  ✘   26 [chromium] › tests/e2e/auth/login.spec.ts:22:7 › Login Page › should successfully log in with valid credentials (30.0s)
+  ✘   28 [chromium] › tests/e2e/auth/login.spec.ts:109:7 › Login Page › should validate empty email field (30.0s)
+  ✘   32 [chromium] › tests/e2e/auth/login.spec.ts:137:7 › Login Page › should toggle password visibility (5.6s)
+  ✘   34 [chromium] › tests/e2e/auth/signup.spec.ts:32:7 › Signup Page › should display signup form with all required elements (5.3s)
+  ✘   35 [chromium] › tests/e2e/auth/signup.spec.ts:45:7 › Signup Page › should successfully sign up with valid email and password (1.1s)
+  ✘   36 [chromium] › tests/e2e/auth/signup.spec.ts:64:7 › Signup Page › should show error for invalid email format (1.1s)
+  ✘   37 [chromium] › tests/e2e/auth/signup.spec.ts:79:7 › Signup Page › should show error for weak password (1.1s)
+  ✘   38 [chromium] › tests/e2e/auth/signup.spec.ts:96:7 › Signup Page › should show error for duplicate email (1.1s)
+  ✘   39 [chromium] › tests/e2e/auth/signup.spec.ts:124:7 › Signup Page › should validate empty email field (1.1s)
+  ✘   40 [chromium] › tests/e2e/auth/signup.spec.ts:138:7 › Signup Page › should validate empty password field (1.1s)
+  ✘   41 [chromium] › tests/e2e/auth/signup.spec.ts:154:7 › Signup Page › should toggle password visibility (1.1s)
+  ✘   42 [chromium] › tests/e2e/auth/signup.spec.ts:173:7 › Signup Page › should navigate to login page when clicking login link (1.1s)
+  ✘   43 [chromium] › tests/e2e/auth/signup.spec.ts:181:7 › Signup Page › should trim whitespace from email (1.1s)
+  ✘   44 [chromium] › tests/e2e/auth/signup.spec.ts:197:7 › Signup Page › should handle form submission with Enter key (1.1s)
+  ✘   45 [chromium] › tests/e2e/dashboard-interactions.spec.ts:38:9 › Dashboard Interactions › Page Load and Display › should display dashboard header with all elements (0ms)
+  -   46 [chromium] › tests/e2e/dashboard-interactions.spec.ts:44:9 › Dashboard Interactions › Page Load and Display › should display user email in welcome message
+  -   47 [chromium] › tests/e2e/dashboard-interactions.spec.ts:49:9 › Dashboard Interactions › Page Load and Display › should display trending section header
+  -   48 [chromium] › tests/e2e/dashboard-interactions.spec.ts:53:9 › Dashboard Interactions › Page Load and Display › should display fading section header
+  -   49 [chromium] › tests/e2e/dashboard-interactions.spec.ts:57:9 › Dashboard Interactions › Page Load and Display › should show stock counts in section headers
+  -   50 [chromium] › tests/e2e/dashboard-interactions.spec.ts:64:9 › Dashboard Interactions › Empty State Handling › should display empty state message when no trending stocks
+  ✘   51 [chromium] › tests/e2e/dashboard-interactions.spec.ts:76:9 › Dashboard Interactions › Empty State Handling › should display empty state for fading stocks when no data (0ms)
+  -   52 [chromium] › tests/e2e/dashboard-interactions.spec.ts:87:9 › Dashboard Interactions › Stock Cards Display › should display stock cards with correct structure if data exists
+  -   53 [chromium] › tests/e2e/dashboard-interactions.spec.ts:104:9 › Dashboard Interactions › Stock Cards Display › should display stock cards in grid layout
+  -   54 [chromium] › tests/e2e/dashboard-interactions.spec.ts:121:9 › Dashboard Interactions › Refresh Timer › should display refresh timer component
+  -   55 [chromium] › tests/e2e/dashboard-interactions.spec.ts:131:9 › Dashboard Interactions › Refresh Timer › should show time information in refresh timer
+  -   56 [chromium] › tests/e2e/dashboard-interactions.spec.ts:157:9 › Dashboard Interactions › Error Handling › should handle network errors gracefully
+  ✘   30 [chromium] › tests/e2e/auth/login.spec.ts:123:7 › Login Page › should validate empty password field (30.0s)
+  ✘   31 [chromium] › tests/e2e/auth/login.spec.ts:164:7 › Login Page › should trim whitespace from email (30.0s)
+  ✘   29 [chromium] › tests/e2e/auth/login.spec.ts:156:7 › Login Page › should navigate to signup page when clicking signup link (30.0s)
+  ✘   57 [chromium] › tests/e2e/dashboard-interactions.spec.ts:175:9 › Dashboard Interactions › Error Handling › should display error message when API returns error (0ms)
+  -   61 [chromium] › tests/e2e/dashboard-interactions.spec.ts:186:9 › Dashboard Interactions › Responsive Design › should be responsive on mobile viewport
+  -   62 [chromium] › tests/e2e/dashboard-interactions.spec.ts:193:9 › Dashboard Interactions › Responsive Design › should be responsive on tablet viewport
+  -   63 [chromium] › tests/e2e/dashboard-interactions.spec.ts:200:9 › Dashboard Interactions › Responsive Design › should stack sections properly on mobile
+  -   64 [chromium] › tests/e2e/dashboard-interactions.spec.ts:214:9 › Dashboard Interactions › Responsive Design › should show grid columns correctly on desktop
+  -   65 [chromium] › tests/e2e/dashboard-interactions.spec.ts:230:9 › Dashboard Interactions › Navigation › should logout and redirect to login page
+Failed to delete test user testdash-1761412804204@example.com: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:15363:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at deleteTestUser [90m(/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:6:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:22:7
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:305:11
+    at TimeoutManager.withRunnable [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/timeoutManager.js:67:14[90m)[39m
+    at TestInfoImpl._runWithTimeout [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:303:7[90m)[39m
+    at FixtureRunner.resolveParametersAndRunFunction [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/fixtureRunner.js:228:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:469:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runEachHooksForSuites [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:468:9[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:330:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runTest [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:318:5[90m)[39m
+    at WorkerMain.runTestGroup [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:198:11[90m)[39m
+    at process.<anonymous> [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/common/process.js:65:22[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+  ✘   58 [chromium] › tests/e2e/dashboard.spec.ts:27:7 › Protected Dashboard › should redirect to login when not authenticated (1.1s)
+  ✘   60 [chromium] › tests/e2e/dashboard-interactions.spec.ts:316:9 › Dashboard Interactions › Accessibility › should have proper heading hierarchy (0ms)
+  -   68 [chromium] › tests/e2e/dashboard-interactions.spec.ts:327:9 › Dashboard Interactions › Accessibility › should have accessible logout button
+  -   69 [chromium] › tests/e2e/dashboard-interactions.spec.ts:334:9 › Dashboard Interactions › Accessibility › should be keyboard navigable
+  ✘   59 [chromium] › tests/e2e/dashboard-interactions.spec.ts:235:9 › Dashboard Interactions › Navigation › should clear session after logout (0ms)
+  -   70 [chromium] › tests/e2e/dashboard-interactions.spec.ts:248:9 › Dashboard Interactions › Loading States › should show loading indicator on initial load
+  -   71 [chromium] › tests/e2e/dashboard-interactions.spec.ts:261:9 › Dashboard Interactions › Loading States › should eventually load dashboard content
+  -   72 [chromium] › tests/e2e/dashboard-interactions.spec.ts:272:9 › Dashboard Interactions › Performance › should load dashboard quickly
+  -   73 [chromium] › tests/e2e/dashboard-interactions.spec.ts:281:9 › Dashboard Interactions › Performance › should not have JavaScript errors
+  -   74 [chromium] › tests/e2e/dashboard-interactions.spec.ts:291:9 › Dashboard Interactions › Performance › should not have console errors
+Failed to delete test user testlogout-1761412805033@example.com: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:15363:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at deleteTestUser [90m(/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:6:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:22:7
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:305:11
+    at TimeoutManager.withRunnable [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/timeoutManager.js:67:14[90m)[39m
+    at TestInfoImpl._runWithTimeout [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:303:7[90m)[39m
+    at FixtureRunner.resolveParametersAndRunFunction [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/fixtureRunner.js:228:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:469:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runEachHooksForSuites [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:468:9[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:330:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runTest [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:318:5[90m)[39m
+    at WorkerMain.runTestGroup [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:198:11[90m)[39m
+    at process.<anonymous> [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/common/process.js:65:22[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+  ✘   66 [chromium] › tests/e2e/dashboard.spec.ts:35:7 › Protected Dashboard › should display dashboard when authenticated (1.1s)
+Failed to delete test user testlogout2-1761412805429@example.com: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:15363:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at deleteTestUser [90m(/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:6:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:22:7
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:305:11
+    at TimeoutManager.withRunnable [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/timeoutManager.js:67:14[90m)[39m
+    at TestInfoImpl._runWithTimeout [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:303:7[90m)[39m
+    at FixtureRunner.resolveParametersAndRunFunction [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/fixtureRunner.js:228:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:469:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runEachHooksForSuites [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:468:9[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:330:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runTest [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:318:5[90m)[39m
+    at WorkerMain.runTestGroup [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:198:11[90m)[39m
+    at process.<anonymous> [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/common/process.js:65:22[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+Failed to delete test user testpersist-1761412805433@example.com: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:15363:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at deleteTestUser [90m(/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:6:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:22:7
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:305:11
+    at TimeoutManager.withRunnable [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/timeoutManager.js:67:14[90m)[39m
+    at TestInfoImpl._runWithTimeout [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:303:7[90m)[39m
+    at FixtureRunner.resolveParametersAndRunFunction [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/fixtureRunner.js:228:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:469:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runEachHooksForSuites [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:468:9[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:330:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runTest [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:318:5[90m)[39m
+    at WorkerMain.runTestGroup [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:198:11[90m)[39m
+    at process.<anonymous> [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/common/process.js:65:22[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+Failed to delete test user testemail-1761412805696@example.com: TypeError: fetch failed
+[90m    at node:internal/deps/undici/undici:15363:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at deleteTestUser [90m(/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:6:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mtests/e2e/dashboard.spec.ts:22:7
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:305:11
+    at TimeoutManager.withRunnable [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/timeoutManager.js:67:14[90m)[39m
+    at TestInfoImpl._runWithTimeout [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:303:7[90m)[39m
+    at FixtureRunner.resolveParametersAndRunFunction [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/fixtureRunner.js:228:5[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:469:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runEachHooksForSuites [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:468:9[90m)[39m
+    at [90m/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:330:11
+    at TestInfoImpl._runAsStep [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/testInfo.js:294:7[90m)[39m
+    at WorkerMain._runTest [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:318:5[90m)[39m
+    at WorkerMain.runTestGroup [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/worker/workerMain.js:198:11[90m)[39m
+    at process.<anonymous> [90m(/Users/markbnet/Documents/thememeradar.com/[39mnode_modules/[4mplaywright[24m/lib/common/process.js:65:22[90m)[39m {
+  [cause]: AggregateError: 
+  [90m    at internalConnectMultiple (node:net:1139:18)[39m
+  [90m    at afterConnectMultiple (node:net:1714:7)[39m {
+    code: [32m'ECONNREFUSED'[39m,
+    [errors]: [ [36m[Error][39m, [36m[Error][39m ]
+  }
+}
+  ✘   67 [chromium] › tests/e2e/dashboard.spec.ts:57:7 › Protected Dashboard › should display logout button when authenticated (1.1s)
+  ✘   76 [chromium] › tests/e2e/dashboard.spec.ts:73:7 › Protected Dashboard › should logout and redirect to login (1.1s)
+  ✘   75 [chromium] › tests/e2e/dashboard.spec.ts:98:7 › Protected Dashboard › should persist authentication across page reloads (1.1s)
+  ✘   77 [chromium] › tests/e2e/dashboard.spec.ts:118:7 › Protected Dashboard › should show user email on dashboard (1.1s)
+  ✘   78 [chromium] › tests/e2e/forms.spec.ts:16:9 › Form Interactions › Signup Form › should show validation errors when submitting empty form (1.1s)
+  ✘   80 [chromium] › tests/e2e/forms.spec.ts:33:9 › Form Interactions › Signup Form › should validate password strength in real-time (1.1s)
+  ✘   79 [chromium] › tests/e2e/forms.spec.ts:24:9 › Form Interactions › Signup Form › should validate email format in real-time (1.1s)
+  ✘   81 [chromium] › tests/e2e/forms.spec.ts:42:9 › Form Interactions › Signup Form › should clear validation errors when user fixes input (1.1s)
+  ✘   82 [chromium] › tests/e2e/forms.spec.ts:57:9 › Form Interactions › Signup Form › should handle paste events correctly (1.1s)
+  ✘   33 [chromium] › tests/e2e/auth/login.spec.ts:189:7 › Login Page › should handle form submission with Enter key (30.0s)
+  ✘   83 [chromium] › tests/e2e/forms.spec.ts:115:9 › Form Interactions › Signup Form › should handle special characters in email (1.1s)
+  ✘   84 [chromium] › tests/e2e/forms.spec.ts:93:9 › Form Interactions › Signup Form › should handle rapid form submission (prevent double submit) (1.1s)
+  ✘   85 [chromium] › tests/e2e/forms.spec.ts:132:9 › Form Interactions › Signup Form › should trim whitespace from email automatically (1.1s)
+  ✘   86 [chromium] › tests/e2e/forms.spec.ts:150:9 › Form Interactions › Signup Form › should handle form submission during network delay (1.1s)
+  ✘   87 [chromium] › tests/e2e/forms.spec.ts:178:9 › Form Interactions › Signup Form › should handle very long email addresses (1.1s)
+  ✘   88 [chromium] › tests/e2e/forms.spec.ts:210:9 › Form Interactions › Login Form › should show validation errors when submitting empty form (1.1s)
+  ✘   89 [chromium] › tests/e2e/forms.spec.ts:218:9 › Form Interactions › Login Form › should remember last entered email after failed login (1.1s)
+  ✘   90 [chromium] › tests/e2e/forms.spec.ts:235:9 › Form Interactions › Login Form › should clear password field after failed login (1.1s)
+  ✘   91 [chromium] › tests/e2e/forms.spec.ts:262:9 › Form Interactions › Login Form › should handle Enter key in email field (1.1s)
+  ✘   92 [chromium] › tests/e2e/forms.spec.ts:286:9 › Form Interactions › Login Form › should handle Enter key in password field (1.1s)
+  ✘   94 [chromium] › tests/e2e/forms.spec.ts:324:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in signup form (1.1s)
+  ✘   93 [chromium] › tests/e2e/forms.spec.ts:310:9 › Form Interactions › Login Form › should handle Tab key navigation (1.1s)
+  ✘   95 [chromium] › tests/e2e/forms.spec.ts:354:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in login form (1.1s)
+  ✘   96 [chromium] › tests/e2e/forms.spec.ts:379:9 › Form Interactions › Form Accessibility › should have proper form labels (1.1s)
+  ✘   97 [chromium] › tests/e2e/forms.spec.ts:391:9 › Form Interactions › Form Accessibility › should have accessible error messages (1.1s)
+  ✘   99 [chromium] › tests/e2e/forms.spec.ts:425:9 › Form Interactions › Form Autocomplete › should have proper autocomplete attributes (1.1s)
+  ✘   98 [chromium] › tests/e2e/forms.spec.ts:404:9 › Form Interactions › Form Accessibility › should maintain focus management during validation (1.1s)
+  ✘  100 [chromium] › tests/e2e/forms.spec.ts:441:9 › Form Interactions › Form Security › should not expose password in HTML (1.1s)
+  ✘  101 [chromium] › tests/e2e/forms.spec.ts:453:9 › Form Interactions › Form Security › should not log sensitive data to console (1.1s)
+  ✘  102 [chromium] › tests/e2e/landing.spec.ts:8:7 › Landing Page › should display landing page with all required elements (1.1s)
+  ✘  103 [chromium] › tests/e2e/landing.spec.ts:30:7 › Landing Page › should navigate to signup page when clicking Sign Up button (1.1s)
+  ✘  104 [chromium] › tests/e2e/landing.spec.ts:25:7 › Landing Page › should navigate to login page when clicking Log In button (1.1s)
+  ✘  105 [chromium] › tests/e2e/landing.spec.ts:35:7 › Landing Page › should have correct styling and layout (1.1s)
+  ✘  106 [chromium] › tests/e2e/landing.spec.ts:44:7 › Landing Page › should display buttons with correct colors (1.1s)
+  ✘  107 [chromium] › tests/e2e/landing.spec.ts:58:7 › Landing Page › should be responsive on mobile viewport (1.1s)
+  ✘  108 [chromium] › tests/e2e/landing.spec.ts:67:7 › Landing Page › should be responsive on tablet viewport (1.1s)
+  ✘  109 [chromium] › tests/e2e/landing.spec.ts:74:7 › Landing Page › should handle navigation with keyboard (1.1s)
+  ✘  110 [chromium] › tests/e2e/landing.spec.ts:87:7 › Landing Page › should load without JavaScript errors (1.1s)
+  ✘  111 [chromium] › tests/e2e/landing.spec.ts:97:7 › Landing Page › should load quickly (performance check) (1.1s)
+  ✘  112 [chromium] › tests/e2e/security.spec.ts:29:9 › Security Tests › Session Management › should prevent access to dashboard without authentication (0ms)
+  -  117 [chromium] › tests/e2e/security.spec.ts:34:9 › Security Tests › Session Management › should maintain session across page reloads
+  -  118 [chromium] › tests/e2e/security.spec.ts:50:9 › Security Tests › Session Management › should maintain session across navigation
+  -  119 [chromium] › tests/e2e/security.spec.ts:69:9 › Security Tests › Session Management › should clear session on logout
+  -  120 [chromium] › tests/e2e/security.spec.ts:88:9 › Security Tests › Session Management › should not allow access with manipulated cookie
+  ✘  113 [chromium] › tests/e2e/security.spec.ts:108:9 › Security Tests › Session Management › should handle missing session cookie (0ms)
+  -  121 [chromium] › tests/e2e/security.spec.ts:120:9 › Security Tests › Authentication Security › should not leak user existence on login with non-existent email
+  -  122 [chromium] › tests/e2e/security.spec.ts:132:9 › Security Tests › Authentication Security › should rate limit login attempts (if implemented)
+  -  123 [chromium] › tests/e2e/security.spec.ts:150:9 › Security Tests › Authentication Security › should not allow SQL injection in email field
+  -  124 [chromium] › tests/e2e/security.spec.ts:162:9 › Security Tests › Authentication Security › should not allow XSS in email field
+  ✘  114 [chromium] › tests/e2e/security.spec.ts:174:9 › Security Tests › Authentication Security › should sanitize user input in forms (0ms)
+  -  125 [chromium] › tests/e2e/security.spec.ts:189:9 › Security Tests › Password Security › should enforce password complexity
+  -  126 [chromium] › tests/e2e/security.spec.ts:206:9 › Security Tests › Password Security › should mask password input by default
+  -  127 [chromium] › tests/e2e/security.spec.ts:215:9 › Security Tests › Password Security › should allow password visibility toggle
+  -  128 [chromium] › tests/e2e/security.spec.ts:235:9 › Security Tests › Password Security › should not expose password in DOM or network
+  ✘  131 [chromium] › tests/e2e/user-journeys.spec.ts:13:9 › Complete User Journeys › New User Complete Journey › should complete full signup -> dashboard -> logout journey (6.1s)
+  ✘  115 [chromium] › tests/e2e/security.spec.ts:248:9 › Security Tests › HTTPS and Cookie Security › should set secure cookie flags in production (0ms)
+  -  133 [chromium] › tests/e2e/security.spec.ts:273:9 › Security Tests › HTTPS and Cookie Security › should not expose sensitive data in client-side code
+  -  134 [chromium] › tests/e2e/security.spec.ts:287:9 › Security Tests › Authorization › should prevent unauthenticated API access
+  -  135 [chromium] › tests/e2e/security.spec.ts:293:9 › Security Tests › Authorization › should prevent access to protected routes
+  -  136 [chromium] › tests/e2e/security.spec.ts:302:9 › Security Tests › Authorization › should allow access to public routes
+  ✘  116 [chromium] › tests/e2e/security.spec.ts:318:9 › Security Tests › Data Validation › should validate email format on client side (0ms)
+  -  138 [chromium] › tests/e2e/security.spec.ts:335:9 › Security Tests › Data Validation › should trim whitespace from inputs
+  -  139 [chromium] › tests/e2e/security.spec.ts:346:9 › Security Tests › Data Validation › should handle very long input strings
+  -  140 [chromium] › tests/e2e/security.spec.ts:362:9 › Security Tests › CORS and Request Headers › should include proper CORS headers in API responses
+  -  141 [chromium] › tests/e2e/security.spec.ts:370:9 › Security Tests › CORS and Request Headers › should handle preflight OPTIONS requests
+  ✘  129 [chromium] › tests/e2e/user-journeys.spec.ts:59:9 › Complete User Journeys › New User Complete Journey › should complete signup -> login -> dashboard -> reload -> still authenticated journey (30.0s)
+  ✘  130 [chromium] › tests/e2e/user-journeys.spec.ts:95:9 › Complete User Journeys › Returning User Journey › should complete login -> dashboard -> view stocks -> logout journey (30.0s)
+  ✘  132 [chromium] › tests/e2e/user-journeys.spec.ts:143:9 › Complete User Journeys › Error Recovery Journeys › should recover from signup error and successfully sign up on retry (30.0s)
+  ✘  137 [chromium] › tests/e2e/user-journeys.spec.ts:171:9 › Complete User Journeys › Error Recovery Journeys › should recover from login error and successfully login on retry (30.0s)
+  ✘  142 [chromium] › tests/e2e/user-journeys.spec.ts:205:9 › Complete User Journeys › Error Recovery Journeys › should handle network failure and retry (30.0s)
+  ✘  143 [chromium] › tests/e2e/user-journeys.spec.ts:243:9 › Complete User Journeys › Multi-Tab Session Journeys › should maintain session across multiple tabs (30.0s)
+  ✘  144 [chromium] › tests/e2e/user-journeys.spec.ts:274:9 › Complete User Journeys › Multi-Tab Session Journeys › should logout from all tabs when logging out from one (30.0s)
+  ✘  148 [chromium] › tests/e2e/user-journeys.spec.ts:431:9 › Complete User Journeys › Mobile User Journeys › should complete full journey on mobile device (5.7s)
+  ✘  145 [chromium] › tests/e2e/user-journeys.spec.ts:310:9 › Complete User Journeys › Browser Navigation Journeys › should handle browser back/forward buttons correctly (30.0s)
+  ✘  146 [chromium] › tests/e2e/user-journeys.spec.ts:357:9 › Complete User Journeys › Form Interaction Journeys › should complete signup using only keyboard (10.3s)
+  ✘  147 [chromium] › tests/e2e/user-journeys.spec.ts:384:9 › Complete User Journeys › Form Interaction Journeys › should handle form autofill correctly (30.0s)
+  ✘  149 [chromium] › tests/e2e/user-journeys.spec.ts:478:9 › Complete User Journeys › Mobile User Journeys › should handle orientation change (30.0s)
+  ✘  150 [chromium] › tests/e2e/user-journeys.spec.ts:518:9 › Complete User Journeys › Performance Journeys › should load dashboard quickly for authenticated user (30.0s)
+
+
+  1) [chromium] › tests/e2e/api/endpoints.spec.ts:32:9 › API Endpoints › /api/auth/signup › should create new user with valid data 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      15 |     });
+      16 |
+    > 17 |     expect(signupResponse.ok()).toBeTruthy();
+         |                                 ^
+      18 |     const cookies = signupResponse.headers()['set-cookie'];
+      19 |     if (cookies) {
+      20 |       authCookie = cookies;
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/api/endpoints.spec.ts:17:33
+
+  2) [chromium] › tests/e2e/api/endpoints.spec.ts:106:9 › API Endpoints › /api/auth/signup › should return 400 for duplicate email 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      15 |     });
+      16 |
+    > 17 |     expect(signupResponse.ok()).toBeTruthy();
+         |                                 ^
+      18 |     const cookies = signupResponse.headers()['set-cookie'];
+      19 |     if (cookies) {
+      20 |       authCookie = cookies;
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/api/endpoints.spec.ts:17:33
+
+  3) [chromium] › tests/e2e/api/endpoints.spec.ts:193:9 › API Endpoints › /api/auth/logout › should logout successfully with valid session 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      15 |     });
+      16 |
+    > 17 |     expect(signupResponse.ok()).toBeTruthy();
+         |                                 ^
+      18 |     const cookies = signupResponse.headers()['set-cookie'];
+      19 |     if (cookies) {
+      20 |       authCookie = cookies;
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/api/endpoints.spec.ts:17:33
+
+  4) [chromium] › tests/e2e/api/endpoints.spec.ts:270:9 › API Endpoints › /api/stocks/trending › should return trending stocks data 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      15 |     });
+      16 |
+    > 17 |     expect(signupResponse.ok()).toBeTruthy();
+         |                                 ^
+      18 |     const cookies = signupResponse.headers()['set-cookie'];
+      19 |     if (cookies) {
+      20 |       authCookie = cookies;
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/api/endpoints.spec.ts:17:33
+
+  5) [chromium] › tests/e2e/api/endpoints.spec.ts:317:9 › API Endpoints › Error Handling › should reject requests with invalid Content-Type 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeTruthy[2m()[22m
+
+    Received: [31mfalse[39m
+
+      15 |     });
+      16 |
+    > 17 |     expect(signupResponse.ok()).toBeTruthy();
+         |                                 ^
+      18 |     const cookies = signupResponse.headers()['set-cookie'];
+      19 |     if (cookies) {
+      20 |       authCookie = cookies;
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/api/endpoints.spec.ts:17:33
+
+  6) [chromium] › tests/e2e/auth/login.spec.ts:9:7 › Login Page › should display login form with all required elements 
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/Log In/i[39m
+    Received string:  [31m"404: This page could not be found."[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveTitle" with timeout 5000ms[22m
+    [2m    9 × unexpected value "404: This page could not be found."[22m
+
+
+       9 |   test('should display login form with all required elements', async ({ page }) => {
+      10 |     // Check page title
+    > 11 |     await expect(page).toHaveTitle(/Log In/i);
+         |                        ^
+      12 |
+      13 |     // Check form elements are present
+      14 |     await expect(page.getByLabel(/email/i)).toBeVisible();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:11:24
+
+    Error Context: test-results/auth-login-Login-Page-shou-75409--with-all-required-elements-chromium/error-context.md
+
+  7) [chromium] › tests/e2e/auth/login.spec.ts:22:7 › Login Page › should successfully log in with valid credentials 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      26 |
+      27 |     await page.goto('/signup');
+    > 28 |     await page.getByLabel(/email/i).fill(testEmail);
+         |                                     ^
+      29 |     await page.getByLabel(/password/i).fill(testPassword);
+      30 |     await page.getByRole('button', { name: /sign up/i }).click();
+      31 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:28:37
+
+    Error Context: test-results/auth-login-Login-Page-shou-31174-g-in-with-valid-credentials-chromium/error-context.md
+
+  8) [chromium] › tests/e2e/auth/login.spec.ts:50:7 › Login Page › should show error for invalid email format 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      50 |   test('should show error for invalid email format', async ({ page }) => {
+      51 |     // Fill in invalid email
+    > 52 |     await page.getByLabel(/email/i).fill('invalid-email');
+         |                                     ^
+      53 |     await page.getByLabel(/password/i).fill('ValidPass123!');
+      54 |
+      55 |     // Submit the form
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:52:37
+
+    Error Context: test-results/auth-login-Login-Page-shou-8b2c3-or-for-invalid-email-format-chromium/error-context.md
+
+  9) [chromium] › tests/e2e/auth/login.spec.ts:65:7 › Login Page › should show error for non-existent user 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      67 |     const nonExistentEmail = `nonexistent-${Date.now()}@example.com`;
+      68 |
+    > 69 |     await page.getByLabel(/email/i).fill(nonExistentEmail);
+         |                                     ^
+      70 |     await page.getByLabel(/password/i).fill('ValidPass123!');
+      71 |
+      72 |     // Submit the form
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:69:37
+
+    Error Context: test-results/auth-login-Login-Page-shou-f3a3d-error-for-non-existent-user-chromium/error-context.md
+
+  10) [chromium] › tests/e2e/auth/login.spec.ts:82:7 › Login Page › should show error for incorrect password 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      87 |
+      88 |     await page.goto('/signup');
+    > 89 |     await page.getByLabel(/email/i).fill(testEmail);
+         |                                     ^
+      90 |     await page.getByLabel(/password/i).fill(correctPassword);
+      91 |     await page.getByRole('button', { name: /sign up/i }).click();
+      92 |     await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:89:37
+
+    Error Context: test-results/auth-login-Login-Page-shou-bc298-rror-for-incorrect-password-chromium/error-context.md
+
+  11) [chromium] › tests/e2e/auth/login.spec.ts:109:7 › Login Page › should validate empty email field 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/password/i)[22m
+
+
+      109 |   test('should validate empty email field', async ({ page }) => {
+      110 |     // Leave email empty
+    > 111 |     await page.getByLabel(/password/i).fill('ValidPass123!');
+          |                                        ^
+      112 |
+      113 |     // Submit the form
+      114 |     await page.getByRole('button', { name: /log in/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:111:40
+
+    Error Context: test-results/auth-login-Login-Page-should-validate-empty-email-field-chromium/error-context.md
+
+  12) [chromium] › tests/e2e/auth/login.spec.ts:123:7 › Login Page › should validate empty password field 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      123 |   test('should validate empty password field', async ({ page }) => {
+      124 |     // Leave password empty
+    > 125 |     await page.getByLabel(/email/i).fill('test@example.com');
+          |                                     ^
+      126 |
+      127 |     // Submit the form
+      128 |     await page.getByRole('button', { name: /log in/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:125:37
+
+    Error Context: test-results/auth-login-Login-Page-should-validate-empty-password-field-chromium/error-context.md
+
+  13) [chromium] › tests/e2e/auth/login.spec.ts:137:7 › Login Page › should toggle password visibility 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveAttribute[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: getByLabel(/password/i)
+    Expected: [32m"password"[39m
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toHaveAttribute" with timeout 5000ms[22m
+    [2m  - waiting for getByLabel(/password/i)[22m
+
+
+      139 |
+      140 |     // Password should initially be hidden (type="password")
+    > 141 |     await expect(passwordInput).toHaveAttribute('type', 'password');
+          |                                 ^
+      142 |
+      143 |     // Click the show/hide toggle button
+      144 |     await page.getByRole('button', { name: /toggle visibility/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:141:33
+
+    Error Context: test-results/auth-login-Login-Page-should-toggle-password-visibility-chromium/error-context.md
+
+  14) [chromium] › tests/e2e/auth/login.spec.ts:156:7 › Login Page › should navigate to signup page when clicking signup link 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /sign up/i })[22m
+
+
+      156 |   test('should navigate to signup page when clicking signup link', async ({ page }) => {
+      157 |     // Click the signup link
+    > 158 |     await page.getByRole('link', { name: /sign up/i }).click();
+          |                                                        ^
+      159 |
+      160 |     // Should navigate to signup page
+      161 |     await expect(page).toHaveURL(/\/signup/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:158:56
+
+    Error Context: test-results/auth-login-Login-Page-shou-f22d8-e-when-clicking-signup-link-chromium/error-context.md
+
+  15) [chromium] › tests/e2e/auth/login.spec.ts:164:7 › Login Page › should trim whitespace from email 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      168 |
+      169 |     await page.goto('/signup');
+    > 170 |     await page.getByLabel(/email/i).fill(testEmail);
+          |                                     ^
+      171 |     await page.getByLabel(/password/i).fill(testPassword);
+      172 |     await page.getByRole('button', { name: /sign up/i }).click();
+      173 |     await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:170:37
+
+    Error Context: test-results/auth-login-Login-Page-should-trim-whitespace-from-email-chromium/error-context.md
+
+  16) [chromium] › tests/e2e/auth/login.spec.ts:189:7 › Login Page › should handle form submission with Enter key 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      193 |
+      194 |     await page.goto('/signup');
+    > 195 |     await page.getByLabel(/email/i).fill(testEmail);
+          |                                     ^
+      196 |     await page.getByLabel(/password/i).fill(testPassword);
+      197 |     await page.getByRole('button', { name: /sign up/i }).click();
+      198 |     await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/login.spec.ts:195:37
+
+    Error Context: test-results/auth-login-Login-Page-shou-4ec20-m-submission-with-Enter-key-chromium/error-context.md
+
+  17) [chromium] › tests/e2e/auth/signup.spec.ts:32:7 › Signup Page › should display signup form with all required elements 
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/Sign Up/i[39m
+    Received string:  [31m"404: This page could not be found."[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveTitle" with timeout 5000ms[22m
+    [2m    9 × unexpected value "404: This page could not be found."[22m
+
+
+      32 |   test('should display signup form with all required elements', async ({ page }) => {
+      33 |     // Check page title
+    > 34 |     await expect(page).toHaveTitle(/Sign Up/i);
+         |                        ^
+      35 |
+      36 |     // Check form elements are present
+      37 |     await expect(page.getByLabel(/email/i)).toBeVisible();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:34:24
+
+    Error Context: test-results/auth-signup-Signup-Page-sh-b75b5--with-all-required-elements-chromium/error-context.md
+
+  18) [chromium] › tests/e2e/auth/signup.spec.ts:45:7 › Signup Page › should successfully sign up with valid email and password 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  19) [chromium] › tests/e2e/auth/signup.spec.ts:64:7 › Signup Page › should show error for invalid email format 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  20) [chromium] › tests/e2e/auth/signup.spec.ts:79:7 › Signup Page › should show error for weak password 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  21) [chromium] › tests/e2e/auth/signup.spec.ts:96:7 › Signup Page › should show error for duplicate email 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  22) [chromium] › tests/e2e/auth/signup.spec.ts:124:7 › Signup Page › should validate empty email field 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  23) [chromium] › tests/e2e/auth/signup.spec.ts:138:7 › Signup Page › should validate empty password field 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  24) [chromium] › tests/e2e/auth/signup.spec.ts:154:7 › Signup Page › should toggle password visibility 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  25) [chromium] › tests/e2e/auth/signup.spec.ts:173:7 › Signup Page › should navigate to login page when clicking login link 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  26) [chromium] › tests/e2e/auth/signup.spec.ts:181:7 › Signup Page › should trim whitespace from email 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  27) [chromium] › tests/e2e/auth/signup.spec.ts:197:7 › Signup Page › should handle form submission with Enter key 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to signup page before each test
+    > 21 |     await page.goto('/signup');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test.afterEach(async ({ baseURL }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/auth/signup.spec.ts:21:16
+
+  28) [chromium] › tests/e2e/dashboard-interactions.spec.ts:38:9 › Dashboard Interactions › Page Load and Display › should display dashboard header with all elements 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:12:16
+
+    Error: apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+    Call log:
+    [2m  - → DELETE http://localhost:3001/api/test/delete-user[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+        at apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:23:25
+
+  29) [chromium] › tests/e2e/dashboard-interactions.spec.ts:76:9 › Dashboard Interactions › Empty State Handling › should display empty state for fading stocks when no data 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:12:16
+
+    Error: apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+    Call log:
+    [2m  - → DELETE http://localhost:3001/api/test/delete-user[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+        at apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:23:25
+
+  30) [chromium] › tests/e2e/dashboard-interactions.spec.ts:175:9 › Dashboard Interactions › Error Handling › should display error message when API returns error 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:12:16
+
+    Error: apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+    Call log:
+    [2m  - → DELETE http://localhost:3001/api/test/delete-user[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+        at apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:23:25
+
+  31) [chromium] › tests/e2e/dashboard-interactions.spec.ts:235:9 › Dashboard Interactions › Navigation › should clear session after logout 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:12:16
+
+    Error: apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+    Call log:
+    [2m  - → DELETE http://localhost:3001/api/test/delete-user[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+        at apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:23:25
+
+  32) [chromium] › tests/e2e/dashboard-interactions.spec.ts:316:9 › Dashboard Interactions › Accessibility › should have proper heading hierarchy 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:12:16
+
+    Error: apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+    Call log:
+    [2m  - → DELETE http://localhost:3001/api/test/delete-user[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+        at apiRequestContext.delete: connect ECONNREFUSED ::1:3001
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard-interactions.spec.ts:23:25
+
+  33) [chromium] › tests/e2e/dashboard.spec.ts:27:7 › Protected Dashboard › should redirect to login when not authenticated 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/dashboard
+    Call log:
+    [2m  - navigating to "http://localhost:3001/dashboard", waiting until "load"[22m
+
+
+      27 |   test('should redirect to login when not authenticated', async ({ page }) => {
+      28 |     // Try to access dashboard without logging in
+    > 29 |     await page.goto('/dashboard');
+         |                ^
+      30 |
+      31 |     // Should redirect to login page
+      32 |     await expect(page).toHaveURL(/\/login/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:29:16
+
+  34) [chromium] › tests/e2e/dashboard.spec.ts:35:7 › Protected Dashboard › should display dashboard when authenticated 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      40 |
+      41 |     // Sign up
+    > 42 |     await page.goto('/signup');
+         |                ^
+      43 |     await page.getByLabel(/email/i).fill(testEmail);
+      44 |     await page.getByLabel(/password/i).fill(testPassword);
+      45 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:42:16
+
+  35) [chromium] › tests/e2e/dashboard.spec.ts:57:7 › Protected Dashboard › should display logout button when authenticated 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      61 |     testUsers.push(testEmail); // Track for cleanup
+      62 |
+    > 63 |     await page.goto('/signup');
+         |                ^
+      64 |     await page.getByLabel(/email/i).fill(testEmail);
+      65 |     await page.getByLabel(/password/i).fill(testPassword);
+      66 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:63:16
+
+  36) [chromium] › tests/e2e/dashboard.spec.ts:73:7 › Protected Dashboard › should logout and redirect to login 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      77 |     testUsers.push(testEmail); // Track for cleanup
+      78 |
+    > 79 |     await page.goto('/signup');
+         |                ^
+      80 |     await page.getByLabel(/email/i).fill(testEmail);
+      81 |     await page.getByLabel(/password/i).fill(testPassword);
+      82 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:79:16
+
+  37) [chromium] › tests/e2e/dashboard.spec.ts:98:7 › Protected Dashboard › should persist authentication across page reloads 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      102 |     testUsers.push(testEmail); // Track for cleanup
+      103 |
+    > 104 |     await page.goto('/signup');
+          |                ^
+      105 |     await page.getByLabel(/email/i).fill(testEmail);
+      106 |     await page.getByLabel(/password/i).fill(testPassword);
+      107 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:104:16
+
+  38) [chromium] › tests/e2e/dashboard.spec.ts:118:7 › Protected Dashboard › should show user email on dashboard 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      122 |     testUsers.push(testEmail); // Track for cleanup
+      123 |
+    > 124 |     await page.goto('/signup');
+          |                ^
+      125 |     await page.getByLabel(/email/i).fill(testEmail);
+      126 |     await page.getByLabel(/password/i).fill(testPassword);
+      127 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/dashboard.spec.ts:124:16
+
+  39) [chromium] › tests/e2e/forms.spec.ts:16:9 › Form Interactions › Signup Form › should show validation errors when submitting empty form 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  40) [chromium] › tests/e2e/forms.spec.ts:24:9 › Form Interactions › Signup Form › should validate email format in real-time 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  41) [chromium] › tests/e2e/forms.spec.ts:33:9 › Form Interactions › Signup Form › should validate password strength in real-time 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  42) [chromium] › tests/e2e/forms.spec.ts:42:9 › Form Interactions › Signup Form › should clear validation errors when user fixes input 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  43) [chromium] › tests/e2e/forms.spec.ts:57:9 › Form Interactions › Signup Form › should handle paste events correctly 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  44) [chromium] › tests/e2e/forms.spec.ts:93:9 › Form Interactions › Signup Form › should handle rapid form submission (prevent double submit) 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  45) [chromium] › tests/e2e/forms.spec.ts:115:9 › Form Interactions › Signup Form › should handle special characters in email 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  46) [chromium] › tests/e2e/forms.spec.ts:132:9 › Form Interactions › Signup Form › should trim whitespace from email automatically 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  47) [chromium] › tests/e2e/forms.spec.ts:150:9 › Form Interactions › Signup Form › should handle form submission during network delay 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  48) [chromium] › tests/e2e/forms.spec.ts:178:9 › Form Interactions › Signup Form › should handle very long email addresses 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      11 |   test.describe('Signup Form', () => {
+      12 |     test.beforeEach(async ({ page }) => {
+    > 13 |       await page.goto('/signup');
+         |                  ^
+      14 |     });
+      15 |
+      16 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:13:18
+
+  49) [chromium] › tests/e2e/forms.spec.ts:210:9 › Form Interactions › Login Form › should show validation errors when submitting empty form 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  50) [chromium] › tests/e2e/forms.spec.ts:218:9 › Form Interactions › Login Form › should remember last entered email after failed login 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  51) [chromium] › tests/e2e/forms.spec.ts:235:9 › Form Interactions › Login Form › should clear password field after failed login 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  52) [chromium] › tests/e2e/forms.spec.ts:262:9 › Form Interactions › Login Form › should handle Enter key in email field 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  53) [chromium] › tests/e2e/forms.spec.ts:286:9 › Form Interactions › Login Form › should handle Enter key in password field 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  54) [chromium] › tests/e2e/forms.spec.ts:310:9 › Form Interactions › Login Form › should handle Tab key navigation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      205 |   test.describe('Login Form', () => {
+      206 |     test.beforeEach(async ({ page }) => {
+    > 207 |       await page.goto('/login');
+          |                  ^
+      208 |     });
+      209 |
+      210 |     test('should show validation errors when submitting empty form', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:207:18
+
+  55) [chromium] › tests/e2e/forms.spec.ts:324:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in signup form 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      323 |   test.describe('Password Visibility Toggle', () => {
+      324 |     test('should toggle password visibility in signup form', async ({ page }) => {
+    > 325 |       await page.goto('/signup');
+          |                  ^
+      326 |
+      327 |       const passwordInput = page.getByLabel(/password/i);
+      328 |       await passwordInput.fill('SecretPassword123!');
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:325:18
+
+  56) [chromium] › tests/e2e/forms.spec.ts:354:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in login form 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login
+    Call log:
+    [2m  - navigating to "http://localhost:3001/login", waiting until "load"[22m
+
+
+      353 |
+      354 |     test('should toggle password visibility in login form', async ({ page }) => {
+    > 355 |       await page.goto('/login');
+          |                  ^
+      356 |
+      357 |       const passwordInput = page.getByLabel(/password/i);
+      358 |       await passwordInput.fill('SecretPassword123!');
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:355:18
+
+  57) [chromium] › tests/e2e/forms.spec.ts:379:9 › Form Interactions › Form Accessibility › should have proper form labels 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      378 |   test.describe('Form Accessibility', () => {
+      379 |     test('should have proper form labels', async ({ page }) => {
+    > 380 |       await page.goto('/signup');
+          |                  ^
+      381 |
+      382 |       // Email label should be associated
+      383 |       const emailInput = page.getByLabel(/email/i);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:380:18
+
+  58) [chromium] › tests/e2e/forms.spec.ts:391:9 › Form Interactions › Form Accessibility › should have accessible error messages 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      390 |
+      391 |     test('should have accessible error messages', async ({ page }) => {
+    > 392 |       await page.goto('/signup');
+          |                  ^
+      393 |
+      394 |       // Submit empty form
+      395 |       await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:392:18
+
+  59) [chromium] › tests/e2e/forms.spec.ts:404:9 › Form Interactions › Form Accessibility › should maintain focus management during validation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      403 |
+      404 |     test('should maintain focus management during validation', async ({ page }) => {
+    > 405 |       await page.goto('/signup');
+          |                  ^
+      406 |
+      407 |       const emailInput = page.getByLabel(/email/i);
+      408 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:405:18
+
+  60) [chromium] › tests/e2e/forms.spec.ts:425:9 › Form Interactions › Form Autocomplete › should have proper autocomplete attributes 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      424 |   test.describe('Form Autocomplete', () => {
+      425 |     test('should have proper autocomplete attributes', async ({ page }) => {
+    > 426 |       await page.goto('/signup');
+          |                  ^
+      427 |
+      428 |       // Email should have autocomplete
+      429 |       const emailInput = page.getByLabel(/email/i);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:426:18
+
+  61) [chromium] › tests/e2e/forms.spec.ts:441:9 › Form Interactions › Form Security › should not expose password in HTML 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      440 |   test.describe('Form Security', () => {
+      441 |     test('should not expose password in HTML', async ({ page }) => {
+    > 442 |       await page.goto('/signup');
+          |                  ^
+      443 |
+      444 |       await page.getByLabel(/password/i).fill('SuperSecret123!');
+      445 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:442:18
+
+  62) [chromium] › tests/e2e/forms.spec.ts:453:9 › Form Interactions › Form Security › should not log sensitive data to console 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      458 |       });
+      459 |
+    > 460 |       await page.goto('/signup');
+          |                  ^
+      461 |
+      462 |       const email = generateEmail();
+      463 |       const password = 'SecretPassword123!';
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/forms.spec.ts:460:18
+
+  63) [chromium] › tests/e2e/landing.spec.ts:8:7 › Landing Page › should display landing page with all required elements 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  64) [chromium] › tests/e2e/landing.spec.ts:25:7 › Landing Page › should navigate to login page when clicking Log In button 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  65) [chromium] › tests/e2e/landing.spec.ts:30:7 › Landing Page › should navigate to signup page when clicking Sign Up button 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  66) [chromium] › tests/e2e/landing.spec.ts:35:7 › Landing Page › should have correct styling and layout 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  67) [chromium] › tests/e2e/landing.spec.ts:44:7 › Landing Page › should display buttons with correct colors 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  68) [chromium] › tests/e2e/landing.spec.ts:58:7 › Landing Page › should be responsive on mobile viewport 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  69) [chromium] › tests/e2e/landing.spec.ts:67:7 › Landing Page › should be responsive on tablet viewport 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  70) [chromium] › tests/e2e/landing.spec.ts:74:7 › Landing Page › should handle navigation with keyboard 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  71) [chromium] › tests/e2e/landing.spec.ts:87:7 › Landing Page › should load without JavaScript errors 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  72) [chromium] › tests/e2e/landing.spec.ts:97:7 › Landing Page › should load quickly (performance check) 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/
+    Call log:
+    [2m  - navigating to "http://localhost:3001/", waiting until "load"[22m
+
+
+      3 | test.describe('Landing Page', () => {
+      4 |   test.beforeEach(async ({ page }) => {
+    > 5 |     await page.goto('/');
+        |                ^
+      6 |   });
+      7 |
+      8 |   test('should display landing page with all required elements', async ({ page }) => {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/landing.spec.ts:5:16
+
+  73) [chromium] › tests/e2e/security.spec.ts:29:9 › Security Tests › Session Management › should prevent access to dashboard without authentication 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:12:16
+
+  74) [chromium] › tests/e2e/security.spec.ts:108:9 › Security Tests › Session Management › should handle missing session cookie 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:12:16
+
+  75) [chromium] › tests/e2e/security.spec.ts:174:9 › Security Tests › Authentication Security › should sanitize user input in forms 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/signup
+    Call log:
+    [2m  - navigating to "http://localhost:3001/signup", waiting until "load"[22m
+
+
+      10 |     const page = await context.newPage();
+      11 |
+    > 12 |     await page.goto('/signup');
+         |                ^
+      13 |     await page.getByLabel(/email/i).fill(testEmail);
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:12:16
+
+  76) [chromium] › tests/e2e/security.spec.ts:248:9 › Security Tests › HTTPS and Cookie Security › should set secure cookie flags in production 
+
+    [31m"beforeAll" hook timeout of 30000ms exceeded.[39m
+
+       5 |   const testPassword = 'SecTest123!';
+       6 |
+    >  7 |   test.beforeAll(async ({ browser }) => {
+         |        ^
+       8 |     // Create test user
+       9 |     const context = await browser.newContext();
+      10 |     const page = await context.newPage();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:7:8
+
+    Error: locator.fill: Test ended.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      11 |
+      12 |     await page.goto('/signup');
+    > 13 |     await page.getByLabel(/email/i).fill(testEmail);
+         |                                     ^
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+      16 |     await page.waitForURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:13:37
+
+    Error Context: test-results/security-Security-Tests-HT-47148--cookie-flags-in-production-chromium/error-context.md
+
+  77) [chromium] › tests/e2e/security.spec.ts:318:9 › Security Tests › Data Validation › should validate email format on client side 
+
+    [31m"beforeAll" hook timeout of 30000ms exceeded.[39m
+
+       5 |   const testPassword = 'SecTest123!';
+       6 |
+    >  7 |   test.beforeAll(async ({ browser }) => {
+         |        ^
+       8 |     // Create test user
+       9 |     const context = await browser.newContext();
+      10 |     const page = await context.newPage();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:7:8
+
+    Error: locator.fill: Test ended.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      11 |
+      12 |     await page.goto('/signup');
+    > 13 |     await page.getByLabel(/email/i).fill(testEmail);
+         |                                     ^
+      14 |     await page.getByLabel(/password/i).fill(testPassword);
+      15 |     await page.getByRole('button', { name: /sign up/i }).click();
+      16 |     await page.waitForURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/security.spec.ts:13:37
+
+    Error Context: test-results/security-Security-Tests-Da-0f3ca-email-format-on-client-side-chromium/error-context.md
+
+  78) [chromium] › tests/e2e/user-journeys.spec.ts:13:9 › Complete User Journeys › New User Complete Journey › should complete full signup -> dashboard -> logout journey 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /Meme Radar/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /Meme Radar/i })[22m
+
+
+      17 |       // 1. Land on homepage
+      18 |       await page.goto('/');
+    > 19 |       await expect(page.getByRole('heading', { name: /Meme Radar/i })).toBeVisible();
+         |                                                                        ^
+      20 |
+      21 |       // 2. Click Sign Up
+      22 |       await page.getByRole('link', { name: /Sign Up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:19:72
+
+    Error Context: test-results/user-journeys-Complete-Use-c580f--dashboard---logout-journey-chromium/error-context.md
+
+  79) [chromium] › tests/e2e/user-journeys.spec.ts:59:9 › Complete User Journeys › New User Complete Journey › should complete signup -> login -> dashboard -> reload -> still authenticated journey 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      65 |       // 1. Sign up
+      66 |       await page.goto('/signup');
+    > 67 |       await page.getByLabel(/email/i).fill(email);
+         |                                       ^
+      68 |       await page.getByLabel(/password/i).fill(password);
+      69 |       await page.getByRole('button', { name: /sign up/i }).click();
+      70 |       await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:67:39
+
+    Error Context: test-results/user-journeys-Complete-Use-f3bd1-still-authenticated-journey-chromium/error-context.md
+
+  80) [chromium] › tests/e2e/user-journeys.spec.ts:95:9 › Complete User Journeys › Returning User Journey › should complete login -> dashboard -> view stocks -> logout journey 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+       99 |       // Setup: Create user
+      100 |       await page.goto('/signup');
+    > 101 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      102 |       await page.getByLabel(/password/i).fill(password);
+      103 |       await page.getByRole('button', { name: /sign up/i }).click();
+      104 |       await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:101:39
+
+    Error Context: test-results/user-journeys-Complete-Use-0e649-iew-stocks---logout-journey-chromium/error-context.md
+
+  81) [chromium] › tests/e2e/user-journeys.spec.ts:143:9 › Complete User Journeys › Error Recovery Journeys › should recover from signup error and successfully sign up on retry 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      147 |       // 1. Try signup with weak password
+      148 |       await page.goto('/signup');
+    > 149 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      150 |       await page.getByLabel(/password/i).fill('weak');
+      151 |       await page.getByRole('button', { name: /sign up/i }).click();
+      152 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:149:39
+
+    Error Context: test-results/user-journeys-Complete-Use-e9513-ccessfully-sign-up-on-retry-chromium/error-context.md
+
+  82) [chromium] › tests/e2e/user-journeys.spec.ts:171:9 › Complete User Journeys › Error Recovery Journeys › should recover from login error and successfully login on retry 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      182 |
+      183 |       // 1. Wrong password attempt
+    > 184 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      185 |       await page.getByLabel(/password/i).fill('WrongPassword123!');
+      186 |       await page.getByRole('button', { name: /log in/i }).click();
+      187 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:184:39
+
+    Error Context: test-results/user-journeys-Complete-Use-a7491-successfully-login-on-retry-chromium/error-context.md
+
+  83) [chromium] › tests/e2e/user-journeys.spec.ts:205:9 › Complete User Journeys › Error Recovery Journeys › should handle network failure and retry 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      217 |       await context.route('**/api/auth/login', (route) => route.abort());
+      218 |
+    > 219 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      220 |       await page.getByLabel(/password/i).fill(password);
+      221 |       await page.getByRole('button', { name: /log in/i }).click();
+      222 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:219:39
+
+    Error Context: test-results/user-journeys-Complete-Use-67a2a-e-network-failure-and-retry-chromium/error-context.md
+
+  84) [chromium] › tests/e2e/user-journeys.spec.ts:243:9 › Complete User Journeys › Multi-Tab Session Journeys › should maintain session across multiple tabs 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      248 |       const page1 = await context.newPage();
+      249 |       await page1.goto('/signup');
+    > 250 |       await page1.getByLabel(/email/i).fill(email);
+          |                                        ^
+      251 |       await page1.getByLabel(/password/i).fill(password);
+      252 |       await page1.getByRole('button', { name: /sign up/i }).click();
+      253 |       await expect(page1).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:250:40
+
+    Error Context: test-results/user-journeys-Complete-Use-80627-ession-across-multiple-tabs-chromium/error-context.md
+
+  85) [chromium] › tests/e2e/user-journeys.spec.ts:274:9 › Complete User Journeys › Multi-Tab Session Journeys › should logout from all tabs when logging out from one 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      279 |       const page1 = await context.newPage();
+      280 |       await page1.goto('/signup');
+    > 281 |       await page1.getByLabel(/email/i).fill(email);
+          |                                        ^
+      282 |       await page1.getByLabel(/password/i).fill(password);
+      283 |       await page1.getByRole('button', { name: /sign up/i }).click();
+      284 |       await expect(page1).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:281:40
+
+    Error Context: test-results/user-journeys-Complete-Use-1a987-s-when-logging-out-from-one-chromium/error-context.md
+
+  86) [chromium] › tests/e2e/user-journeys.spec.ts:310:9 › Complete User Journeys › Browser Navigation Journeys › should handle browser back/forward buttons correctly 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /Sign Up/i })[22m
+
+
+      317 |
+      318 |       // 2. Navigate to signup
+    > 319 |       await page.getByRole('link', { name: /Sign Up/i }).click();
+          |                                                          ^
+      320 |       await expect(page).toHaveURL(/\/signup/);
+      321 |
+      322 |       // 3. Navigate to login via link
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:319:58
+
+    Error Context: test-results/user-journeys-Complete-Use-cceed-k-forward-buttons-correctly-chromium/error-context.md
+
+  87) [chromium] › tests/e2e/user-journeys.spec.ts:357:9 › Complete User Journeys › Form Interaction Journeys › should complete signup using only keyboard 
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/\/dashboard/[39m
+    Received string:  [31m"http://localhost:3001/signup"[39m
+    Timeout: 10000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 10000ms[22m
+    [2m    14 × unexpected value "http://localhost:3001/signup"[22m
+
+
+      374 |
+      375 |       // Should successfully sign up
+    > 376 |       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+          |                          ^
+      377 |
+      378 |       // Cleanup
+      379 |       await page.request.delete('/api/test/delete-user', {
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:376:26
+
+    Error Context: test-results/user-journeys-Complete-Use-55b22--signup-using-only-keyboard-chromium/error-context.md
+
+  88) [chromium] › tests/e2e/user-journeys.spec.ts:384:9 › Complete User Journeys › Form Interaction Journeys › should handle form autofill correctly 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      388 |       // Sign up first
+      389 |       await page.goto('/signup');
+    > 390 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      391 |       await page.getByLabel(/password/i).fill(password);
+      392 |       await page.getByRole('button', { name: /sign up/i }).click();
+      393 |       await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:390:39
+
+    Error Context: test-results/user-journeys-Complete-Use-dc51a-dle-form-autofill-correctly-chromium/error-context.md
+
+  89) [chromium] › tests/e2e/user-journeys.spec.ts:431:9 › Complete User Journeys › Mobile User Journeys › should complete full journey on mobile device 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /Meme Radar/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /Meme Radar/i })[22m
+
+
+      438 |       // 1. Land on homepage
+      439 |       await page.goto('/');
+    > 440 |       await expect(page.getByRole('heading', { name: /Meme Radar/i })).toBeVisible();
+          |                                                                        ^
+      441 |
+      442 |       // 2. Navigate to signup
+      443 |       await page.getByRole('link', { name: /Sign Up/i }).click();
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:440:72
+
+    Error Context: test-results/user-journeys-Complete-Use-ee052-ll-journey-on-mobile-device-chromium/error-context.md
+
+  90) [chromium] › tests/e2e/user-journeys.spec.ts:478:9 › Complete User Journeys › Mobile User Journeys › should handle orientation change 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      489 |       await page.goto('/login');
+      490 |
+    > 491 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      492 |       await page.getByLabel(/password/i).fill(password);
+      493 |       await page.getByRole('button', { name: /log in/i }).click();
+      494 |
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:491:39
+
+    Error Context: test-results/user-journeys-Complete-Use-0e302-d-handle-orientation-change-chromium/error-context.md
+
+  91) [chromium] › tests/e2e/user-journeys.spec.ts:518:9 › Complete User Journeys › Performance Journeys › should load dashboard quickly for authenticated user 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel(/email/i)[22m
+
+
+      526 |
+      527 |       await page.goto('/login');
+    > 528 |       await page.getByLabel(/email/i).fill(email);
+          |                                       ^
+      529 |       await page.getByLabel(/password/i).fill(password);
+      530 |       await page.getByRole('button', { name: /log in/i }).click();
+      531 |       await expect(page).toHaveURL(/\/dashboard/);
+        at /Users/markbnet/Documents/thememeradar.com/tests/e2e/user-journeys.spec.ts:528:39
+
+    Error Context: test-results/user-journeys-Complete-Use-83ea2-ckly-for-authenticated-user-chromium/error-context.md
+
+  91 failed
+    [chromium] › tests/e2e/api/endpoints.spec.ts:32:9 › API Endpoints › /api/auth/signup › should create new user with valid data 
+    [chromium] › tests/e2e/api/endpoints.spec.ts:106:9 › API Endpoints › /api/auth/signup › should return 400 for duplicate email 
+    [chromium] › tests/e2e/api/endpoints.spec.ts:193:9 › API Endpoints › /api/auth/logout › should logout successfully with valid session 
+    [chromium] › tests/e2e/api/endpoints.spec.ts:270:9 › API Endpoints › /api/stocks/trending › should return trending stocks data 
+    [chromium] › tests/e2e/api/endpoints.spec.ts:317:9 › API Endpoints › Error Handling › should reject requests with invalid Content-Type 
+    [chromium] › tests/e2e/auth/login.spec.ts:9:7 › Login Page › should display login form with all required elements 
+    [chromium] › tests/e2e/auth/login.spec.ts:22:7 › Login Page › should successfully log in with valid credentials 
+    [chromium] › tests/e2e/auth/login.spec.ts:50:7 › Login Page › should show error for invalid email format 
+    [chromium] › tests/e2e/auth/login.spec.ts:65:7 › Login Page › should show error for non-existent user 
+    [chromium] › tests/e2e/auth/login.spec.ts:82:7 › Login Page › should show error for incorrect password 
+    [chromium] › tests/e2e/auth/login.spec.ts:109:7 › Login Page › should validate empty email field 
+    [chromium] › tests/e2e/auth/login.spec.ts:123:7 › Login Page › should validate empty password field 
+    [chromium] › tests/e2e/auth/login.spec.ts:137:7 › Login Page › should toggle password visibility 
+    [chromium] › tests/e2e/auth/login.spec.ts:156:7 › Login Page › should navigate to signup page when clicking signup link 
+    [chromium] › tests/e2e/auth/login.spec.ts:164:7 › Login Page › should trim whitespace from email 
+    [chromium] › tests/e2e/auth/login.spec.ts:189:7 › Login Page › should handle form submission with Enter key 
+    [chromium] › tests/e2e/auth/signup.spec.ts:32:7 › Signup Page › should display signup form with all required elements 
+    [chromium] › tests/e2e/auth/signup.spec.ts:45:7 › Signup Page › should successfully sign up with valid email and password 
+    [chromium] › tests/e2e/auth/signup.spec.ts:64:7 › Signup Page › should show error for invalid email format 
+    [chromium] › tests/e2e/auth/signup.spec.ts:79:7 › Signup Page › should show error for weak password 
+    [chromium] › tests/e2e/auth/signup.spec.ts:96:7 › Signup Page › should show error for duplicate email 
+    [chromium] › tests/e2e/auth/signup.spec.ts:124:7 › Signup Page › should validate empty email field 
+    [chromium] › tests/e2e/auth/signup.spec.ts:138:7 › Signup Page › should validate empty password field 
+    [chromium] › tests/e2e/auth/signup.spec.ts:154:7 › Signup Page › should toggle password visibility 
+    [chromium] › tests/e2e/auth/signup.spec.ts:173:7 › Signup Page › should navigate to login page when clicking login link 
+    [chromium] › tests/e2e/auth/signup.spec.ts:181:7 › Signup Page › should trim whitespace from email 
+    [chromium] › tests/e2e/auth/signup.spec.ts:197:7 › Signup Page › should handle form submission with Enter key 
+    [chromium] › tests/e2e/dashboard-interactions.spec.ts:38:9 › Dashboard Interactions › Page Load and Display › should display dashboard header with all elements 
+    [chromium] › tests/e2e/dashboard-interactions.spec.ts:76:9 › Dashboard Interactions › Empty State Handling › should display empty state for fading stocks when no data 
+    [chromium] › tests/e2e/dashboard-interactions.spec.ts:175:9 › Dashboard Interactions › Error Handling › should display error message when API returns error 
+    [chromium] › tests/e2e/dashboard-interactions.spec.ts:235:9 › Dashboard Interactions › Navigation › should clear session after logout 
+    [chromium] › tests/e2e/dashboard-interactions.spec.ts:316:9 › Dashboard Interactions › Accessibility › should have proper heading hierarchy 
+    [chromium] › tests/e2e/dashboard.spec.ts:27:7 › Protected Dashboard › should redirect to login when not authenticated 
+    [chromium] › tests/e2e/dashboard.spec.ts:35:7 › Protected Dashboard › should display dashboard when authenticated 
+    [chromium] › tests/e2e/dashboard.spec.ts:57:7 › Protected Dashboard › should display logout button when authenticated 
+    [chromium] › tests/e2e/dashboard.spec.ts:73:7 › Protected Dashboard › should logout and redirect to login 
+    [chromium] › tests/e2e/dashboard.spec.ts:98:7 › Protected Dashboard › should persist authentication across page reloads 
+    [chromium] › tests/e2e/dashboard.spec.ts:118:7 › Protected Dashboard › should show user email on dashboard 
+    [chromium] › tests/e2e/forms.spec.ts:16:9 › Form Interactions › Signup Form › should show validation errors when submitting empty form 
+    [chromium] › tests/e2e/forms.spec.ts:24:9 › Form Interactions › Signup Form › should validate email format in real-time 
+    [chromium] › tests/e2e/forms.spec.ts:33:9 › Form Interactions › Signup Form › should validate password strength in real-time 
+    [chromium] › tests/e2e/forms.spec.ts:42:9 › Form Interactions › Signup Form › should clear validation errors when user fixes input 
+    [chromium] › tests/e2e/forms.spec.ts:57:9 › Form Interactions › Signup Form › should handle paste events correctly 
+    [chromium] › tests/e2e/forms.spec.ts:93:9 › Form Interactions › Signup Form › should handle rapid form submission (prevent double submit) 
+    [chromium] › tests/e2e/forms.spec.ts:115:9 › Form Interactions › Signup Form › should handle special characters in email 
+    [chromium] › tests/e2e/forms.spec.ts:132:9 › Form Interactions › Signup Form › should trim whitespace from email automatically 
+    [chromium] › tests/e2e/forms.spec.ts:150:9 › Form Interactions › Signup Form › should handle form submission during network delay 
+    [chromium] › tests/e2e/forms.spec.ts:178:9 › Form Interactions › Signup Form › should handle very long email addresses 
+    [chromium] › tests/e2e/forms.spec.ts:210:9 › Form Interactions › Login Form › should show validation errors when submitting empty form 
+    [chromium] › tests/e2e/forms.spec.ts:218:9 › Form Interactions › Login Form › should remember last entered email after failed login 
+    [chromium] › tests/e2e/forms.spec.ts:235:9 › Form Interactions › Login Form › should clear password field after failed login 
+    [chromium] › tests/e2e/forms.spec.ts:262:9 › Form Interactions › Login Form › should handle Enter key in email field 
+    [chromium] › tests/e2e/forms.spec.ts:286:9 › Form Interactions › Login Form › should handle Enter key in password field 
+    [chromium] › tests/e2e/forms.spec.ts:310:9 › Form Interactions › Login Form › should handle Tab key navigation 
+    [chromium] › tests/e2e/forms.spec.ts:324:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in signup form 
+    [chromium] › tests/e2e/forms.spec.ts:354:9 › Form Interactions › Password Visibility Toggle › should toggle password visibility in login form 
+    [chromium] › tests/e2e/forms.spec.ts:379:9 › Form Interactions › Form Accessibility › should have proper form labels 
+    [chromium] › tests/e2e/forms.spec.ts:391:9 › Form Interactions › Form Accessibility › should have accessible error messages 
+    [chromium] › tests/e2e/forms.spec.ts:404:9 › Form Interactions › Form Accessibility › should maintain focus management during validation 
+    [chromium] › tests/e2e/forms.spec.ts:425:9 › Form Interactions › Form Autocomplete › should have proper autocomplete attributes 
+    [chromium] › tests/e2e/forms.spec.ts:441:9 › Form Interactions › Form Security › should not expose password in HTML 
+    [chromium] › tests/e2e/forms.spec.ts:453:9 › Form Interactions › Form Security › should not log sensitive data to console 
+    [chromium] › tests/e2e/landing.spec.ts:8:7 › Landing Page › should display landing page with all required elements 
+    [chromium] › tests/e2e/landing.spec.ts:25:7 › Landing Page › should navigate to login page when clicking Log In button 
+    [chromium] › tests/e2e/landing.spec.ts:30:7 › Landing Page › should navigate to signup page when clicking Sign Up button 
+    [chromium] › tests/e2e/landing.spec.ts:35:7 › Landing Page › should have correct styling and layout 
+    [chromium] › tests/e2e/landing.spec.ts:44:7 › Landing Page › should display buttons with correct colors 
+    [chromium] › tests/e2e/landing.spec.ts:58:7 › Landing Page › should be responsive on mobile viewport 
+    [chromium] › tests/e2e/landing.spec.ts:67:7 › Landing Page › should be responsive on tablet viewport 
+    [chromium] › tests/e2e/landing.spec.ts:74:7 › Landing Page › should handle navigation with keyboard 
+    [chromium] › tests/e2e/landing.spec.ts:87:7 › Landing Page › should load without JavaScript errors 
+    [chromium] › tests/e2e/landing.spec.ts:97:7 › Landing Page › should load quickly (performance check) 
+    [chromium] › tests/e2e/security.spec.ts:29:9 › Security Tests › Session Management › should prevent access to dashboard without authentication 
+    [chromium] › tests/e2e/security.spec.ts:108:9 › Security Tests › Session Management › should handle missing session cookie 
+    [chromium] › tests/e2e/security.spec.ts:174:9 › Security Tests › Authentication Security › should sanitize user input in forms 
+    [chromium] › tests/e2e/security.spec.ts:248:9 › Security Tests › HTTPS and Cookie Security › should set secure cookie flags in production 
+    [chromium] › tests/e2e/security.spec.ts:318:9 › Security Tests › Data Validation › should validate email format on client side 
+    [chromium] › tests/e2e/user-journeys.spec.ts:13:9 › Complete User Journeys › New User Complete Journey › should complete full signup -> dashboard -> logout journey 
+    [chromium] › tests/e2e/user-journeys.spec.ts:59:9 › Complete User Journeys › New User Complete Journey › should complete signup -> login -> dashboard -> reload -> still authenticated journey 
+    [chromium] › tests/e2e/user-journeys.spec.ts:95:9 › Complete User Journeys › Returning User Journey › should complete login -> dashboard -> view stocks -> logout journey 
+    [chromium] › tests/e2e/user-journeys.spec.ts:143:9 › Complete User Journeys › Error Recovery Journeys › should recover from signup error and successfully sign up on retry 
+    [chromium] › tests/e2e/user-journeys.spec.ts:171:9 › Complete User Journeys › Error Recovery Journeys › should recover from login error and successfully login on retry 
+    [chromium] › tests/e2e/user-journeys.spec.ts:205:9 › Complete User Journeys › Error Recovery Journeys › should handle network failure and retry 
+    [chromium] › tests/e2e/user-journeys.spec.ts:243:9 › Complete User Journeys › Multi-Tab Session Journeys › should maintain session across multiple tabs 
+    [chromium] › tests/e2e/user-journeys.spec.ts:274:9 › Complete User Journeys › Multi-Tab Session Journeys › should logout from all tabs when logging out from one 
+    [chromium] › tests/e2e/user-journeys.spec.ts:310:9 › Complete User Journeys › Browser Navigation Journeys › should handle browser back/forward buttons correctly 
+    [chromium] › tests/e2e/user-journeys.spec.ts:357:9 › Complete User Journeys › Form Interaction Journeys › should complete signup using only keyboard 
+    [chromium] › tests/e2e/user-journeys.spec.ts:384:9 › Complete User Journeys › Form Interaction Journeys › should handle form autofill correctly 
+    [chromium] › tests/e2e/user-journeys.spec.ts:431:9 › Complete User Journeys › Mobile User Journeys › should complete full journey on mobile device 
+    [chromium] › tests/e2e/user-journeys.spec.ts:478:9 › Complete User Journeys › Mobile User Journeys › should handle orientation change 
+    [chromium] › tests/e2e/user-journeys.spec.ts:518:9 › Complete User Journeys › Performance Journeys › should load dashboard quickly for authenticated user 
+  1 skipped
+  58 did not run

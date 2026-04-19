@@ -35,6 +35,18 @@ interface Evidence {
   createdAt: number;
 }
 
+interface StockEnrichment {
+  price: number;
+  volume_24h: number;
+  percent_change_24h: number;
+  social_dominance: number;
+  galaxy_score: number;
+  sentiment: number;
+  engagements: number;
+  mentions_cross_platform: number;
+  engagements_by_network: Record<string, number>;
+}
+
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker: tickerParam } = use(params);
   const ticker = tickerParam.toUpperCase();
@@ -49,6 +61,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const [timeBreakdown, setTimeBreakdown] = useState<{
     periods: { label: string; mentions: number; bullishPct: number; neutralPct: number; bearishPct: number }[];
   } | null>(null);
+  const [enrichment, setEnrichment] = useState<StockEnrichment | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,6 +88,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           }
           if (result.data.timeBreakdown) {
             setTimeBreakdown(result.data.timeBreakdown);
+          }
+          if (result.data.enrichment) {
+            setEnrichment(result.data.enrichment);
           }
         } else {
           setError(result.error || 'Stock not found');
@@ -186,6 +202,33 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           </div>
         </div>
 
+        {/* Market Data — from LunarCrush enrichment */}
+        {enrichment && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Market Data</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Price</p>
+                <p className="text-xl font-bold text-gray-900">${enrichment.price.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">24h Change</p>
+                <p className={`text-xl font-bold ${enrichment.percent_change_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {enrichment.percent_change_24h >= 0 ? '+' : ''}{enrichment.percent_change_24h.toFixed(2)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Social Dominance</p>
+                <p className="text-xl font-bold text-purple-700">{enrichment.social_dominance.toFixed(1)}%</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Cross-Platform Mentions</p>
+                <p className="text-xl font-bold text-gray-900">{enrichment.mentions_cross_platform.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <StockChart
@@ -265,6 +308,35 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             </div>
           </CollapsibleSection>
         </div>
+
+        {/* Cross-Platform Activity — engagements by network */}
+        {enrichment && Object.keys(enrichment.engagements_by_network).length > 0 && (
+          <div className="mt-8">
+            <CollapsibleSection title="Cross-Platform Activity">
+              <div className="space-y-3">
+                {(() => {
+                  const total = Object.values(enrichment.engagements_by_network).reduce((a, b) => a + b, 0);
+                  return Object.entries(enrichment.engagements_by_network)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([network, engagements]) => (
+                      <div key={network}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-gray-700 capitalize">{network}</span>
+                          <span className="text-sm font-medium text-gray-900">{engagements.toLocaleString()}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2">
+                          <div
+                            className="bg-purple-500 h-2 rounded-full"
+                            style={{ width: total > 0 ? `${(engagements / total) * 100}%` : '0%' }}
+                          />
+                        </div>
+                      </div>
+                    ));
+                })()}
+              </div>
+            </CollapsibleSection>
+          </div>
+        )}
 
         {/* Top Keywords */}
         {stockDetails.topKeywords.length > 0 && (

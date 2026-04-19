@@ -1,5 +1,6 @@
 import { GET } from '@/app/api/stocks/[ticker]/route';
 import type { StoredStockMention, StoredEvidence } from '@/lib/db/storage';
+import type { StoredEnrichment } from '@/lib/db/enrichment';
 
 jest.mock('@/lib/db/storage', () => ({
   getStockDetails: jest.fn(),
@@ -8,12 +9,19 @@ jest.mock('@/lib/db/storage', () => ({
   getStockTimeBreakdown: jest.fn(),
 }));
 
+jest.mock('@/lib/db/enrichment', () => ({
+  getLatestEnrichment: jest.fn(),
+}));
+
 import {
   getStockDetails,
   getStockEvidence,
   getStockHistory,
   getStockTimeBreakdown,
 } from '@/lib/db/storage';
+
+import { getLatestEnrichment } from '@/lib/db/enrichment';
+const mockGetLatestEnrichment = getLatestEnrichment as jest.MockedFunction<typeof getLatestEnrichment>;
 
 const mockGetStockDetails = getStockDetails as jest.MockedFunction<typeof getStockDetails>;
 const mockGetStockEvidence = getStockEvidence as jest.MockedFunction<typeof getStockEvidence>;
@@ -79,6 +87,23 @@ describe('GET /api/stocks/[ticker]', () => {
     return new Request(`http://localhost:3000/api/stocks/${ticker}`);
   };
 
+  const mockEnrichment: StoredEnrichment = {
+    ticker: 'GME',
+    timestamp: 1700000000000,
+    price: 24.50,
+    volume_24h: 1000000,
+    percent_change_24h: 3.21,
+    social_dominance: 12.5,
+    galaxy_score: 60,
+    sentiment: 4,
+    engagements: 50000,
+    mentions_cross_platform: 200,
+    top_creators: [],
+    engagements_by_network: { twitter: 30000, reddit: 15000, youtube: 5000 },
+    fetchedAt: 1700000000000,
+    ttl: 1702592000,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Default: storage returns no data (404 path)
@@ -86,6 +111,7 @@ describe('GET /api/stocks/[ticker]', () => {
     mockGetStockEvidence.mockResolvedValue([]);
     mockGetStockHistory.mockResolvedValue({ mentions: [], sentiment: [] });
     mockGetStockTimeBreakdown.mockResolvedValue({ periods: [] });
+    mockGetLatestEnrichment.mockResolvedValue(null);
   });
 
   it('should return 404 for unknown ticker', async () => {
@@ -253,6 +279,48 @@ describe('GET /api/stocks/[ticker]', () => {
       expect(mockGetStockEvidence).toHaveBeenCalledWith('GME', 10);
       expect(mockGetStockHistory).toHaveBeenCalledWith('GME', 7);
       expect(mockGetStockTimeBreakdown).toHaveBeenCalledWith('GME');
+    });
+
+    it('should include enrichment field (null when no LunarCrush data)', async () => {
+      const response = await GET(
+        createRequest('GME'),
+        { params: Promise.resolve({ ticker: 'GME' }) }
+      );
+      const data = await response.json();
+
+      expect(data.data).toHaveProperty('enrichment');
+      expect(data.data.enrichment).toBeNull();
+    });
+
+    it('should include enrichment data when LunarCrush data is available', async () => {
+      mockGetLatestEnrichment.mockResolvedValue(mockEnrichment);
+
+      const response = await GET(
+        createRequest('GME'),
+        { params: Promise.resolve({ ticker: 'GME' }) }
+      );
+      const data = await response.json();
+
+      expect(data.data.enrichment).not.toBeNull();
+      expect(data.data.enrichment.price).toBe(24.50);
+      expect(data.data.enrichment.percent_change_24h).toBe(3.21);
+      expect(data.data.enrichment.social_dominance).toBe(12.5);
+    });
+
+    it('should include engagements_by_network in enrichment', async () => {
+      mockGetLatestEnrichment.mockResolvedValue(mockEnrichment);
+
+      const response = await GET(
+        createRequest('GME'),
+        { params: Promise.resolve({ ticker: 'GME' }) }
+      );
+      const data = await response.json();
+
+      expect(data.data.enrichment.engagements_by_network).toEqual({
+        twitter: 30000,
+        reddit: 15000,
+        youtube: 5000,
+      });
     });
   });
 

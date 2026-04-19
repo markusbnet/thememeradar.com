@@ -24,6 +24,12 @@ jest.mock('@/components/StockCard', () => {
   };
 });
 
+jest.mock('@/components/OpportunityCard', () => {
+  return function MockOpportunityCard({ opportunity, rank }: { opportunity: { ticker: string; signalLevel: string; score: number }; rank: number }) {
+    return <div data-testid={`opp-card-${opportunity.ticker}`}>OpportunityCard: {opportunity.ticker} #{rank} ({opportunity.signalLevel}: {opportunity.score})</div>;
+  };
+});
+
 jest.mock('@/components/SurgeAlert', () => {
   return function MockSurgeAlert({ stocks }: { stocks: unknown[] }) {
     return <div data-testid="surge-alert">SurgeAlert: {stocks.length} stocks</div>;
@@ -36,10 +42,11 @@ jest.mock('@/components/RefreshTimer', () => {
   };
 });
 
-// Helper to build a mock fetch that responds to trending and surging endpoints
+// Helper to build a mock fetch that responds to trending, surging, and opportunities endpoints
 function createMockFetch(overrides: {
   trending?: { success: boolean; data?: unknown; error?: string };
   surging?: { success: boolean; data?: unknown; error?: string };
+  opportunities?: { success: boolean; data?: unknown; error?: string };
 } = {}) {
   const trendingResponse = overrides.trending ?? {
     success: true,
@@ -48,6 +55,10 @@ function createMockFetch(overrides: {
   const surgingResponse = overrides.surging ?? {
     success: true,
     data: { surging: [] },
+  };
+  const opportunitiesResponse = overrides.opportunities ?? {
+    success: true,
+    data: { opportunities: [] },
   };
 
   return jest.fn((url: string) => {
@@ -61,6 +72,12 @@ function createMockFetch(overrides: {
       return Promise.resolve({
         ok: surgingResponse.success,
         json: () => Promise.resolve(surgingResponse),
+      });
+    }
+    if (url === '/api/stocks/opportunities') {
+      return Promise.resolve({
+        ok: opportunitiesResponse.success,
+        json: () => Promise.resolve(opportunitiesResponse),
       });
     }
     if (url === '/api/auth/logout') {
@@ -317,5 +334,91 @@ describe('DashboardPage', () => {
     });
 
     expect(mockPush).not.toHaveBeenCalledWith('/login');
+  });
+
+  describe('Opportunities section', () => {
+    it('hides opportunities section when no opportunities qualify', async () => {
+      global.fetch = createMockFetch({
+        opportunities: { success: true, data: { opportunities: [] } },
+      }) as unknown as typeof fetch;
+
+      render(<DashboardPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Top 10 Trending/)).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText(/Opportunities/)).not.toBeInTheDocument();
+    });
+
+    it('renders opportunities section when hot/rising opportunities exist', async () => {
+      const opportunities = [
+        { ticker: 'GME', score: 80, signalLevel: 'hot', subScores: { velocity: 90, sentiment: 70, socialDominance: 85, volumeChange: 75, creatorInfluence: 60 } },
+        { ticker: 'AMC', score: 55, signalLevel: 'rising', subScores: { velocity: 50, sentiment: 60, socialDominance: 40, volumeChange: 55, creatorInfluence: 30 } },
+      ];
+
+      global.fetch = createMockFetch({
+        opportunities: { success: true, data: { opportunities } },
+      }) as unknown as typeof fetch;
+
+      render(<DashboardPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Opportunities/)).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('opp-card-GME')).toBeInTheDocument();
+      expect(screen.getByTestId('opp-card-AMC')).toBeInTheDocument();
+    });
+
+    it('shows opportunity cards sorted by rank', async () => {
+      const opportunities = [
+        { ticker: 'GME', score: 80, signalLevel: 'hot', subScores: { velocity: 90, sentiment: 70, socialDominance: 85, volumeChange: 75, creatorInfluence: 60 } },
+        { ticker: 'AMC', score: 55, signalLevel: 'rising', subScores: { velocity: 50, sentiment: 60, socialDominance: 40, volumeChange: 55, creatorInfluence: 30 } },
+      ];
+
+      global.fetch = createMockFetch({
+        opportunities: { success: true, data: { opportunities } },
+      }) as unknown as typeof fetch;
+
+      render(<DashboardPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('opp-card-GME')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/OpportunityCard: GME #1/)).toBeInTheDocument();
+      expect(screen.getByText(/OpportunityCard: AMC #2/)).toBeInTheDocument();
+    });
+
+    it('silently ignores opportunities fetch failure', async () => {
+      global.fetch = jest.fn((url: string) => {
+        if (url === '/api/stocks/opportunities') {
+          return Promise.reject(new Error('Network error'));
+        }
+        if (url === '/api/stocks/trending') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true, data: { trending: [], fading: [], timestamp: Date.now() } }),
+          });
+        }
+        if (url === '/api/stocks/surging') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true, data: { surging: [] } }),
+          });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      }) as unknown as typeof fetch;
+
+      render(<DashboardPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Top 10 Trending/)).toBeInTheDocument();
+      });
+
+      // Dashboard still renders, no crash
+      expect(screen.queryByText(/Opportunities/)).not.toBeInTheDocument();
+    });
   });
 });

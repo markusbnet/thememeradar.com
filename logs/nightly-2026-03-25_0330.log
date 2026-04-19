@@ -1,0 +1,15 @@
+============================================
+Nightly Claude Run — Wed Mar 25 03:30:01 GMT 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-03-25_0330.log
+
+[03:30:01] FOUND — 16 task(s) in TODOIST-TASKS.md
+[03:30:01] START — Handing off to Claude (opus, max effort)...
+
+Not logged in · Please run /login
+
+!!! NIGHTLY CLAUDE FAILED !!!
+Error on line 104 (exit code: 1)
+Check log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-03-25_0330.log
+Time: Wed Mar 25 03:30:03 GMT 2026

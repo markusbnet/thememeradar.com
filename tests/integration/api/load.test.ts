@@ -9,6 +9,11 @@ jest.mock('@/lib/db/storage', () => ({
   getStockTimeBreakdown: jest.fn().mockResolvedValue({ periods: [] }),
 }));
 
+jest.mock('@/lib/db/enrichment', () => ({
+  getLatestEnrichment: jest.fn().mockResolvedValue(null),
+  getEnrichmentMap: jest.fn().mockResolvedValue(new Map()),
+}));
+
 import { apiCache } from '@/lib/cache';
 
 describe('API Load Testing', () => {

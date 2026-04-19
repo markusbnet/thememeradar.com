@@ -91,4 +91,42 @@ describe('StockCard', () => {
     const svg = container.querySelector('svg');
     expect(svg).not.toBeInTheDocument();
   });
+
+  describe('enrichment display', () => {
+    const enrichmentProps = {
+      price: 24.50,
+      changePct24h: 3.21,
+      socialDominance: 12.5,
+    };
+
+    it('shows price when enrichment data provided', () => {
+      render(<StockCard {...defaultProps} {...enrichmentProps} />);
+      expect(screen.getByText('$24.50')).toBeInTheDocument();
+    });
+
+    it('shows positive 24h change in green', () => {
+      render(<StockCard {...defaultProps} {...enrichmentProps} changePct24h={3.21} />);
+      expect(screen.getByText('+3.21%')).toBeInTheDocument();
+    });
+
+    it('shows negative 24h change in red', () => {
+      render(<StockCard {...defaultProps} {...enrichmentProps} changePct24h={-2.50} />);
+      expect(screen.getByText('-2.50%')).toBeInTheDocument();
+    });
+
+    it('hides price block when no enrichment data provided', () => {
+      render(<StockCard {...defaultProps} />);
+      expect(screen.queryByText(/^\$\d+\.\d{2}$/)).not.toBeInTheDocument();
+    });
+
+    it('shows social dominance label', () => {
+      render(<StockCard {...defaultProps} {...enrichmentProps} socialDominance={12.5} />);
+      expect(screen.getByText(/Social/i)).toBeInTheDocument();
+    });
+
+    it('does not show social dominance when not provided', () => {
+      render(<StockCard {...defaultProps} />);
+      expect(screen.queryByText(/Social/i)).not.toBeInTheDocument();
+    });
+  });
 });

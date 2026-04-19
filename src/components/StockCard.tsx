@@ -20,6 +20,10 @@ interface StockCardProps {
   sparklineData?: number[];
   rankDelta24h?: number | null;
   rankStatus?: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
+  // Optional enrichment data from LunarCrush
+  price?: number;
+  changePct24h?: number;
+  socialDominance?: number;
 }
 
 export default function StockCard({
@@ -33,6 +37,9 @@ export default function StockCard({
   sparklineData,
   rankDelta24h,
   rankStatus,
+  price,
+  changePct24h,
+  socialDominance,
 }: StockCardProps) {
   // Determine sentiment emoji and color
   const getSentimentDisplay = (category: string) => {
@@ -100,6 +107,32 @@ export default function StockCard({
               color={isPositiveVelocity ? '#16a34a' : '#dc2626'}
               fillColor={isPositiveVelocity ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)'}
             />
+          </div>
+        )}
+
+        {/* Enrichment: price + social dominance */}
+        {price !== undefined && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-400">Price</p>
+                <p className="text-sm font-semibold text-gray-900">${price.toFixed(2)}</p>
+              </div>
+              {changePct24h !== undefined && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">24h</p>
+                  <p className={`text-sm font-semibold ${changePct24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {changePct24h >= 0 ? '+' : ''}{changePct24h.toFixed(2)}%
+                  </p>
+                </div>
+              )}
+              {socialDominance !== undefined && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Social</p>
+                  <p className="text-sm font-semibold text-purple-600">{socialDominance.toFixed(1)}%</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

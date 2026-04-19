@@ -1,0 +1,21 @@
+============================================
+Nightly Claude Run — Sat Apr 18 17:10:15 BST 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-18_1710.log
+
+[17:10:15] FOUND — 57 task(s) in TODOIST-TASKS.md
+[17:10:15] START — Handing off to Claude (opus, max effort)...
+
+Session complete. Two tasks finished tonight:
+
+- **Task 55** — LunarCrush enrichment pipeline: `enrichWithLunarCrush()` wired into the scan cron, `stock_enrichment` DynamoDB table, enrichment data joined into the trending API response, 9 tests.
+- **Task 56** — Opportunity Score algorithm: 5-factor weighted score (velocity, sentiment, social dominance, 24h price change, creator influence), `GET /api/stocks/opportunities` endpoint with dedup + signal-level filtering, `opportunity_signals` table added to both init-db scripts, 33 tests.
+
+Final state: **611 tests passing, clean build.** Next up: Task 57 (p2) — creator tracking for trending tickers.
+
+============================================
+Claude exited with code: 0
+Finished at Sat Apr 18 17:39:16 BST 2026
+Log saved to: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-18_1710.log
+============================================

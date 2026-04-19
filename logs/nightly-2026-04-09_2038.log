@@ -1,0 +1,36 @@
+============================================
+Nightly Claude Run — Thu Apr  9 20:38:03 BST 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-09_2038.log
+
+[20:38:03] FOUND — 31 task(s) in TODOIST-TASKS.md
+[20:38:03] START — Handing off to Claude (opus, max effort)...
+
+---
+
+[SUMMARY] 6/6 tasks completed, 0 failed
+
+| # | Task | Status |
+|---|------|--------|
+| 41 | QA pass: test health, coverage gaps, feature review | COMPLETE |
+| 42 | Verify app runs locally, builds, all tests pass | COMPLETE |
+| 43 | Fix login flow and test framework review | COMPLETE |
+| 44 | Create comprehensive user tests for every feature | COMPLETE |
+| 45 | Document stock weighting and trending/fading algorithm | COMPLETE |
+| 46 | Mobile UI review and fixes | COMPLETE |
+
+**Final metrics:** 35 test suites, 386 tests (was 300, +86 new), lint clean, build clean, E2E 55/55 passed
+
+**Key outcomes:**
+- **Login fixed** — DynamoDB tables were not initialized locally; `db:init` creates them
+- **86 new tests** covering surge detection DB, stock detail success paths, Reddit error paths, middleware passthrough, trending/fading data, auth edge cases, evidence API
+- **Test framework cleaned** — auth test cleanup, port mismatch fixed, broken script removed
+- **Algorithm documentation** added to all core functions with formulas and thresholds
+- **Mobile UI overhauled** — viewport meta, responsive scaling across 12 files, responsive charts
+
+============================================
+Claude exited with code: 0
+Finished at Thu Apr  9 21:16:40 BST 2026
+Log saved to: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-09_2038.log
+============================================

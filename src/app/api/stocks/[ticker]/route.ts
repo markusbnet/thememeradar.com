@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 
 import { NextResponse } from 'next/server';
 import { getStockDetails, getStockEvidence, getStockHistory, getStockTimeBreakdown } from '@/lib/db/storage';
+import { getLatestEnrichment } from '@/lib/db/enrichment';
 
 export async function GET(
   request: Request,
@@ -17,12 +18,13 @@ export async function GET(
     const { ticker: tickerParam } = await params;
     const ticker = tickerParam.toUpperCase();
 
-    // Fetch stock details, evidence, history, and time breakdown in parallel
-    const [details, evidence, history, timeBreakdown] = await Promise.all([
+    // Fetch stock details, evidence, history, time breakdown, and enrichment in parallel
+    const [details, evidence, history, timeBreakdown, enrichment] = await Promise.all([
       getStockDetails(ticker),
       getStockEvidence(ticker, 10),
       getStockHistory(ticker, 7),
       getStockTimeBreakdown(ticker),
+      getLatestEnrichment(ticker),
     ]);
 
     if (!details) {
@@ -43,6 +45,7 @@ export async function GET(
         evidence,
         history,
         timeBreakdown,
+        enrichment: enrichment ?? null,
         timestamp: Date.now(),
       },
     });

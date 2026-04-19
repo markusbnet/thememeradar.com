@@ -1,0 +1,36 @@
+============================================
+Nightly Claude Run — Wed Apr 15 05:00:00 BST 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-15_0500.log
+
+[05:00:00] FOUND — 37 task(s) in TODOIST-TASKS.md
+[05:00:00] START — Handing off to Claude (opus, max effort)...
+
+[TASK 52] COMPLETE — QA pass done
+
+[SUMMARY] 1/1 tasks completed, 0 failed
+
+**Task 52 Results:**
+- **Unit/Integration:** 41 suites, 514 tests — ALL PASSING (+17 new)
+- **E2E:** 186/186 passed on Chromium
+- **Lint:** Zero warnings or errors
+- **Build:** 19 routes compiled
+
+**Tests added (17):**
+- StockChart: responsive SVG, empty data, custom height, valueFormatter, grid lines, flat data edge case (6)
+- Error/not-found pages: tap target verification, purple theme consistency (6)
+- CollapsibleSection: responsive padding on button and content (2)
+- Logout API: httpOnly flag, custom cookie name env var (2)
+- Health API: JSON content-type header (1)
+
+**UI fixes (3):**
+- CollapsibleSection: responsive padding `p-4 sm:p-6` for mobile
+- Stock detail table headers: `scope="col"` for accessibility
+- Stock detail header "Back to Dashboard" link: added `min-h-[44px]` tap target
+
+============================================
+Claude exited with code: 0
+Finished at Wed Apr 15 05:16:26 BST 2026
+Log saved to: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-15_0500.log
+============================================

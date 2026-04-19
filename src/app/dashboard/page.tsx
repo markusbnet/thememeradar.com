@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkAuth, logout, type User } from '@/lib/auth/client';
 import StockCard from '@/components/StockCard';
+import OpportunityCard from '@/components/OpportunityCard';
 import RefreshTimer from '@/components/RefreshTimer';
 import SurgeAlert from '@/components/SurgeAlert';
 import type { SurgeStock } from '@/lib/db/surge';
+import type { OpportunityScore } from '@/lib/opportunity-score';
 
 interface TrendingStock {
   ticker: string;
@@ -18,6 +20,11 @@ interface TrendingStock {
   sparklineData?: number[];
   rankDelta24h?: number | null;
   rankStatus?: 'climbing' | 'falling' | 'new' | 'steady' | 'unknown';
+  enrichment?: {
+    price: number;
+    percent_change_24h: number;
+    social_dominance: number;
+  } | null;
 }
 
 interface StockData {
@@ -32,6 +39,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [surgeData, setSurgeData] = useState<SurgeStock[]>([]);
+  const [opportunities, setOpportunities] = useState<OpportunityScore[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,8 +58,8 @@ export default function DashboardPage() {
       setUser(userData || null);
       setIsLoading(false);
 
-      // Fetch stock data and surge data in parallel
-      await Promise.all([fetchStockData(), fetchSurgeData()]);
+      // Fetch stock data, surge data, and opportunities in parallel
+      await Promise.all([fetchStockData(), fetchSurgeData(), fetchOpportunities()]);
     };
 
     verifyAuth();
@@ -82,6 +90,18 @@ export default function DashboardPage() {
       }
     } catch {
       // Surge data is non-critical; silently ignore failures
+    }
+  };
+
+  const fetchOpportunities = async () => {
+    try {
+      const response = await fetch('/api/stocks/opportunities');
+      const result = await response.json();
+      if (result.success) {
+        setOpportunities(result.data.opportunities || []);
+      }
+    } catch {
+      // Opportunities are non-critical; silently ignore failures
     }
   };
 
@@ -188,6 +208,29 @@ export default function DashboardPage() {
         {/* Surge Alert */}
         <SurgeAlert stocks={surgeData} />
 
+        {/* Opportunities Section — only shown when signal-qualifying stocks exist */}
+        {opportunities.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                🎯 Opportunities
+              </h2>
+              <span className="ml-3 text-sm text-gray-500">
+                {opportunities.length} signal{opportunities.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              {opportunities.slice(0, 10).map((opp, index) => (
+                <OpportunityCard
+                  key={opp.ticker}
+                  opportunity={opp}
+                  rank={index + 1}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Trending Stocks Section */}
         <section className="mb-12">
           <div className="flex items-center mb-6">
@@ -224,6 +267,9 @@ export default function DashboardPage() {
                   sparklineData={stock.sparklineData}
                   rankDelta24h={stock.rankDelta24h}
                   rankStatus={stock.rankStatus}
+                  price={stock.enrichment?.price}
+                  changePct24h={stock.enrichment?.percent_change_24h}
+                  socialDominance={stock.enrichment?.social_dominance}
                 />
               ))}
             </div>
@@ -263,6 +309,9 @@ export default function DashboardPage() {
                   sparklineData={stock.sparklineData}
                   rankDelta24h={stock.rankDelta24h}
                   rankStatus={stock.rankStatus}
+                  price={stock.enrichment?.price}
+                  changePct24h={stock.enrichment?.percent_change_24h}
+                  socialDominance={stock.enrichment?.social_dominance}
                 />
               ))}
             </div>

@@ -1,0 +1,37 @@
+============================================
+Nightly Claude Run — Thu Apr 16 05:00:01 BST 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-16_0500.log
+
+[05:00:01] FOUND — 38 task(s) in TODOIST-TASKS.md
+[05:00:01] START — Handing off to Claude (opus, max effort)...
+
+Task 53 complete.
+
+**Nightly run summary — 2026-04-16**
+
+| Metric | Before → After |
+|---|---|
+| Test suites | 41 → **42** (+1) |
+| Unit/integration tests | 514 → **532** (+18) |
+| E2E Chromium | 186/186 (unchanged) |
+| Lint / Build | clean / clean |
+
+**18 new tests (TDD) covering real gaps:**
+- Trending API error paths (2)
+- Scan API POST+GET error paths (4)
+- Evidence API non-Error fallback (1)
+- `getRedditClient()` singleton factory (2)
+- `RateLimiter.reset()` + `authRateLimiter` env config (3)
+- New `ticker-list.test.ts` whitelist sanity (6)
+
+**No regressions, no UI fixes needed this pass.** Known CLAUDE.md spec gaps unchanged from prior runs (DD count, top subreddit, GET /api/stocks, refresh timer sync, fading threshold, top-keywords placement, posts/comments table provisioning) — all deferred to future tasks.
+
+Committed as `0809379`.
+
+============================================
+Claude exited with code: 0
+Finished at Thu Apr 16 05:20:54 BST 2026
+Log saved to: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-04-16_0500.log
+============================================

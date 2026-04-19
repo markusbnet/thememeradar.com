@@ -1,0 +1,24 @@
+============================================
+Nightly Claude Run — Tue Mar 31 09:52:17 BST 2026
+============================================
+Project: /Users/markbnet/Documents/thememeradar.com
+Log: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-03-31_0952.log
+
+[09:52:17] FOUND — 6 task(s) in TODOIST-TASKS.md
+[09:52:17] START — Handing off to Claude (opus, max effort)...
+
+**Nightly run complete.** All 19 tasks (22-40) finished successfully.
+
+**Summary:**
+- **19/19 tasks completed, 0 failed**
+- **Security:** JWT signature verification, scan endpoint auth, security headers, env var validation
+- **Tests:** 214 → 300 tests (86 new), 35 suites, all passing
+- **Code quality:** Zero `any` types, dead code removed, ticker/sentiment fixes
+- **New features:** Evidence API endpoint, API caching
+- **Commit:** `d72b939` — 38 files changed, +1645/-217 lines
+
+============================================
+Claude exited with code: 0
+Finished at Tue Mar 31 10:29:27 BST 2026
+Log saved to: /Users/markbnet/Documents/thememeradar.com/logs/nightly-2026-03-31_0952.log
+============================================
