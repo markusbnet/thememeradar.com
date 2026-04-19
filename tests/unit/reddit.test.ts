@@ -464,6 +464,108 @@ describe('RedditClient', () => {
       expect(result.comments[0].subreddit).toBe('stocks');
     }, 10000);
   });
+
+  describe('getNewPosts', () => {
+    const mockOAuth = () =>
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'tok', token_type: 'bearer', expires_in: 3600 }),
+      });
+
+    it('fetches from /new.json endpoint', async () => {
+      mockOAuth();
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { children: [] } }),
+      });
+
+      await client.getNewPosts('wallstreetbets', 30);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[1][0] as string;
+      expect(callUrl).toContain('/new');
+    });
+
+    it('returns parsed posts from /new', async () => {
+      mockOAuth();
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            children: [{
+              data: {
+                id: 'new1',
+                subreddit: 'pennystocks',
+                title: '$BIRD moonshot',
+                selftext: '',
+                author: 'ape42',
+                ups: 5,
+                created_utc: 1700000000,
+                permalink: '/r/pennystocks/comments/new1',
+              },
+            }],
+          },
+        }),
+      });
+
+      const posts = await client.getNewPosts('pennystocks', 30);
+      expect(posts).toHaveLength(1);
+      expect(posts[0].id).toBe('new1');
+    });
+
+    it('throws when /new request fails', async () => {
+      mockOAuth();
+      (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 429, statusText: 'Too Many Requests' });
+      await expect(client.getNewPosts('wallstreetbets', 30)).rejects.toThrow(/Too Many Requests/);
+    });
+  });
+
+  describe('getRisingPosts', () => {
+    const mockOAuth = () =>
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'tok', token_type: 'bearer', expires_in: 3600 }),
+      });
+
+    it('fetches from /rising.json endpoint', async () => {
+      mockOAuth();
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { children: [] } }),
+      });
+
+      await client.getRisingPosts('wallstreetbets', 25);
+
+      const callUrl = (global.fetch as jest.Mock).mock.calls[1][0] as string;
+      expect(callUrl).toContain('/rising');
+    });
+
+    it('returns parsed posts from /rising', async () => {
+      mockOAuth();
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            children: [{
+              data: {
+                id: 'rise1',
+                subreddit: 'wallstreetbets',
+                title: 'GME rising!',
+                selftext: '',
+                author: 'ape1',
+                ups: 250,
+                created_utc: 1700000001,
+                permalink: '/r/wallstreetbets/comments/rise1',
+              },
+            }],
+          },
+        }),
+      });
+
+      const posts = await client.getRisingPosts('wallstreetbets', 25);
+      expect(posts).toHaveLength(1);
+      expect(posts[0].id).toBe('rise1');
+    });
+  });
 });
 
 describe('getRedditClient', () => {

@@ -142,6 +142,52 @@ export class RedditClient {
   }
 
   /**
+   * Fetch newest posts from a subreddit (/new listing)
+   */
+  async getNewPosts(subreddit: string, limit: number = 30): Promise<RedditPost[]> {
+    return this.fetchListing(subreddit, 'new', limit);
+  }
+
+  /**
+   * Fetch rising posts from a subreddit (/rising listing)
+   */
+  async getRisingPosts(subreddit: string, limit: number = 25): Promise<RedditPost[]> {
+    return this.fetchListing(subreddit, 'rising', limit);
+  }
+
+  private async fetchListing(subreddit: string, listing: string, limit: number): Promise<RedditPost[]> {
+    await this.authenticate();
+
+    logger.info(`[Reddit] Fetching ${limit} ${listing} posts from r/${subreddit}`);
+    const url = `https://oauth.reddit.com/r/${subreddit}/${listing}?limit=${limit}`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'User-Agent': this.userAgent,
+      },
+    });
+
+    if (!response.ok) {
+      logger.error(`[Reddit] Failed to fetch ${listing} posts from r/${subreddit}: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch ${listing} posts from r/${subreddit}: ${response.statusText}`);
+    }
+
+    const data: RedditListingResponse = await response.json();
+    logger.info(`[Reddit] Received ${data.data.children.length} ${listing} posts from r/${subreddit}`);
+
+    return data.data.children.map(child => ({
+      id: child.data.id,
+      subreddit: child.data.subreddit,
+      title: child.data.title || '',
+      body: child.data.selftext || '',
+      author: child.data.author,
+      upvotes: child.data.ups,
+      createdAt: child.data.created_utc,
+      url: `https://reddit.com${child.data.permalink}`,
+    }));
+  }
+
+  /**
    * Fetch comments for a specific post
    */
   async getPostComments(subreddit: string, postId: string): Promise<RedditComment[]> {

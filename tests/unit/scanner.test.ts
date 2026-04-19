@@ -11,6 +11,21 @@ jest.mock('@/lib/reddit', () => ({
   RedditClient: jest.fn(),
 }));
 
+// Also mock rate-limit so RedditCallBudget doesn't interfere
+jest.mock('@/lib/rate-limit', () => {
+  const actual = jest.requireActual('@/lib/rate-limit');
+  return {
+    ...actual,
+    RedditCallBudget: jest.fn().mockImplementation(() => ({
+      canMakeCall: jest.fn().mockReturnValue(true),
+      recordCall: jest.fn(),
+      callsUsed: 0,
+      remaining: 500,
+      reset: jest.fn(),
+    })),
+  };
+});
+
 describe('Scanner', () => {
   let scanner: Scanner;
   let mockRedditClient: jest.Mocked<RedditClient>;
@@ -19,6 +34,8 @@ describe('Scanner', () => {
     // Create mock Reddit client instance
     mockRedditClient = {
       getHotPosts: jest.fn(),
+      getNewPosts: jest.fn().mockResolvedValue([]),
+      getRisingPosts: jest.fn().mockResolvedValue([]),
       getPostComments: jest.fn(),
     } as any;
 
@@ -297,5 +314,102 @@ describe('createScanner', () => {
     expect(scanner).toBeInstanceOf(Scanner);
     expect(typeof scanner.scanSubreddit).toBe('function');
     expect(typeof scanner.scanMultipleSubreddits).toBe('function');
+  });
+});
+
+describe('Scanner — /new and /rising sweep deduplication', () => {
+  let scanner: Scanner;
+  let mockRedditClient: jest.Mocked<RedditClient>;
+
+  const makePost = (id: string, ticker: string, upvotes = 10) => ({
+    id,
+    subreddit: 'wallstreetbets',
+    title: `$${ticker} discussion`,
+    body: '',
+    author: 'u1',
+    upvotes,
+    createdAt: 1700000000,
+    url: `https://reddit.com/r/wallstreetbets/comments/${id}`,
+  });
+
+  beforeEach(() => {
+    mockRedditClient = {
+      getHotPosts: jest.fn().mockResolvedValue([]),
+      getNewPosts: jest.fn().mockResolvedValue([]),
+      getRisingPosts: jest.fn().mockResolvedValue([]),
+      getPostComments: jest.fn().mockResolvedValue([]),
+    } as any;
+
+    (RedditClient as jest.Mock).mockImplementation(() => mockRedditClient);
+
+    scanner = createScanner({
+      clientId: 'test_id',
+      clientSecret: 'test_secret',
+      userAgent: 'test_agent',
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('deduplicates posts that appear in both hot and new listings', async () => {
+    const sharedPost = makePost('shared1', 'GME', 100);
+    mockRedditClient.getHotPosts.mockResolvedValue([sharedPost]);
+    mockRedditClient.getNewPosts.mockResolvedValue([sharedPost]); // same post
+
+    const result = await scanner.scanSubreddit('wallstreetbets', 25);
+
+    // GME should only be counted once despite appearing in two listings
+    const gmeMentions = result.tickers.get('GME') || [];
+    const uniqueSourceIds = new Set(gmeMentions.map(m => m.sourceId));
+    expect(uniqueSourceIds.size).toBe(1);
+  });
+
+  it('includes posts from /new that are not in /hot', async () => {
+    const hotPost = makePost('hot1', 'GME');
+    const newPost = makePost('new1', 'BIRD', 3); // only in /new
+    mockRedditClient.getHotPosts.mockResolvedValue([hotPost]);
+    mockRedditClient.getNewPosts.mockResolvedValue([newPost]);
+
+    const result = await scanner.scanSubreddit('wallstreetbets', 25);
+
+    expect(result.tickers.has('GME')).toBe(true);
+    expect(result.tickers.has('BIRD')).toBe(true);
+  });
+
+  it('includes posts from /rising that are not in /hot', async () => {
+    const risingPost = makePost('rise1', 'AMC', 500);
+    mockRedditClient.getHotPosts.mockResolvedValue([]);
+    mockRedditClient.getRisingPosts.mockResolvedValue([risingPost]);
+
+    const result = await scanner.scanSubreddit('wallstreetbets', 25);
+
+    expect(result.tickers.has('AMC')).toBe(true);
+  });
+
+  it('attaches listing weight to ticker mentions', async () => {
+    const risingPost = makePost('rise2', 'TSLA', 200);
+    mockRedditClient.getHotPosts.mockResolvedValue([]);
+    mockRedditClient.getRisingPosts.mockResolvedValue([risingPost]);
+
+    const result = await scanner.scanSubreddit('wallstreetbets', 25);
+
+    const mentions = result.tickers.get('TSLA') || [];
+    expect(mentions.length).toBeGreaterThan(0);
+    // Rising posts should have weight > 1
+    expect(mentions[0].listingWeight).toBeGreaterThan(1);
+  });
+
+  it('new post mentions have weight < 1', async () => {
+    const newPost = makePost('new2', 'PLTR', 2);
+    mockRedditClient.getHotPosts.mockResolvedValue([]);
+    mockRedditClient.getNewPosts.mockResolvedValue([newPost]);
+
+    const result = await scanner.scanSubreddit('wallstreetbets', 25);
+
+    const mentions = result.tickers.get('PLTR') || [];
+    expect(mentions.length).toBeGreaterThan(0);
+    expect(mentions[0].listingWeight).toBeLessThan(1);
   });
 });

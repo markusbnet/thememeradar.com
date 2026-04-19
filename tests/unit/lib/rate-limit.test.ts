@@ -1,4 +1,4 @@
-import { RateLimiter } from '@/lib/rate-limit';
+import { RateLimiter, RedditCallBudget } from '@/lib/rate-limit';
 
 describe('RateLimiter', () => {
   let limiter: RateLimiter;
@@ -139,5 +139,46 @@ describe('authRateLimiter env configuration', () => {
       expect(authRateLimiter.check('env-test-2').allowed).toBe(true);
     }
     expect(authRateLimiter.check('env-test-2').allowed).toBe(false);
+  });
+});
+
+describe('RedditCallBudget', () => {
+  it('allows calls under the budget', () => {
+    const budget = new RedditCallBudget(500);
+    expect(budget.canMakeCall()).toBe(true);
+    budget.recordCall();
+    expect(budget.canMakeCall()).toBe(true);
+  });
+
+  it('blocks calls when budget is exhausted', () => {
+    const budget = new RedditCallBudget(3);
+    budget.recordCall();
+    budget.recordCall();
+    budget.recordCall();
+    expect(budget.canMakeCall()).toBe(false);
+  });
+
+  it('tracks total calls made', () => {
+    const budget = new RedditCallBudget(500);
+    budget.recordCall();
+    budget.recordCall();
+    budget.recordCall();
+    expect(budget.callsUsed).toBe(3);
+  });
+
+  it('exposes remaining budget', () => {
+    const budget = new RedditCallBudget(10);
+    budget.recordCall();
+    budget.recordCall();
+    expect(budget.remaining).toBe(8);
+  });
+
+  it('resets to full budget', () => {
+    const budget = new RedditCallBudget(5);
+    budget.recordCall();
+    budget.recordCall();
+    budget.reset();
+    expect(budget.callsUsed).toBe(0);
+    expect(budget.canMakeCall()).toBe(true);
   });
 });

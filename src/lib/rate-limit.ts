@@ -63,6 +63,39 @@ export class RateLimiter {
   }
 }
 
+/**
+ * Per-scan-run Reddit API call budget.
+ * Prevents any single scan from exceeding the Reddit API rate limit.
+ */
+export class RedditCallBudget {
+  private used = 0;
+  private readonly budget: number;
+
+  constructor(budget: number) {
+    this.budget = budget;
+  }
+
+  canMakeCall(): boolean {
+    return this.used < this.budget;
+  }
+
+  recordCall(): void {
+    this.used++;
+  }
+
+  get callsUsed(): number {
+    return this.used;
+  }
+
+  get remaining(): number {
+    return Math.max(0, this.budget - this.used);
+  }
+
+  reset(): void {
+    this.used = 0;
+  }
+}
+
 export const authRateLimiter = new RateLimiter({
   maxAttempts: process.env.AUTH_RATE_LIMIT_MAX ? parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) : 5,
   windowMs: 15 * 60 * 1000,

@@ -7,6 +7,8 @@ import { logger } from '@/lib/logger';
 import { RedditClient, type RedditPost, type RedditComment } from '@/lib/reddit';
 import { extractTickers } from '@/lib/ticker-detection';
 import { analyzeSentiment, type SentimentResult } from '@/lib/sentiment';
+import { RedditCallBudget } from '@/lib/rate-limit';
+import { LISTING_MIX, REDDIT_CALL_BUDGET } from './config';
 
 // Types
 export interface ScannerConfig {
@@ -46,6 +48,8 @@ export interface TickerMention {
   sentiment: SentimentResult;
   upvotes: number;
   subreddit: string;
+  /** Listing-type weight: hot=1.0, new=0.5, rising=1.5 */
+  listingWeight: number;
 }
 
 export interface ScanStats {
@@ -81,37 +85,80 @@ export class Scanner {
   }
 
   /**
-   * Scan a single subreddit for stock mentions
+   * Scan a single subreddit for stock mentions.
+   * Fetches hot + /new + /rising listings, deduplicates by postId, and
+   * applies listing-type weights to ticker mentions.
    */
   async scanSubreddit(subreddit: string, limit: number = 25): Promise<ScanResult> {
     const scannedAt = Date.now();
     const tickerMap = new Map<string, TickerMention[]>();
     const posts: ScannedPost[] = [];
+    const budget = new RedditCallBudget(REDDIT_CALL_BUDGET);
 
     let totalComments = 0;
     let totalMentions = 0;
 
-    // Fetch hot posts from subreddit
-    const redditPosts = await this.redditClient.getHotPosts(subreddit, limit);
+    // Build per-listing post lists, deduplicated across listings by postId
+    const seenPostIds = new Set<string>();
+    const postListings: Array<{ post: RedditPost; weight: number; commentThreshold: number }> = [];
 
-    // Process each post
-    for (const post of redditPosts) {
-      // Extract tickers from post
+    const addListingPosts = (redditPosts: RedditPost[], weight: number, commentThreshold: number) => {
+      for (const post of redditPosts) {
+        if (!seenPostIds.has(post.id)) {
+          seenPostIds.add(post.id);
+          postListings.push({ post, weight, commentThreshold });
+        }
+      }
+    };
+
+    // Hot: all subreddits, weight 1.0
+    if (budget.canMakeCall()) {
+      const hotConfig = LISTING_MIX.hot;
+      const hotPosts = await this.redditClient.getHotPosts(subreddit, limit);
+      budget.recordCall();
+      addListingPosts(hotPosts, hotConfig.weight, hotConfig.commentThreshold);
+    }
+
+    // /new: only for configured subreddits, weight 0.5
+    const newConfig = LISTING_MIX.new;
+    const newSubreddits = newConfig.subreddits as string[];
+    if (budget.canMakeCall() && newSubreddits.includes(subreddit)) {
+      const newPosts = await this.redditClient.getNewPosts(subreddit, newConfig.limit);
+      budget.recordCall();
+      addListingPosts(newPosts, newConfig.weight, newConfig.commentThreshold);
+    }
+
+    // /rising: only for configured subreddits (WSB), weight 1.5
+    const risingConfig = LISTING_MIX.rising;
+    const risingSubreddits = risingConfig.subreddits as string[];
+    if (budget.canMakeCall() && risingSubreddits.includes(subreddit)) {
+      const risingPosts = await this.redditClient.getRisingPosts(subreddit, risingConfig.limit);
+      budget.recordCall();
+      addListingPosts(risingPosts, risingConfig.weight, risingConfig.commentThreshold);
+    }
+
+    if (budget.callsUsed >= REDDIT_CALL_BUDGET * 0.9) {
+      logger.warn(`[Scanner] Budget near limit: ${budget.callsUsed}/${REDDIT_CALL_BUDGET} calls used for r/${subreddit}`);
+    }
+
+    // Process each deduplicated post
+    for (const { post, weight, commentThreshold } of postListings) {
       const postText = `${post.title} ${post.body}`;
       const postTickers = extractTickers(postText);
 
-      // Fetch comments for this post
+      // Fetch comments if post meets upvote threshold for its listing type
       let comments: RedditComment[] = [];
-      try {
-        comments = await this.redditClient.getPostComments(subreddit, post.id);
-      } catch (error: unknown) {
-        logger.error(`Failed to fetch comments for post ${post.id}:`, error instanceof Error ? error.message : 'Unknown error');
-        // Continue with empty comments
+      if (post.upvotes >= commentThreshold && budget.canMakeCall()) {
+        try {
+          comments = await this.redditClient.getPostComments(subreddit, post.id);
+          budget.recordCall();
+        } catch (error: unknown) {
+          logger.error(`Failed to fetch comments for post ${post.id}:`, error instanceof Error ? error.message : 'Unknown error');
+        }
       }
 
       totalComments += comments.length;
 
-      // Process comments
       const scannedComments: ScannedComment[] = [];
       for (const comment of comments) {
         const commentTickers = extractTickers(comment.body);
@@ -126,10 +173,8 @@ export class Scanner {
           tickers: commentTickers,
         });
 
-        // Add ticker mentions from comment
         for (const ticker of commentTickers) {
           const sentiment = analyzeSentiment(comment.body, ticker);
-
           const mention: TickerMention = {
             ticker,
             source: 'comment',
@@ -138,17 +183,14 @@ export class Scanner {
             sentiment,
             upvotes: comment.upvotes,
             subreddit,
+            listingWeight: weight,
           };
-
-          if (!tickerMap.has(ticker)) {
-            tickerMap.set(ticker, []);
-          }
+          if (!tickerMap.has(ticker)) tickerMap.set(ticker, []);
           tickerMap.get(ticker)!.push(mention);
           totalMentions++;
         }
       }
 
-      // Add scanned post
       posts.push({
         id: post.id,
         subreddit: post.subreddit,
@@ -162,10 +204,8 @@ export class Scanner {
         comments: scannedComments,
       });
 
-      // Add ticker mentions from post
       for (const ticker of postTickers) {
         const sentiment = analyzeSentiment(postText, ticker);
-
         const mention: TickerMention = {
           ticker,
           source: 'post',
@@ -174,33 +214,28 @@ export class Scanner {
           sentiment,
           upvotes: post.upvotes,
           subreddit,
+          listingWeight: weight,
         };
-
-        if (!tickerMap.has(ticker)) {
-          tickerMap.set(ticker, []);
-        }
+        if (!tickerMap.has(ticker)) tickerMap.set(ticker, []);
         tickerMap.get(ticker)!.push(mention);
         totalMentions++;
       }
     }
 
-    // Calculate statistics
-    const stats: ScanStats = {
-      totalPosts: posts.length,
-      totalComments,
-      uniqueTickers: tickerMap.size,
-      totalMentions,
-      subredditBreakdown: {
-        [subreddit]: totalMentions,
-      },
-    };
+    logger.info(`[Scanner] r/${subreddit}: ${posts.length} posts, ${totalComments} comments, ${tickerMap.size} tickers, ${budget.callsUsed} API calls`);
 
     return {
       scannedAt,
       subreddit,
       posts,
       tickers: tickerMap,
-      stats,
+      stats: {
+        totalPosts: posts.length,
+        totalComments,
+        uniqueTickers: tickerMap.size,
+        totalMentions,
+        subredditBreakdown: { [subreddit]: totalMentions },
+      },
     };
   }
 
