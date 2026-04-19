@@ -26,6 +26,8 @@ interface StockCardProps {
   socialDominance?: number;
   // Finnhub price staleness (fresh/normal = normal color, grey = muted, drop = hide)
   staleness?: 'fresh' | 'normal' | 'grey' | 'drop';
+  // ApeWisdom coverage source badge
+  coverageSource?: 'reddit' | 'apewisdom' | 'both';
 }
 
 export default function StockCard({
@@ -43,6 +45,7 @@ export default function StockCard({
   changePct24h,
   socialDominance,
   staleness,
+  coverageSource,
 }: StockCardProps) {
   // Determine sentiment emoji and color
   const getSentimentDisplay = (category: string) => {
@@ -74,6 +77,12 @@ export default function StockCard({
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">${ticker}</h3>
               {rankStatus === 'new' && (
                 <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">NEW</span>
+              )}
+              {coverageSource === 'both' && (
+                <span title="tracked by Reddit + ApeWisdom" className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AW+</span>
+              )}
+              {coverageSource === 'apewisdom' && (
+                <span title="ApeWisdom-only signal" className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">AW</span>
               )}
               {(rankStatus === 'climbing' || rankStatus === 'falling') && rankDelta24h !== null && rankDelta24h !== undefined && (
                 <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${rankDelta24h > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>

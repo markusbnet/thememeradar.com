@@ -30,6 +30,7 @@ interface TrendingStock {
     changePct24h: number;
     staleness: 'fresh' | 'normal' | 'grey' | 'drop';
   } | null;
+  coverageSource?: 'reddit' | 'apewisdom' | 'both';
 }
 
 interface StockData {
@@ -276,6 +277,7 @@ export default function DashboardPage() {
                   changePct24h={stock.price?.changePct24h ?? stock.enrichment?.percent_change_24h}
                   socialDominance={stock.enrichment?.social_dominance}
                   staleness={stock.price?.staleness}
+                  coverageSource={stock.coverageSource}
                 />
               ))}
             </div>
@@ -319,6 +321,7 @@ export default function DashboardPage() {
                   changePct24h={stock.price?.changePct24h ?? stock.enrichment?.percent_change_24h}
                   socialDominance={stock.enrichment?.social_dominance}
                   staleness={stock.price?.staleness}
+                  coverageSource={stock.coverageSource}
                 />
               ))}
             </div>

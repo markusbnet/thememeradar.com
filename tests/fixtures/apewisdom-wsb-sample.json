@@ -1,0 +1,19 @@
+{
+  "subreddit": "wallstreetbets",
+  "fetchedAt": 1745094000000,
+  "rows": [
+    { "rank": 1, "rank_24h_ago": 3, "ticker": "GME", "name": "GameStop Corp.", "mentions": 450, "mentions_24h_ago": 200, "upvotes": 8900 },
+    { "rank": 2, "rank_24h_ago": 1, "ticker": "AMC", "name": "AMC Entertainment Holdings", "mentions": 380, "mentions_24h_ago": 420, "upvotes": 5200 },
+    { "rank": 3, "rank_24h_ago": null, "ticker": "BIRD", "name": "Allbirds Inc.", "mentions": 310, "mentions_24h_ago": 0, "upvotes": 4100 },
+    { "rank": 4, "rank_24h_ago": 7, "ticker": "TSLA", "name": "Tesla Inc.", "mentions": 290, "mentions_24h_ago": 150, "upvotes": 7300 },
+    { "rank": 5, "rank_24h_ago": 5, "ticker": "SPY", "name": "SPDR S&P 500 ETF", "mentions": 270, "mentions_24h_ago": 260, "upvotes": 3100 },
+    { "rank": 6, "rank_24h_ago": 2, "ticker": "PLTR", "name": "Palantir Technologies", "mentions": 240, "mentions_24h_ago": 430, "upvotes": 2800 },
+    { "rank": 7, "rank_24h_ago": 8, "ticker": "AAPL", "name": "Apple Inc.", "mentions": 220, "mentions_24h_ago": 140, "upvotes": 2400 },
+    { "rank": 8, "rank_24h_ago": 6, "ticker": "NVDA", "name": "NVIDIA Corp.", "mentions": 200, "mentions_24h_ago": 230, "upvotes": 2100 },
+    { "rank": 9, "rank_24h_ago": 10, "ticker": "HOOD", "name": "Robinhood Markets", "mentions": 180, "mentions_24h_ago": 110, "upvotes": 1900 },
+    { "rank": 10, "rank_24h_ago": 9, "ticker": "RBLX", "name": "Roblox Corp.", "mentions": 160, "mentions_24h_ago": 170, "upvotes": 1600 },
+    { "rank": 11, "rank_24h_ago": 15, "ticker": "SOFI", "name": "SoFi Technologies", "mentions": 140, "mentions_24h_ago": 80, "upvotes": 1400 },
+    { "rank": 12, "rank_24h_ago": 11, "ticker": "MSTR", "name": "MicroStrategy Inc.", "mentions": 120, "mentions_24h_ago": 130, "upvotes": 1200 }
+  ],
+  "ttl": 1745267000
+}

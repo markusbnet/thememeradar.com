@@ -12,6 +12,15 @@ jest.mock('@/lib/db/prices', () => ({
   getLatestPriceMap: jest.fn().mockResolvedValue(new Map()),
 }));
 
+jest.mock('@/lib/db/apewisdom', () => ({
+  getLatestApewisdomSnapshot: jest.fn().mockResolvedValue(null),
+}));
+
+jest.mock('@/lib/coverage/apewisdom', () => {
+  const actual = jest.requireActual('@/lib/coverage/apewisdom');
+  return actual; // use the real merge function
+});
+
 import { GET } from '@/app/api/stocks/trending/route';
 import { apiCache } from '@/lib/cache';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';

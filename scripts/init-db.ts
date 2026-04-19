@@ -52,6 +52,7 @@ const TABLES = {
   STOCK_ENRICHMENT: 'stock_enrichment',
   OPPORTUNITY_SIGNALS: 'opportunity_signals',
   STOCK_PRICES: 'stock_prices',
+  APEWISDOM_SNAPSHOT: 'apewisdom_snapshot',
 };
 
 async function deleteTableIfExists(tableName: string) {
@@ -243,6 +244,31 @@ async function createStockPricesTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createApewisdomSnapshotTable() {
+  const tableName = TABLES.APEWISDOM_SNAPSHOT;
+  await deleteTableIfExists(tableName);
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'subreddit', KeyType: 'HASH' },
+        { AttributeName: 'fetchedAt', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'subreddit', AttributeType: 'S' },
+        { AttributeName: 'fetchedAt', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing DynamoDB Tables ===\n');
 
@@ -253,6 +279,7 @@ async function main() {
     await createStockEnrichmentTable();
     await createOpportunitySignalsTable();
     await createStockPricesTable();
+    await createApewisdomSnapshotTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
@@ -262,6 +289,7 @@ async function main() {
     console.log('- stock_enrichment (LunarCrush social + price data per ticker, TTL 30d)');
     console.log('- opportunity_signals (composite opportunity scores, TTL 30d)');
     console.log('- stock_prices (Finnhub price snapshots per ticker, TTL 7d)');
+    console.log('- apewisdom_snapshot (ApeWisdom ranked ticker lists per subreddit, TTL 48h)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.

@@ -10,6 +10,8 @@ import { NextResponse } from 'next/server';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
 import { getEnrichmentMap } from '@/lib/db/enrichment';
 import { getLatestPriceMap } from '@/lib/db/prices';
+import { getLatestApewisdomSnapshot } from '@/lib/db/apewisdom';
+import { mergeCoverage } from '@/lib/coverage/apewisdom';
 import { apiCache } from '@/lib/cache';
 
 const CACHE_KEY = 'trending-fading';
@@ -25,11 +27,16 @@ export async function GET() {
       });
     }
 
-    // Fetch trending and fading stocks in parallel
-    const [trending, fading] = await Promise.all([
+    // Fetch trending and fading stocks plus ApeWisdom snapshot in parallel
+    const [trendingRaw, fadingRaw, awSnapshot] = await Promise.all([
       getTrendingStocks(10),
       getFadingStocks(10),
+      getLatestApewisdomSnapshot('wallstreetbets'),
     ]);
+
+    const now = Date.now();
+    const trending = mergeCoverage(trendingRaw, awSnapshot, now);
+    const fading = mergeCoverage(fadingRaw, awSnapshot, now);
 
     // Fetch sparkline + enrichment + price data for all stocks in parallel
     const allTickers = [...trending, ...fading].map(s => s.ticker);
@@ -52,7 +59,7 @@ export async function GET() {
     const data = {
       trending: addEnrichment(trending),
       fading: addEnrichment(fading),
-      timestamp: Date.now(),
+      timestamp: now,
     };
 
     // Cache for 5 minutes

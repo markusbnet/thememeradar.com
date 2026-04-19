@@ -20,6 +20,10 @@ jest.mock('@/lib/db/prices', () => ({
   getLatestPriceMap: jest.fn().mockResolvedValue(new Map()),
 }));
 
+jest.mock('@/lib/db/apewisdom', () => ({
+  getLatestApewisdomSnapshot: jest.fn().mockResolvedValue(null),
+}));
+
 import { apiCache } from '@/lib/cache';
 
 describe('API Load Testing', () => {
