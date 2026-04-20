@@ -40,6 +40,12 @@ jobs:
           echo "JWT_SECRET=test-secret-key-for-ci" >> .env.local
           echo "SESSION_COOKIE_NAME=meme_radar_session" >> .env.local
           echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> .env.local
+          # Required by check-env and the cron-auth tests; placeholder values
+          # are fine because CI never calls Reddit or the live cron endpoint.
+          echo "CRON_SECRET=ci-cron-secret" >> .env.local
+          echo "REDDIT_CLIENT_ID=ci-reddit-client" >> .env.local
+          echo "REDDIT_CLIENT_SECRET=ci-reddit-secret" >> .env.local
+          echo "REDDIT_USER_AGENT=MemeRadarCI/1.0" >> .env.local
 
       - name: Wait for DynamoDB Local
         run: sleep 5
@@ -86,6 +92,28 @@ jobs:
 
       - name: Build Next.js app
         run: npm run build
+
+      # Seed fixture data before E2E so tests that assert on rendered stocks
+      # have something to find. Safe to re-run — seed-db uses stable keys.
+      - name: Seed DynamoDB with fixture
+        run: npm run db:seed
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+
+      - name: Run boot smoke test
+        run: npm run test:smoke
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          CRON_SECRET: ci-cron-secret
+          JWT_SECRET: test-secret-key-for-ci
+          REDDIT_CLIENT_ID: ci-reddit-client
+          REDDIT_CLIENT_SECRET: ci-reddit-secret
 
       - name: Run E2E tests
         run: npm run test:e2e

@@ -1,10 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config();
+// Some E2E tests seed DynamoDB directly from Node (inside the test runner,
+// not inside the webServer). Those imports read process.env at module load
+// time, so defaults must be set before @playwright/test loads the specs.
+// Only populate values the caller hasn't already provided — CI can override.
+process.env.DYNAMODB_ENDPOINT ??= 'http://localhost:8000';
+process.env.AWS_REGION ??= 'us-east-1';
+process.env.AWS_ACCESS_KEY_ID ??= 'test';
+process.env.AWS_SECRET_ACCESS_KEY ??= 'test';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -57,12 +60,16 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests (only if not testing external URL) */
+  /* Run your local dev server before starting the tests (only if not testing external URL).
+   * The command runs `npm run dev`, which triggers `predev` → check-env + db:init. If a required
+   * env var is missing locally, Playwright will fail fast with the same message a fresh clone sees.
+   * We inherit the full parent env so .env.local values (CRON_SECRET, JWT_SECRET, REDDIT_*) reach
+   * the spawned server. The `env` overrides below pin the ones that must be deterministic for tests. */
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
     command: 'PORT=3005 npm run dev',
     url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000,
+    timeout: 60000,
     env: {
       DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000',
       AWS_REGION: process.env.AWS_REGION || 'us-east-1',

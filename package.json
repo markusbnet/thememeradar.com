@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run check:env && npm run db:init",
     "dev": "next dev",
+    "check:env": "tsx --env-file=.env.local scripts/check-env.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -12,7 +14,10 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "db:init": "tsx --env-file=.env.local scripts/init-db.ts"
+    "test:smoke": "tsx --env-file=.env.local scripts/smoke-test.ts",
+    "db:init": "tsx --env-file=.env.local scripts/init-db.ts",
+    "db:reset": "tsx --env-file=.env.local scripts/init-db.ts --reset",
+    "db:seed": "tsx --env-file=.env.local scripts/seed-db.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.699.0",
