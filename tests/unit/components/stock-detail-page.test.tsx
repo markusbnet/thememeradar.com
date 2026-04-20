@@ -319,4 +319,110 @@ describe('StockDetailPage', () => {
 
     expect(screen.getByText('Network error')).toBeInTheDocument();
   });
+
+  it('shows Notable Creators section when enrichment has top_creators', async () => {
+    const withCreators = {
+      ...mockStockDetails,
+      data: {
+        ...mockStockDetails.data,
+        enrichment: {
+          price: 25.0,
+          volume_24h: 1_000_000,
+          percent_change_24h: 5,
+          social_dominance: 3,
+          galaxy_score: 60,
+          sentiment: 4,
+          engagements: 50_000,
+          mentions_cross_platform: 200,
+          engagements_by_network: {},
+          top_creators: [
+            { screen_name: 'influencer1', network: 'twitter', influencer_rank: 10, followers: 500_000, posts: 5, engagements: 10_000 },
+          ],
+        },
+      },
+    };
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: () => Promise.resolve(withCreators),
+    });
+
+    await act(async () => {
+      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Notable Creators')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('@influencer1')).toBeInTheDocument();
+  });
+
+  it('shows Notable badge for creator with rank <= 100', async () => {
+    const withNotableCreator = {
+      ...mockStockDetails,
+      data: {
+        ...mockStockDetails.data,
+        enrichment: {
+          price: 25.0,
+          volume_24h: 1_000_000,
+          percent_change_24h: 5,
+          social_dominance: 3,
+          galaxy_score: 60,
+          sentiment: 4,
+          engagements: 50_000,
+          mentions_cross_platform: 200,
+          engagements_by_network: {},
+          top_creators: [
+            { screen_name: 'topinfluencer', network: 'reddit', influencer_rank: 50, followers: 80_000, posts: 3, engagements: 5_000 },
+          ],
+        },
+      },
+    };
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: () => Promise.resolve(withNotableCreator),
+    });
+
+    await act(async () => {
+      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('@topinfluencer')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Notable')).toBeInTheDocument();
+  });
+
+  it('does not show Notable Creators section when enrichment has no top_creators', async () => {
+    const withoutCreators = {
+      ...mockStockDetails,
+      data: {
+        ...mockStockDetails.data,
+        enrichment: {
+          price: 25.0,
+          volume_24h: 1_000_000,
+          percent_change_24h: 5,
+          social_dominance: 3,
+          galaxy_score: 60,
+          sentiment: 4,
+          engagements: 50_000,
+          mentions_cross_platform: 200,
+          engagements_by_network: {},
+          top_creators: [],
+        },
+      },
+    };
+    (global.fetch as jest.Mock).mockResolvedValue({
+      json: () => Promise.resolve(withoutCreators),
+    });
+
+    await act(async () => {
+      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('$TSLA')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Notable Creators')).not.toBeInTheDocument();
+  });
 });

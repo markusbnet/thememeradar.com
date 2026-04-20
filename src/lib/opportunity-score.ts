@@ -1,5 +1,6 @@
 import type { TrendingStock } from '@/lib/db/storage';
 import type { StoredEnrichment } from '@/lib/db/enrichment';
+import { normalizeCreatorScore } from '@/lib/creators';
 
 export type SignalLevel = 'hot' | 'rising' | 'watch' | 'none';
 
@@ -38,10 +39,8 @@ function normalizeVolumeChange(pctChange: number): number {
   return Math.min(pctChange * 5, 100);
 }
 
-// top_creators: 1 creator → 20, 5+ → 100
 function normalizeCreatorInfluence(creators: StoredEnrichment['top_creators']): number {
-  if (!creators || creators.length === 0) return 0;
-  return Math.min(creators.length * 20, 100);
+  return normalizeCreatorScore(creators || []);
 }
 
 export function classifySignalLevel(score: number): SignalLevel {

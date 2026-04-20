@@ -115,15 +115,10 @@ describe('computeOpportunityScore', () => {
     expect(result.subScores.socialDominance).toBe(100);
   });
 
-  it('5 creators yields creatorInfluence sub-score 100', () => {
-    const creators = Array.from({ length: 5 }, (_, i) => ({
-      screen_name: `user${i}`,
-      network: 'twitter',
-      influencer_rank: i + 1,
-      followers: 100000,
-      posts: 3,
-      engagements: 5000,
-    }));
+  it('top-ranked creator (rank=1, 1M followers) yields creatorInfluence sub-score 100', () => {
+    const creators = [
+      { screen_name: 'influencer', network: 'twitter', influencer_rank: 1, followers: 1_000_000, posts: 5, engagements: 50000 },
+    ];
     const result = computeOpportunityScore(baseStock, { ...baseEnrichment, top_creators: creators });
     expect(result.subScores.creatorInfluence).toBe(100);
   });
@@ -134,15 +129,15 @@ describe('computeOpportunityScore', () => {
   });
 
   it('weighted sum matches manual calculation', () => {
-    // velocity=500→100, sentiment=1→100, social_dominance=20→100, pct_change=20→100, 5 creators→100
+    // velocity=500→100, sentiment=1→100, social_dominance=20→100, pct_change=20→100, rank=1+1M followers→100
     const stock = { ...baseStock, velocity: 500, sentimentScore: 1 };
     const enrichment = {
       ...baseEnrichment,
       percent_change_24h: 20,
       social_dominance: 20,
-      top_creators: Array.from({ length: 5 }, (_, i) => ({
-        screen_name: `u${i}`, network: 'twitter', influencer_rank: 1, followers: 100000, posts: 1, engagements: 1000,
-      })),
+      top_creators: [
+        { screen_name: 'influencer', network: 'twitter', influencer_rank: 1, followers: 1_000_000, posts: 1, engagements: 1000 },
+      ],
     };
     const result = computeOpportunityScore(stock, enrichment);
     // 100*0.25 + 100*0.15 + 100*0.20 + 100*0.25 + 100*0.15 = 100

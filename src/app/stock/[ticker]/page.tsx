@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { checkAuth } from '@/lib/auth/client';
 import StockChart from '@/components/StockChart';
 import CollapsibleSection from '@/components/CollapsibleSection';
+import { detectCreatorSignal } from '@/lib/creators';
+import type { LunarCrushCreator } from '@/types/lunarcrush';
 
 interface StockDetails {
   ticker: string;
@@ -45,6 +47,7 @@ interface StockEnrichment {
   engagements: number;
   mentions_cross_platform: number;
   engagements_by_network: Record<string, number>;
+  top_creators?: LunarCrushCreator[];
 }
 
 interface PriceSnapshot {
@@ -431,6 +434,36 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                     {keyword}
                   </span>
                 ))}
+              </div>
+            </CollapsibleSection>
+          </div>
+        )}
+
+        {/* Notable Creators */}
+        {enrichment?.top_creators && enrichment.top_creators.length > 0 && (
+          <div className="mt-8">
+            <CollapsibleSection title="Notable Creators">
+              <div className="space-y-3">
+                {enrichment.top_creators.map((creator, i) => {
+                  const isNotable = detectCreatorSignal([creator]);
+                  return (
+                    <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">@{creator.screen_name}</span>
+                          {isNotable && (
+                            <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded font-semibold">Notable</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 capitalize">{creator.network} · Rank #{creator.influencer_rank}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">{creator.followers >= 1_000_000 ? `${(creator.followers / 1_000_000).toFixed(1)}M` : creator.followers >= 1_000 ? `${(creator.followers / 1_000).toFixed(0)}K` : creator.followers} followers</p>
+                        <p className="text-xs text-gray-400">{creator.engagements.toLocaleString()} engagements</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CollapsibleSection>
           </div>
