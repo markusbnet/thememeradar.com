@@ -15,6 +15,8 @@ import type { Timeframe } from '@/lib/db/storage';
 interface TrendingStock {
   ticker: string;
   mentionCount: number;
+  mentionsPrev?: number;
+  mentionDelta?: number;
   sentimentScore: number;
   sentimentCategory: string;
   velocity: number;
@@ -296,6 +298,8 @@ export default function DashboardPage() {
                   rank={index + 1}
                   ticker={stock.ticker}
                   mentionCount={stock.mentionCount}
+                  mentionsPrev={stock.mentionsPrev}
+                  mentionDelta={stock.mentionDelta}
                   sentimentScore={stock.sentimentScore}
                   sentimentCategory={stock.sentimentCategory}
                   velocity={stock.velocity}
@@ -340,6 +344,8 @@ export default function DashboardPage() {
                   rank={index + 1}
                   ticker={stock.ticker}
                   mentionCount={stock.mentionCount}
+                  mentionsPrev={stock.mentionsPrev}
+                  mentionDelta={stock.mentionDelta}
                   sentimentScore={stock.sentimentScore}
                   sentimentCategory={stock.sentimentCategory}
                   velocity={stock.velocity}

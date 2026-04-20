@@ -130,6 +130,48 @@ describe('StockCard', () => {
     });
   });
 
+  describe('mention count and delta display', () => {
+    it('renders mentionCount formatted with commas', () => {
+      render(<StockCard {...defaultProps} mentionCount={1243} />);
+      expect(screen.getByText('1,243')).toBeInTheDocument();
+    });
+
+    it('renders positive mentionDelta with + prefix and "vs prev" label', () => {
+      render(<StockCard {...defaultProps} mentionCount={1243} mentionsPrev={123} mentionDelta={1120} />);
+      expect(screen.getByText('+1,120 vs prev')).toBeInTheDocument();
+    });
+
+    it('renders negative mentionDelta with - prefix and "vs prev" label', () => {
+      render(<StockCard {...defaultProps} mentionCount={50} mentionsPrev={200} mentionDelta={-150} />);
+      expect(screen.getByText('-150 vs prev')).toBeInTheDocument();
+    });
+
+    it('renders "NEW" when mentionsPrev is 0', () => {
+      render(<StockCard {...defaultProps} mentionCount={8} mentionsPrev={0} mentionDelta={8} />);
+      expect(screen.getByText('NEW')).toBeInTheDocument();
+    });
+
+    it('does not render velocity as Infinity% or NaN%', () => {
+      render(<StockCard {...defaultProps} velocity={0} mentionsPrev={0} mentionDelta={0} />);
+      expect(screen.queryByText(/Infinity%/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/NaN%/)).not.toBeInTheDocument();
+    });
+
+    it('does not show delta when mentionDelta and mentionsPrev are not provided', () => {
+      render(<StockCard {...defaultProps} />);
+      expect(screen.queryByText(/vs prev/)).not.toBeInTheDocument();
+      expect(screen.queryByText('NEW')).not.toBeInTheDocument();
+    });
+
+    it('has flex-col sm:flex-row layout for the mention count container', () => {
+      const { container } = render(
+        <StockCard {...defaultProps} mentionCount={500} mentionsPrev={100} mentionDelta={400} />
+      );
+      const flexContainer = container.querySelector('.flex-col.sm\\:flex-row');
+      expect(flexContainer).toBeInTheDocument();
+    });
+  });
+
   describe('staleness display', () => {
     const priceProps = { price: 24.50, changePct24h: 3.21 };
 

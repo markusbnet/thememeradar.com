@@ -41,6 +41,8 @@ export interface StoredEvidence {
 export interface TrendingStock {
   ticker: string;
   mentionCount: number;
+  mentionsPrev: number;  // mentions in previous window (0 if new stock)
+  mentionDelta: number;  // mentionCount - mentionsPrev
   sentimentScore: number;
   sentimentCategory: string;
   velocity: number; // % change from previous period
@@ -325,6 +327,8 @@ export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe
       trending.push({
         ticker,
         mentionCount: current,
+        mentionsPrev: previous,
+        mentionDelta: current - previous,
         sentimentScore: data.sentimentScore,
         sentimentCategory: data.sentimentCategory,
         velocity,

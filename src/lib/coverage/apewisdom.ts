@@ -113,9 +113,12 @@ export function mergeCoverage(
 
   for (const [key, awRow] of awMap) {
     if (!seen.has(key)) {
+      const prev = awRow.mentions_24h_ago;
       merged.push({
         ticker: awRow.ticker,
         mentionCount: awRow.mentions,
+        mentionsPrev: prev,
+        mentionDelta: awRow.mentions - prev,
         sentimentScore: 0,
         sentimentCategory: 'neutral',
         velocity: awVelocity(awRow),

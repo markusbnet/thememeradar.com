@@ -12,6 +12,8 @@ interface StockCardProps {
   rank: number;
   ticker: string;
   mentionCount: number;
+  mentionsPrev?: number;
+  mentionDelta?: number;
   sentimentScore: number;
   sentimentCategory: string;
   velocity: number;
@@ -34,6 +36,8 @@ export default function StockCard({
   rank,
   ticker,
   mentionCount,
+  mentionsPrev,
+  mentionDelta,
   sentimentScore,
   sentimentCategory,
   velocity,
@@ -155,11 +159,20 @@ export default function StockCard({
           </div>
         )}
 
-        {/* Mention count */}
+        {/* Mention count + delta */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
           <div>
             <p className="text-sm text-gray-500">Mentions</p>
-            <p className="text-lg font-semibold text-gray-900">{mentionCount.toLocaleString()}</p>
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+              <p className="text-lg font-semibold text-gray-900">{mentionCount.toLocaleString()}</p>
+              {mentionDelta !== undefined && mentionsPrev !== undefined && (
+                <p className={`text-xs font-medium ${mentionDelta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {mentionsPrev === 0
+                    ? 'NEW'
+                    : `${mentionDelta >= 0 ? '+' : ''}${mentionDelta.toLocaleString()} vs prev`}
+                </p>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Sentiment Score</p>

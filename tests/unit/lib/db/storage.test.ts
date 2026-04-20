@@ -407,6 +407,11 @@ describe('Storage Layer', () => {
   });
 
   describe('getTrendingStocks', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+      clearRankSnapshotCache();
+    });
+
     it('should return an array', async () => {
       const result = await getTrendingStocks(10);
       expect(Array.isArray(result)).toBe(true);
@@ -486,6 +491,71 @@ describe('Storage Layer', () => {
       expect(stock).toHaveProperty('sentimentCategory');
       expect(stock).toHaveProperty('velocity');
       expect(stock).toHaveProperty('timestamp');
+    });
+
+    it('should include mentionsPrev field in each result', async () => {
+      // Use frozen time so we control exactly which window each seed falls into.
+      // The 24h timeframe scan covers [now-48h, now].
+      // currentWindowStart = now - 24h; anything before that goes to previousMap.
+      const frozen = roundToInterval(new Date('2025-08-01T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 24 * 60 * 60 * 1000;
+      // Seed 8 mentions in the previous window (> 24h ago but within 48h)
+      await seedMention({ ticker: 'MPREV', timestamp: frozen - windowMs - 15 * 60 * 1000, mentionCount: 8, sentimentCategory: 'neutral' });
+      // Seed 12 mentions in the current window (within last 24h)
+      await seedMention({ ticker: 'MPREV', timestamp: frozen - 15 * 60 * 1000, mentionCount: 12, sentimentCategory: 'neutral' });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'MPREV');
+      expect(stock).toBeDefined();
+      expect(stock).toHaveProperty('mentionsPrev');
+      expect(typeof stock!.mentionsPrev).toBe('number');
+      expect(stock!.mentionsPrev).toBe(8);
+    });
+
+    it('should include mentionDelta field in each result', async () => {
+      const frozen = roundToInterval(new Date('2025-08-02T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 24 * 60 * 60 * 1000;
+      // 10 mentions in previous window
+      await seedMention({ ticker: 'MDELTA', timestamp: frozen - windowMs - 15 * 60 * 1000, mentionCount: 10, sentimentCategory: 'neutral' });
+      // 30 mentions in current window
+      await seedMention({ ticker: 'MDELTA', timestamp: frozen - 15 * 60 * 1000, mentionCount: 30, sentimentCategory: 'neutral' });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'MDELTA');
+      expect(stock).toBeDefined();
+      expect(stock).toHaveProperty('mentionDelta');
+      expect(typeof stock!.mentionDelta).toBe('number');
+      expect(stock!.mentionDelta).toBe(20); // 30 - 10 = 20
+    });
+
+    it('should set mentionsPrev=0 and mentionDelta=mentionCount for new stocks', async () => {
+      const frozen = roundToInterval(new Date('2025-08-03T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      // No previous data — only current window
+      await seedMention({ ticker: 'MNEWTICKER', timestamp: frozen - 15 * 60 * 1000, mentionCount: 7, sentimentCategory: 'neutral' });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'MNEWTICKER');
+      expect(stock).toBeDefined();
+      expect(stock!.mentionsPrev).toBe(0);
+      expect(stock!.mentionDelta).toBe(stock!.mentionCount);
+    });
+
+    it('should compute mentionDelta as mentionCount minus mentionsPrev', async () => {
+      const frozen = roundToInterval(new Date('2025-08-04T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 24 * 60 * 60 * 1000;
+      // 50 mentions in previous window
+      await seedMention({ ticker: 'MDIFF', timestamp: frozen - windowMs - 15 * 60 * 1000, mentionCount: 50, sentimentCategory: 'bullish' });
+      // 75 mentions in current window
+      await seedMention({ ticker: 'MDIFF', timestamp: frozen - 15 * 60 * 1000, mentionCount: 75, sentimentCategory: 'bullish' });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'MDIFF');
+      expect(stock).toBeDefined();
+      expect(stock!.mentionDelta).toBe(stock!.mentionCount - stock!.mentionsPrev);
     });
   });
 
