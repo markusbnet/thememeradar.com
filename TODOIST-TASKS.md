@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-17 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-20 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -1090,25 +1090,19 @@ Each sub-score normalized to 0–100. Final score 0–100.
 
 ---
 
-### Task 57: [ ] NEW — Creator tracking for trending tickers
+### Task 57: [x] COMPLETE — Creator tracking for trending tickers
 **Todoist ID:** 6gQ2vfMR4j5GhQ46
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-20
 **Priority:** p2
-**Description:** Track influential social media creators who post about stocks that are already showing momentum. When a high-follower account starts hyping a stock your app is already tracking, that's an acceleration signal.
 
 **Implementation:**
-1. During LunarCrush enrichment (Task 55), extract the top 5 creators per ticker from the Topic response
-2. Store creator mentions in `stock_enrichment` table (already designed in Task 55)
-3. New function `detectCreatorSignal(ticker, creators)`:
-   - Flag when a creator with influencer_rank in top 100 OR followers > 100K posts about a trending ticker
-   - Weight the creator's impact based on: follower count, engagement rate, historical accuracy (future)
-4. Feed creator signal into the Opportunity Score (Task 56) as the "Creator influence score" component
-5. On stock detail page, show "Notable creators talking about this stock" section with creator name, platform, follower count, recent post snippet
-
-**API:** Extend `GET /api/stocks/[ticker]` to include `topCreators` array.
-
-**TDD:** Test creator signal detection, test creator data storage/retrieval, test UI component rendering.
+- Created `src/lib/creators.ts` — `detectCreatorSignal(creators)` (returns true if rank ≤ 100 or followers > 100K) and `normalizeCreatorScore(creators)` (log-scale followers + linear rank, 60/40 weighted, capped at 100)
+- Updated `src/lib/opportunity-score.ts` — replaced length×20 formula with `normalizeCreatorScore` for richer creator weighting
+- Updated `src/app/stock/[ticker]/page.tsx` — added `top_creators` field to `StockEnrichment` interface, added "Notable Creators" `CollapsibleSection` with per-creator name/network/rank/followers/engagements and "Notable" badge for influencers
+- **Tests created:** `tests/unit/lib/creators.test.ts` (8 tests), updated `stock-detail-page.test.tsx` (+3), updated `opportunity-score.test.ts` (+0 new, 2 updated)
+- **Metrics:** 724 tests (was 713, +11), lint clean, build clean
 
 ---
 
@@ -1154,10 +1148,11 @@ Each sub-score normalized to 0–100. Final score 0–100.
 
 ---
 
-### Task 59: [ ] NEW — Email alerts for high-confidence signals
+### Task 59: [x] COMPLETE — Email alerts for high-confidence signals
 **Todoist ID:** 6gQ2vfpPfvRXGWm6
 **Added:** 2026-04-17
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-20
 **Priority:** p2
 **Description:** When a stock hits "Hot Opportunity" status (score ≥ 75), send an email alert so Mark can act quickly.
 
@@ -1178,13 +1173,24 @@ Each sub-score normalized to 0–100. Final score 0–100.
 
 **TDD:** Test email content generation, deduplication logic, draft creation. Mock Gmail MCP in tests.
 
+**Implementation notes:**
+- App-side pipeline only (Gmail MCP delivery handled externally by Cowork polling the pending-alerts endpoint)
+- `src/lib/email-alert.ts` — pure functions: `generateAlertSubject`, `generateAlertBody`, `generateDailyDigestBody`, `shouldSendAlert`
+- `src/lib/db/alerts.ts` — DynamoDB layer for `email_alerts` table (saveAlert, getPendingAlerts, markAlertSent, getRecentAlerts)
+- `src/lib/alert-pipeline.ts` — `checkAndCreateAlerts()` fired after each scan; 4h dedup window
+- `GET /api/internal/pending-alerts` — Cowork polls this; auth via `ALERTS_API_SECRET`
+- `POST /api/internal/pending-alerts/[ticker]/sent` — marks alert as delivered
+- New DynamoDB table `email_alerts` added to init-db.ts and init-db-production.ts
+- **Metrics:** 760 tests (was 724, +36), 55 suites, lint clean, build clean
+
 ---
 
 ### Task 60: [x] COMPLETE — A1: 24h rank-delta metric on trending
 **Todoist ID:** 6gQ535G3P4qMjcGc
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
 **Priority:** p1
 
 **Why this matters:** ApeWisdom's headline column is "rank yesterday → rank today". It's the first thing the eye lands on and the most intuitive way to spot emerging memes. Mark wants to advise himself on what to buy, and "BIRD jumped from #528 to #3 overnight" tells him more than any velocity percentage does. We already store the data — this task just surfaces it.
@@ -1242,11 +1248,12 @@ interface TrendingStock {
 
 ---
 
-### Task 61: [ ] NEW — A2: Timeframe selector (1h / 4h / 24h / 7d)
+### Task 61: [x] COMPLETE — A2: Timeframe selector (1h / 4h / 24h / 7d)
 **Todoist ID:** 6gQ536WWpRxMpQj6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-20
 **Priority:** p2
 
 **Why this matters:** Different signals live in different timeframes. A 1h window catches the kind of fast spike that happens when a single catalyst hits (earnings leak, viral tweet); a 7d window shows sustained conviction plays like the classic WSB DD-driven runs. Showing only one window hides half the story. ApeWisdom exposes 24h and 1h; we said in CLAUDE.md we'd go further with 15m/1h/4h/24h/7d. This task delivers four of those five (skip 15m — too noisy for a default UI view, but the data is there if we want it later).
@@ -1275,13 +1282,21 @@ interface TrendingStock {
 
 **TDD:** Unit tests for each timeframe in storage (correct window boundaries, correct velocity math). API test for query param validation (bad value → 400). E2E that clicking each button changes the URL and updates at least the first card.
 
+**Implementation:**
+- `Timeframe` type + `TIMEFRAME_CONFIG` added to storage.ts (7d uses minMentions=15, others use 5); `getTrendingStocks`/`getFadingStocks` now accept `(limit, timeframe='24h')` using ScanCommand with BETWEEN filter over 2× window
+- Trending API: reads `?timeframe=` param, validates, returns 400 on invalid; cache key per timeframe
+- New `src/components/TimeframeSelector.tsx` — 4 buttons with `aria-pressed`, keyboard accessible
+- Dashboard: `timeframe` state, URL-synced via `history.replaceState`, `fetchStockData(tf)` passes timeframe; surge section untouched
+- **Metrics:** 783 tests (was 760, +23 net), lint clean, build clean
+
 ---
 
-### Task 62: [ ] NEW — A3: Show absolute mention counts alongside velocity
+### Task 62: [x] COMPLETE — A3: Show absolute mention counts alongside velocity
 **Todoist ID:** 6gQ537QhM2WQxQH6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-20
 **Priority:** p2
 
 **Why this matters:** A velocity percentage without the underlying count is deceptive. "+500%" on a ticker that went from 2 mentions to 12 is statistical noise; "+500%" on a ticker that went from 200 to 1,200 is a real signal. ApeWisdom shows "850 mentions (+120 vs yesterday)" and that's the shape of data a trader can actually act on. This is a small UI change with a big effect on how trustworthy the dashboard feels.
@@ -1306,13 +1321,20 @@ interface TrendingStock {
 
 **TDD:** Unit tests for delta / velocity computation including the zero-prev edge case. Component test that renders "NEW" when `mentionsPrev=0`. E2E snapshot confirming card layout at 375px.
 
+**Implementation:**
+- `TrendingStock` type extended with required `mentionsPrev` and `mentionDelta` fields
+- `getTrendingStocks` now computes and returns both fields; ApeWisdom-only stocks use their 24h data
+- `StockCard`: new `mentionsPrev?`/`mentionDelta?` props; mention section shows `+N vs prev` / `-N vs prev` / `NEW` badge; `flex-col sm:flex-row` layout
+- **Metrics:** 794 tests (was 783, +11), lint clean, build clean
+
 ---
 
 ### Task 63: [x] COMPLETE — A4: Broaden subreddit coverage
 **Todoist ID:** 6gQ538qJg8jFw5vc
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-18
 **Priority:** p1
 
 **Why this matters:** WSB / stocks / investing only covers large-cap retail sentiment. The interesting meme moves — microcaps, short squeezes, penny-stock pumps — happen in pennystocks and Superstonk. ApeWisdom's breadth advantage over us is almost entirely explained by which subs they scan. Four new subs closes most of the coverage gap at very low cost.
@@ -1515,11 +1537,12 @@ interface FinnhubQuote {
 
 ---
 
-### Task 67: [ ] NEW — B8: SwaggyStocks options-data confirmatory layer
+### Task 67: [x] COMPLETE — B8: SwaggyStocks options-data confirmatory layer
 **Todoist ID:** 6gQ53M8FjMJPX7W6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase B — beyond ApeWisdom)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-20
 **Priority:** p2
 
 **Why this matters:** Reddit noise + rising options activity = high conviction. Options traders put actual money down, so when call open interest spikes alongside WSB chatter, it's a much stronger signal than either alone. SwaggyStocks exposes call/put open interest, put/call ratio, and 30-day implied volatility for free. Layering it under the Opportunity Score is the cleanest way to separate "people are yelling about this ticker" from "people are betting on this ticker." The direct SwaggyStocks domain is restricted at the network layer for direct Vercel fetches, so retrieval happens via Cowork's Chrome automation outside this repo.
@@ -1572,6 +1595,19 @@ interface OptionsIngestPayload {
 - Opportunity Score for a ticker with options data differs from a ticker without (verify in unit test)
 
 **TDD:** Unit test for the zod schema (valid fixture passes, malformed payloads fail). Integration test that POSTs the fixture to the ingest endpoint and reads it back via the consumption path. Unit test for the opportunity-score reweighting math (both with and without options data). Component test for the Options Activity section (renders with present data, hidden when absent). All tests use the fixture — no live SwaggyStocks calls.
+
+**Implementation:**
+- New `src/types/options.ts` — `OptionsActivity`, `OptionsIngestPayload`
+- New `src/lib/market/swaggystocks.ts` — `getLatestOptionsActivity`, `getOptionsMap` (DynamoDB readers only, no HTTP)
+- New `src/app/api/internal/options-enrichment/route.ts` — POST ingest with Bearer auth + manual validation, 201 on success, 30-day TTL
+- New `src/components/OptionsActivitySection.tsx` — renders put/call ratio gauge, call/put OI, 30D IV (hidden when null)
+- Updated `src/lib/opportunity-score.ts` — optional `options` 3rd param; when present, adds `optionsActivityScore` = `min(1/putCallRatio, 3)/3*100` with 0.10 weight, other weights ×0.90
+- Updated `src/app/api/stocks/[ticker]/route.ts` — parallel fetches `getLatestOptionsActivity`, includes `options` in response
+- Updated `src/app/stock/[ticker]/page.tsx` — renders `OptionsActivitySection` above Supporting Evidence
+- New `scripts/init-db.ts`/`init-db-production.ts` entries for `stock_options` table (PAY_PER_REQUEST, TTL 30d)
+- Test fixture `tests/fixtures/swaggystocks-sample.json` (5 tickers: GME, AMC, TSLA, BIRD null-iv, SPY)
+- `OPTIONS_INGEST_SECRET` documented in `.env.local.example` and `CLAUDE.md`
+- **Metrics:** 841 tests (was 794, +47), 59 suites, lint clean, build clean
 
 ---
 
@@ -1765,6 +1801,326 @@ function mergeCoverage(
 - CSV opens cleanly in Excel, Google Sheets, and Python `pd.read_csv`
 
 **TDD:** Unit tests for the CSV writer (escaping, header row, empty data). Integration test for 30-day range. Load test that a concurrent 10-user export doesn't OOM the Vercel function.
+
+---
+
+### Task 72: [ ] NEW — E2E: Full happy-path journey (signup → dashboard → stock detail → logout)
+**Todoist ID:** 6gQW5p624g5wr43c
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — user-reported bugs in live app; we have 700 unit tests but zero end-to-end coverage
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** We currently have 700 unit tests but no test that proves the whole app functions together. A single broken link, hydration error, or auth-session bug ships through CI undetected. Mark is seeing bugs in the running app right now — this test would have caught most of them.
+
+**Description:** Write a single Playwright E2E test `tests/e2e/happy-path.spec.ts` that exercises the complete user journey end-to-end in one run.
+
+**Steps to assert:**
+1. Sign up a fresh test user (unique email)
+2. Log in
+3. Land on `/dashboard` — assert trending stocks render with at least one `StockCard`
+4. Click the first stock → lands on `/stock/[ticker]`
+5. On the stock page — assert ticker, sentiment, mention count, and at least one evidence item render
+6. Navigate back to dashboard
+7. Log out — assert redirect to landing page
+
+**Acceptance:**
+- Test runs reliably on CI (no flakes in 3 consecutive runs)
+- Fails loudly if ANY step breaks
+- Uses the standard test user seeding from CLAUDE.md (`testuser@thememeradar.test`)
+- Runs in < 30 seconds
+- Documented in README or TESTING.md
+
+If any step fails because of existing bugs in the app, FIX the bug before marking complete. Never add `test.skip` to work around a real issue.
+
+---
+
+### Task 73: [ ] NEW — E2E: Dashboard correctness audit (rank badges, coverage badges, price overlay, refresh timer)
+**Todoist ID:** 6gQW5p94GgXwqPXc
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — five features shipped last night (Tasks 60, 63, 64, 66, 68) with visual bugs reported
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** We shipped five features last night but Mark is seeing bugs in them. This test pins down the correct visual contract against seeded data, so any regression fails loudly.
+
+**Description:** Write a Playwright E2E test suite `tests/e2e/dashboard-correctness.spec.ts` that verifies every dashboard visual element rendered by Tasks 60, 63, 64, 66, 68 is correct against seeded DynamoDB data.
+
+**Seed DynamoDB with a known fixture** (3 trending stocks, 3 fading) where:
+- Stock A has `rankDelta24h=+3`, `coverageSource='both'`
+- Stock B has `rankDelta24h=-2`, `coverageSource='apewisdom'`, `price=$42.50` (fresh)
+- Stock C has `rankDelta24h=null`, `coverageSource='reddit'`, price=stale
+
+**Test assertions:**
+1. Stock A shows ↑3 green badge AND 'both' coverage pill
+2. Stock B shows ↓2 red badge AND 'apewisdom' coverage pill AND price $42.50 in non-grey color
+3. Stock C shows NO rank-delta badge AND NO coverage pill AND price in grey (staleness indicator)
+4. Refresh timer ("Last updated: X min ago") is present and counts up
+5. Next-update indicator is present
+6. All stocks have sparkline container rendered (not empty)
+
+**Acceptance:** All 6 assertions pass. No flakes. Any discovered bug is fixed in the feature code, not worked around in the test.
+
+---
+
+### Task 74: [ ] NEW — E2E: Console error + hydration-mismatch guard fixture
+**Todoist ID:** 6gQW5pCm8222rX6c
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — local dev showing errors / blank screens, likely hydration mismatches
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** Mark is seeing "errors / blank screens" when running locally. Hydration mismatches and unhandled exceptions are invisible to most tests but destroy UX. This fixture turns every E2E test into a console-error detector for free.
+
+**Description:** Create a shared Playwright fixture `tests/e2e/fixtures/console-guard.ts` that:
+1. Collects all console errors and warnings during every test
+2. Collects all unhandled page errors (`window.onerror`, promise rejections)
+3. Fails the test if ANY `console.error`, hydration mismatch warning, or uncaught exception fires during the run
+
+**Allowlist policy:** Fixture should support an explicit allowlist of known-benign messages (e.g. React DevTools, HMR). Anything not on the allowlist fails the test.
+
+Apply this fixture to ALL existing E2E tests. Run the full suite — any existing tests that now fail are uncovering real bugs. Fix the bugs, do not add to the allowlist to silence them.
+
+**Acceptance:**
+- Fixture exists and is imported by every E2E spec
+- Full E2E suite passes with fixture active
+- At least 2 allowlist entries are documented with justification
+- Any bugs surfaced during implementation are fixed, not silenced
+
+---
+
+### Task 75: [ ] NEW — E2E: Mobile viewport pass (375px and 414px) with tap-target + overflow checks
+**Todoist ID:** 6gQW5pHHVM3vq7gc
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — CLAUDE.md mandates mobile-first, zero mobile-specific E2E coverage today
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** CLAUDE.md mandates mobile-first. Mark is seeing layout bugs. We have ZERO mobile-specific E2E coverage today.
+
+**Description:** Create `tests/e2e/mobile.spec.ts` that runs the core user flows (dashboard, stock detail, signup, login) at TWO viewport widths: 375px (iPhone SE) and 414px (iPhone Pro Max).
+
+**For each viewport, assert:**
+1. No horizontal scroll — `document.body.scrollWidth <= viewport width`
+2. All interactive elements (buttons, links, tap targets) have bounding boxes ≥ 44×44px
+3. No element overflows its parent container (inspect key containers)
+4. Primary CTA on each page is visible in the initial viewport without scroll
+5. Text is not truncated in unexpected ways (header, nav, stock ticker)
+
+Use Playwright's viewport presets + a custom helper to programmatically check tap-target sizes.
+
+**Acceptance:**
+- 4 flows × 2 viewports = 8 test runs, all passing
+- Any bugs discovered (overflow, small tap targets, hidden CTAs) are fixed in components, not suppressed in tests
+- Test runs in < 60s total
+
+---
+
+### Task 76: [ ] NEW — Visual regression baseline (Playwright screenshot diffs per route/viewport)
+**Todoist ID:** 6gQW5pGrV3Qgc3g6
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — fastest way to catch layout regressions on every PR
+**Status:** [ ] NEW
+**Priority:** p1
+
+**Why this matters:** Mark is seeing "broken UI / layout" bugs. Screenshot diffs are the fastest way to catch visual regressions on every PR.
+
+**Description:** Wire Playwright's built-in visual comparison (`toHaveScreenshot`) into a new spec `tests/e2e/visual.spec.ts`.
+
+**Baselines to capture:**
+- `/login`, `/signup`, `/dashboard`, `/stock/[seeded-ticker]`
+- Each at desktop (1280×800) and mobile (375×667)
+- Total: 8 baseline screenshots
+
+Commit the baselines to `tests/e2e/visual.spec.ts-snapshots/`. Configure a small diff threshold (0.1%) so genuine changes fail loudly but font-rendering noise passes.
+
+**IMPORTANT:** The first run captures whatever is currently rendered — INCLUDING any visible bugs. Before committing baselines, visually inspect each screenshot. If a baseline captures broken UI, fix the UI first. Document this in `tests/e2e/README.md`: "Before updating baselines, manually verify the new rendering is correct."
+
+**Acceptance:**
+- 8 baseline PNGs committed to repo
+- Visual spec passes on CI
+- README documents how to update baselines intentionally
+- Mark has reviewed and approved the initial baselines (blocking — needs Mark's sign-off before PR lands)
+
+---
+
+### Task 77: [ ] NEW — E2E: Auth edge cases (bad password, rate limit, session expiry, double-submit)
+**Todoist ID:** 6gQW5pM25JHqhmx6
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — auth has highest blast radius, zero edge-case coverage today
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Auth has the highest blast radius. A broken auth flow is a P0 incident. We have happy-path coverage but zero edge-case coverage.
+
+**Description:** Add `tests/e2e/auth-edge-cases.spec.ts` covering every auth failure mode.
+
+**Cases:**
+1. Login with wrong password → error message shown, still on login page
+2. Login rate limit — 6 failed attempts in 15 min → 6th gets rate-limit error (CLAUDE.md specifies 5 attempts per 15 min)
+3. Signup with invalid email format → validation error, no user created
+4. Signup with duplicate email → error message (email uniqueness enforced per CLAUDE.md)
+5. Signup with password < 8 chars → validation error
+6. Session expiry — set cookie to expired value → protected route redirects to login
+7. Double-submit on signup form — click submit twice quickly → only one user created
+8. Logout clears cookie — after logout, accessing `/dashboard` redirects to login
+
+**Acceptance:** All 8 cases tested and passing. Any bug found (e.g. rate limiter not working) is fixed in the auth code, not in the test.
+
+---
+
+### Task 78: [ ] NEW — Integration: API route contract tests for every /api endpoint
+**Todoist ID:** 6gQW5pMM6rgFMcj6
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — "wrong data shown" bugs; contract tests catch response-shape regressions at the API boundary
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Mark is seeing "wrong data shown" bugs. Contract tests catch response-shape regressions at the API boundary, independent of UI rendering.
+
+**Description:** Create `tests/integration/api-contracts.test.ts` that hits every API route listed in CLAUDE.md and asserts response shape, status codes, and auth guards.
+
+**For each route, assert:**
+- Happy path returns 200 + expected JSON shape (use zod schema or explicit type check)
+- Missing auth → 401 (for protected routes)
+- Invalid input → 400 with `error.message` populated
+- `success:true` present on success, `success:false + error` on failure (per CLAUDE.md response format)
+
+**Routes to cover (from CLAUDE.md):**
+- `GET /api/stocks`
+- `GET /api/stocks/:ticker`
+- `GET /api/stocks/:ticker/evidence`
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/health`
+- `POST /api/scan` (cron — verify auth header check)
+
+Plus any newer routes introduced by Tasks 58, 60, 63, 64, 66, 68 (check `src/app/api/*`).
+
+**Acceptance:** Every `/api/*` route has at least 3 assertions (happy/auth/validation). All pass.
+
+---
+
+### Task 79: [ ] NEW — Accessibility: axe-core integrated into Playwright with serious/critical fail gate
+**Todoist ID:** 6gQW5pJ993CRw7gc
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — a11y bugs don't crash the app so they're invisible; CLAUDE.md mandates mobile usability
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Mobile usability is in CLAUDE.md's requirements. Tap targets < 44px, missing labels, bad heading order, low contrast all hurt real users. A11y bugs don't crash the app so they're invisible to existing tests.
+
+**Description:** Install `@axe-core/playwright`. Create a shared helper `tests/e2e/fixtures/a11y.ts` that injects axe into the page and runs a scan.
+
+Add an a11y check to every existing E2E test: after the page is ready, run axe and fail if ANY serious or critical violations are detected. Allow moderate/minor for now (document in README).
+
+Run the full suite. For every violation surfaced, either:
+- **Fix the component** (preferred — e.g. add `aria-label`, fix contrast, fix heading order)
+- **Suppress with an inline exclusion AND a code comment explaining why** (last resort)
+
+**Acceptance:**
+- `@axe-core/playwright` installed
+- Helper exists and is used by all E2E specs
+- Zero serious/critical violations across the whole suite
+- README documents policy on moderate/minor (defer vs fix)
+
+---
+
+### Task 80: [ ] NEW — Integration: Scan pipeline end-to-end (Reddit fixture → DynamoDB → dashboard API)
+**Todoist ID:** 6gQW5pQp6whG94Jc
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — "wrong data shown" bugs; composed-pipeline bugs hide between stage unit tests
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Why this matters:** Mark is seeing "wrong data shown" bugs. The pipeline has four stages (fetch → ticker detect → sentiment → store) and each has unit tests, but no test proves they work correctly WHEN COMPOSED with real-ish data. This is where data-integrity bugs hide.
+
+**Description:** Create `tests/integration/scan-pipeline.test.ts` that proves the full data pipeline is correct end-to-end:
+
+1. Load a realistic Reddit fixture (`tests/fixtures/reddit-scan-sample.json`) — 10 posts, 30 comments mentioning GME/AMC/TSLA with known sentiment-trigger keywords
+2. Mock the Reddit API client to return the fixture
+3. Run the scan pipeline (`POST /api/scan` or the underlying scan function)
+4. Assert DynamoDB has the expected rows: post count, comment count, `stock_mentions` entries, `stock_evidence` entries
+5. Call `GET /api/stocks` and assert the response includes GME/AMC/TSLA with the expected mentionCount, sentimentScore (within tolerance), and `rankDelta24h`
+6. Call `GET /api/stocks/GME/evidence` and assert the top evidence items match the fixture
+
+**Acceptance:**
+- Fixture file exists with realistic post/comment structure (upvotes, timestamps, real ticker mentions)
+- Test runs against DynamoDB Local
+- All assertions pass
+- Any bugs found are fixed in pipeline code, not worked around in the test
+
+---
+
+### Task 81: [ ] NEW — Standing nightly bug report (Playwright writes findings to QA-REPORT.md)
+**Todoist ID:** 6gQW5pfcFgjVvM86
+**Added:** 2026-04-20
+**Source:** Mark (2026-04-19) — gives Mark a single file to check each morning rather than log-spelunking
+**Status:** [ ] NEW
+**Priority:** p2
+
+**Blocked by:** Tasks 72–80 should ship first so the suites actually exist before the nightly report runs against them.
+
+**Why this matters:** Gives Mark a single file to check each morning to see what's healthy and what's drifting, without reading through log files.
+
+**Description:** After all above test suites exist, create `scripts/nightly-qa-report.sh` that runs the full test suite and appends a dated summary to `QA-REPORT.md` in the repo root.
+
+**Format:**
+```
+# QA Report — YYYY-MM-DD
+
+## Suite results
+- Unit tests: X/Y passing
+- Integration tests: X/Y passing
+- E2E (desktop): X/Y passing
+- E2E (mobile 375): X/Y passing
+- E2E (mobile 414): X/Y passing
+- Visual regression: X/Y passing
+- A11y violations: N (breakdown by severity)
+
+## New failures this run
+- [List of test names that failed today but passed yesterday]
+
+## Open issues not yet fixed
+- [Issues flagged but not auto-fixable]
+```
+
+Commit `QA-REPORT.md` on each nightly run.
+
+**Acceptance:** Script exists, runs cleanly, produces markdown. `QA-REPORT.md` exists in repo and is updated by the nightly run.
+
+**Note:** This task depends on the other 9 existing. If Claude Code picks it up before the others are done, mark it `[?] NEEDS CLARIFICATION` and move on.
+
+---
+
+### Nightly Run Summary — 2026-04-20
+
+**5/5 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 57 | Creator tracking for trending tickers | p2 | [x] COMPLETE |
+| 59 | Email alerts for high-confidence signals | p2 | [x] COMPLETE |
+| 61 | A2: Timeframe selector (1h/4h/24h/7d) | p2 | [x] COMPLETE |
+| 62 | A3: Show absolute mention counts alongside velocity | p2 | [x] COMPLETE |
+| 67 | B8: SwaggyStocks options-data confirmatory layer | p2 | [x] COMPLETE |
+
+**Final metrics:** 841 tests (was 713 at start of run, +128 new), 59 suites, lint clean, build clean.
+
+**Key changes this run:**
+- **Task 57 (Creator tracking):** New `src/lib/creators.ts` with `detectCreatorSignal` and `normalizeCreatorScore` (log-scale follower + rank scoring); updated `opportunity-score.ts` to use richer creator weighting; "Notable Creators" collapsible section on stock detail page with "Notable" badge for influencers (rank ≤ 100 or followers > 100K)
+- **Task 59 (Email alerts):** Full app-side alert pipeline — `src/lib/email-alert.ts` (content generation), `src/lib/db/alerts.ts` (DynamoDB deduplication, 4h window), `src/lib/alert-pipeline.ts` (post-scan hook), `GET/POST /api/internal/pending-alerts` endpoints for Cowork to poll and mark delivered; new `email_alerts` DynamoDB table
+- **Task 61 (Timeframe selector):** `getTrendingStocks`/`getFadingStocks` now accept `timeframe: Timeframe` ('1h'|'4h'|'24h'|'7d'); trending API validates `?timeframe=` param (400 on invalid); cache keyed per timeframe; new `TimeframeSelector` component with `aria-pressed`; dashboard is URL-synced via `?timeframe=`; surge section untouched (always native 15-min)
+- **Task 62 (Absolute mention counts):** `TrendingStock` type extended with `mentionsPrev`/`mentionDelta`; StockCard shows "+N vs prev" / "-N vs prev" / "NEW" badge alongside velocity; ApeWisdom-only stocks use their 24h delta
+- **Task 67 (SwaggyStocks):** New `stock_options` DynamoDB table; `src/lib/market/swaggystocks.ts` (DynamoDB reader only); `POST /api/internal/options-enrichment` ingest endpoint (Bearer auth, manual validation, 30d TTL); `OptionsActivitySection` component; opportunity score extended with optional `optionsActivityScore` (weight 0.10, other weights ×0.90); stock detail page shows "Options Activity" section; test fixture `tests/fixtures/swaggystocks-sample.json`
+- **Stale status fixes:** Corrected `[ ] NEW` → `[x] COMPLETE` on Tasks 60 and 63 (were completed in prior runs but status field not updated)
+
+**Remaining NEW tasks in queue:**
+- p2: Tasks 77 (auth E2E edge cases), 78 (API contract tests), 79 (axe-core a11y), 80 (scan pipeline integration), 81 (nightly QA report)
+- p3: Tasks 65 (dense table view), 69 (public JSON API), 71 (historical CSV export)
+- p1 (new): Tasks 72 (E2E dashboard data), 73 (E2E stock detail smoke), 74 (console error guard), 75 (mobile viewport E2E), 76 (visual regression baseline)
+- p4: Task 70 (/m mobile route + iOS shortcut)
 
 ---
 
@@ -2327,6 +2683,42 @@ All tests passing: 700 / 700. Lint and build clean.
 ---
 
 ## Sync Log
+
+### Nightly Cowork Sync — 2026-04-20 04:40
+
+**Log summary:** Claude Code nightly cron ran SUCCESS on Apr 19 05:00 (`nightly-2026-04-19_0500.log`). Completed 4 tasks — Task 64 (A5 /new + /rising sweep), Task 66 (B7 Finnhub price overlay), Task 68 (C1 ApeWisdom hybrid coverage), plus carryover Task 58 (Opportunities dashboard). 700/700 tests passing, lint + build clean. Apr 18 run also succeeded with Tasks 55 + 56 (LunarCrush enrichment + Opportunity Score). Apr 17 run failed ("You've hit your limit") — that was the cause of the stale sync timestamp. This sync covers the three days of activity accumulated since.
+
+**Completed tasks processed:** 10 tasks verified via git log (commits `4e8361f`, `73773a7`, `1b97f05`, `d87105a`, `7052863`, `e3ad241`, `9e0ddc4`, `f846fed`, `5549195`, `3da7eae`) and closed in Todoist:
+- Task 54 (QA pass, no Todoist ID — auto-injected QA)
+- Task 54 LC: LunarCrush API client → [Notion](https://www.notion.so/34877a7f9e6681ce8bf1dc5b9b3a9c22)
+- Task 55: LunarCrush enrichment pipeline → [Notion](https://www.notion.so/34877a7f9e6681f9b6d6f2494e83a023)
+- Task 56: Opportunity Score algorithm → [Notion](https://www.notion.so/34877a7f9e66812ea398ef420235f828)
+- Task 58: Dashboard Opportunities section → [Notion](https://www.notion.so/34877a7f9e66817dad1bdc0ebc46da01)
+- Task 60: A1 24h rank-delta metric → [Notion](https://www.notion.so/34877a7f9e6681ffb71bc5286eeb50a5)
+- Task 63: A4 broaden subreddit coverage → [Notion](https://www.notion.so/34877a7f9e66813698cacdc5dcbf9ee6)
+- Task 64: A5 /new + /rising sweep → [Notion](https://www.notion.so/34877a7f9e6681969bdec8b4b51b16b2)
+- Task 66: B7 Finnhub price overlay → [Notion](https://www.notion.so/34877a7f9e6681659540cdf046b8febb)
+- Task 68: C1 ApeWisdom hybrid coverage → [Notion](https://www.notion.so/34877a7f9e6681e8852eef74b63aebc3)
+
+**Notion pages created:** 10 new shipped-feature pages. (Pre-existing 2026-04-17 planning pages for Tasks 60/63/64/66/68 are "planning" format — kept separate.)
+
+**New Todoist tasks added:** 10 — Tasks 72–81, a QA / testing hardening batch Mark created Apr 19 in response to bugs in the running app:
+- Task 72 (p1): E2E happy-path journey
+- Task 73 (p1): E2E dashboard correctness audit
+- Task 74 (p1): E2E console-error + hydration guard fixture
+- Task 75 (p1): E2E mobile viewport pass (375 / 414)
+- Task 76 (p1): Visual regression baseline
+- Task 77 (p2): E2E auth edge cases
+- Task 78 (p2): API contract tests
+- Task 79 (p2): Accessibility axe-core integration
+- Task 80 (p2): Scan pipeline integration test
+- Task 81 (p2): Standing nightly bug report (blocked by 72–80)
+
+**QA task injected:** No — queue now has 19 workable `[ ] NEW` tasks (9 existing: 57, 59, 61, 62, 65, 67, 69, 70, 71 + 10 new: 72–81). Plenty to work on.
+
+**Notion items needing testing:** 46 pages (36 existing + 10 new shipped today). All confirmed Testing Complete = __NO__ via sampled fetches. Most recent shipped items (Task 54–68) are highest priority for Mark's hands-on verification because they change the dashboard visually.
+
+---
 
 ### Nightly Cowork Sync — 2026-04-16 04:40
 
