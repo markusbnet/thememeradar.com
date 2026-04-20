@@ -51,6 +51,15 @@ export interface TrendingStock {
   //   climbing = positive delta; falling = negative; steady = 0; new = no prior entry; unknown = < 24h history
 }
 
+export type Timeframe = '1h' | '4h' | '24h' | '7d';
+
+const TIMEFRAME_CONFIG: Record<Timeframe, { windowMs: number; minMentions: number }> = {
+  '1h':  { windowMs:                    60 * 60 * 1000, minMentions: 5  },
+  '4h':  { windowMs:             4 * 60 * 60 * 1000, minMentions: 5  },
+  '24h': { windowMs:            24 * 60 * 60 * 1000, minMentions: 5  },
+  '7d':  { windowMs: 7 * 24 * 60 * 60 * 1000, minMentions: 15 },
+};
+
 // 5-minute in-memory cache for 24h rank snapshots (one entry per timestamp bucket)
 let _rankSnapshotCache: { timestamp: number; data: Map<string, number>; fetchedAt: number } | null = null;
 
@@ -236,76 +245,90 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
  *
  * ALGORITHM: Velocity-based ranking
  * ─────────────────────────────────
- * 1. Fetch all stock mentions from the CURRENT 15-minute bucket
- * 2. Fetch all stock mentions from the PREVIOUS 15-minute bucket
- * 3. For each stock in the current bucket:
- *    - velocity = ((current - previous) / previous) * 100   (% change)
- *    - If the stock is new (no previous data), velocity = 100%
- * 4. Filter: only stocks with >= 5 mentions in the current bucket qualify
+ * 1. Scan all stock_mentions within the last 2*windowMs
+ * 2. Aggregate mentionCounts per ticker for:
+ *    - current window  = [now - windowMs, now]
+ *    - previous window = [now - 2*windowMs, now - windowMs]
+ * 3. For each stock in the current window:
+ *    - velocity = ((current - previous) / previous) * 100  (% change)
+ *    - If new stock (no previous data), velocity = 100%
+ * 4. Filter: only stocks with >= minMentions in the current window qualify
+ *    (minMentions = 5 for 1h/4h/24h; 15 for 7d)
  * 5. Sort by velocity descending → top N are "trending"
  *
- * NOTE: The CLAUDE.md spec calls for 1-hour windows, but the implementation
- * uses 15-minute windows for faster signal detection. This is intentional —
- * 1-hour windows are too slow for a meme stock tracker.
+ * Timeframe defaults to '24h'. Surge detection always uses the native
+ * 15-min baseline and is unaffected by this parameter.
  */
-export async function getTrendingStocks(limit: number = 10): Promise<TrendingStock[]> {
-  const now = roundToInterval(Date.now());
-  const previousInterval = now - 15 * 60 * 1000; // Previous 15-min bucket
+export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe = '24h'): Promise<TrendingStock[]> {
+  const now = Date.now();
+  const { windowMs, minMentions } = TIMEFRAME_CONFIG[timeframe];
 
-  // Get current period data
-  const currentData = await docClient.send(
-    new QueryCommand({
+  const windowStart = now - 2 * windowMs;
+
+  // Scan all mentions within the last 2 windows (current + previous)
+  const scanResult = await docClient.send(
+    new ScanCommand({
       TableName: TABLES.STOCK_MENTIONS,
-      IndexName: 'timestamp-index',
-      KeyConditionExpression: '#timestamp = :timestamp',
-      ExpressionAttributeNames: {
-        '#timestamp': 'timestamp',
-      },
+      FilterExpression: '#ts BETWEEN :windowStart AND :now',
+      ExpressionAttributeNames: { '#ts': 'timestamp' },
       ExpressionAttributeValues: {
-        ':timestamp': now,
+        ':windowStart': windowStart,
+        ':now': now,
       },
     })
   );
 
-  // Get previous period data
-  const previousData = await docClient.send(
-    new QueryCommand({
-      TableName: TABLES.STOCK_MENTIONS,
-      IndexName: 'timestamp-index',
-      KeyConditionExpression: '#timestamp = :timestamp',
-      ExpressionAttributeNames: {
-        '#timestamp': 'timestamp',
-      },
-      ExpressionAttributeValues: {
-        ':timestamp': previousInterval,
-      },
-    })
-  );
+  const items = scanResult.Items || [];
+  const currentWindowStart = now - windowMs;
 
-  // Build map of previous mentions
+  // Aggregate per ticker for current and previous windows
+  const currentMap = new Map<string, { mentionCount: number; sentimentScore: number; sentimentCategory: string }>();
   const previousMap = new Map<string, number>();
-  for (const item of previousData.Items || []) {
-    previousMap.set(item.ticker, item.mentionCount);
+
+  for (const item of items) {
+    const ts = item.timestamp as number;
+    const ticker = item.ticker as string;
+    const mentions = item.mentionCount as number;
+
+    if (ts > currentWindowStart && ts <= now) {
+      // Current window (exclusive of the boundary point)
+      const existing = currentMap.get(ticker);
+      if (existing) {
+        existing.mentionCount += mentions;
+        // Keep the most recent sentiment values (last write wins — fine for aggregation)
+      } else {
+        currentMap.set(ticker, {
+          mentionCount: mentions,
+          sentimentScore: item.avgSentimentScore as number || 0,
+          sentimentCategory: item.sentimentCategory as string || 'neutral',
+        });
+      }
+    } else if (ts >= windowStart && ts <= currentWindowStart) {
+      // Previous window (inclusive of both boundaries)
+      previousMap.set(ticker, (previousMap.get(ticker) || 0) + mentions);
+    }
   }
+
+  const roundedNow = roundToInterval(now);
 
   // Calculate velocity for current stocks
   const trending: Omit<TrendingStock, 'rank24hAgo' | 'rankDelta24h' | 'rankStatus'>[] = [];
-  for (const item of currentData.Items || []) {
-    const current = item.mentionCount as number;
-    const previous = previousMap.get(item.ticker as string) || 0;
+  for (const [ticker, data] of currentMap.entries()) {
+    const current = data.mentionCount;
+    const previous = previousMap.get(ticker) || 0;
 
     // Calculate velocity (% change)
     const velocity = previous > 0 ? ((current - previous) / previous) * 100 : 100;
 
-    // Only include stocks with at least 5 mentions
-    if (current >= 5) {
+    // Only include stocks meeting the minimum mention threshold
+    if (current >= minMentions) {
       trending.push({
-        ticker: item.ticker as string,
+        ticker,
         mentionCount: current,
-        sentimentScore: item.avgSentimentScore as number,
-        sentimentCategory: item.sentimentCategory as string,
+        sentimentScore: data.sentimentScore,
+        sentimentCategory: data.sentimentCategory,
         velocity,
-        timestamp: now,
+        timestamp: roundedNow,
       });
     }
   }
@@ -314,7 +337,7 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
   const sorted = trending.sort((a, b) => b.velocity - a.velocity).slice(0, limit);
 
   // Compute 24h rank delta: query the snapshot from 24h ago
-  const timestamp24hAgo = now - 24 * 60 * 60 * 1000;
+  const timestamp24hAgo = roundedNow - 24 * 60 * 60 * 1000;
   const snapshot24h = await getRankSnapshot(timestamp24hAgo);
   const hasHistory = snapshot24h.size > 0;
 
@@ -345,16 +368,16 @@ export async function getTrendingStocks(limit: number = 10): Promise<TrendingSto
  *
  * ALGORITHM: Inverse velocity ranking
  * ────────────────────────────────────
- * 1. Fetch up to 100 stocks using getTrendingStocks (which includes all stocks >= 5 mentions)
+ * 1. Fetch up to 100 stocks using getTrendingStocks (which includes all stocks >= minMentions)
  * 2. Filter to only stocks with NEGATIVE velocity (mentions declining)
  * 3. Sort by velocity ascending (most negative = biggest drop = rank #1)
  * 4. Return top N
  *
  * NOTE: The CLAUDE.md spec requires minimum 10 mentions in the PREVIOUS period.
- * Current implementation requires >= 5 mentions in the CURRENT period (via getTrendingStocks).
+ * Current implementation requires >= minMentions in the CURRENT period (via getTrendingStocks).
  */
-export async function getFadingStocks(limit: number = 10): Promise<TrendingStock[]> {
-  const trending = await getTrendingStocks(100); // Get more stocks first
+export async function getFadingStocks(limit: number = 10, timeframe: Timeframe = '24h'): Promise<TrendingStock[]> {
+  const trending = await getTrendingStocks(100, timeframe); // Get more stocks first
 
   // Filter for negative velocity and sort ascending (biggest drops first)
   return trending

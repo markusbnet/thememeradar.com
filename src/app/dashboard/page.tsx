@@ -7,8 +7,10 @@ import StockCard from '@/components/StockCard';
 import OpportunityCard from '@/components/OpportunityCard';
 import RefreshTimer from '@/components/RefreshTimer';
 import SurgeAlert from '@/components/SurgeAlert';
+import TimeframeSelector from '@/components/TimeframeSelector';
 import type { SurgeStock } from '@/lib/db/surge';
 import type { OpportunityScore } from '@/lib/opportunity-score';
+import type { Timeframe } from '@/lib/db/storage';
 
 interface TrendingStock {
   ticker: string;
@@ -39,6 +41,8 @@ interface StockData {
   timestamp: number;
 }
 
+const VALID_TIMEFRAMES: Timeframe[] = ['1h', '4h', '24h', '7d'];
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -47,6 +51,7 @@ export default function DashboardPage() {
   const [surgeData, setSurgeData] = useState<SurgeStock[]>([]);
   const [opportunities, setOpportunities] = useState<OpportunityScore[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>('24h');
 
   useEffect(() => {
     document.title = 'Dashboard - The Meme Radar';
@@ -64,16 +69,28 @@ export default function DashboardPage() {
       setUser(userData || null);
       setIsLoading(false);
 
+      // Read initial timeframe from URL
+      const params = new URLSearchParams(window.location.search);
+      const tfParam = params.get('timeframe');
+      const initialTf: Timeframe =
+        tfParam && (VALID_TIMEFRAMES as string[]).includes(tfParam)
+          ? (tfParam as Timeframe)
+          : '24h';
+
+      if (initialTf !== '24h') {
+        setTimeframe(initialTf);
+      }
+
       // Fetch stock data, surge data, and opportunities in parallel
-      await Promise.all([fetchStockData(), fetchSurgeData(), fetchOpportunities()]);
+      await Promise.all([fetchStockData(initialTf), fetchSurgeData(), fetchOpportunities()]);
     };
 
     verifyAuth();
-  }, [router]);
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchStockData = async () => {
+  const fetchStockData = async (tf: Timeframe = timeframe) => {
     try {
-      const response = await fetch('/api/stocks/trending');
+      const response = await fetch(`/api/stocks/trending?timeframe=${tf}`);
       const result = await response.json();
 
       if (result.success) {
@@ -109,6 +126,12 @@ export default function DashboardPage() {
     } catch {
       // Opportunities are non-critical; silently ignore failures
     }
+  };
+
+  const handleTimeframeChange = (tf: Timeframe) => {
+    setTimeframe(tf);
+    window.history.replaceState({}, '', `?timeframe=${tf}`);
+    fetchStockData(tf);
   };
 
   const handleLogout = async () => {
@@ -236,6 +259,14 @@ export default function DashboardPage() {
             </div>
           </section>
         )}
+
+        {/* Timeframe Selector */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-sm text-gray-500">
+            Showing data for the last <span className="font-medium text-gray-700">{timeframe}</span>
+          </div>
+          <TimeframeSelector value={timeframe} onChange={handleTimeframeChange} />
+        </div>
 
         {/* Trending Stocks Section */}
         <section className="mb-12">

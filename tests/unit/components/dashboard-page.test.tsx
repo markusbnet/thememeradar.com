@@ -62,7 +62,7 @@ function createMockFetch(overrides: {
   };
 
   return jest.fn((url: string) => {
-    if (url === '/api/stocks/trending') {
+    if (url.startsWith('/api/stocks/trending')) {
       return Promise.resolve({
         ok: trendingResponse.success,
         json: () => Promise.resolve(trendingResponse),
@@ -238,7 +238,7 @@ describe('DashboardPage', () => {
 
   it('shows error banner when fetch throws a network error', async () => {
     global.fetch = jest.fn((url: string) => {
-      if (url === '/api/stocks/trending') {
+      if (url.startsWith('/api/stocks/trending')) {
         return Promise.reject(new Error('Network error'));
       }
       if (url === '/api/stocks/surging') {

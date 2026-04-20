@@ -34,7 +34,9 @@ describe('API Load Testing', () => {
   it('should handle 50 concurrent requests to /api/stocks/trending', async () => {
     const { GET } = await import('@/app/api/stocks/trending/route');
 
-    const requests = Array(50).fill(null).map(() => GET());
+    const requests = Array(50).fill(null).map(() =>
+      GET(new Request('http://localhost/api/stocks/trending'))
+    );
     const responses = await Promise.all(requests);
 
     const statuses = responses.map(r => r.status);
@@ -71,7 +73,9 @@ describe('API Load Testing', () => {
     const { GET } = await import('@/app/api/stocks/trending/route');
 
     const start = Date.now();
-    const requests = Array(50).fill(null).map(() => GET());
+    const requests = Array(50).fill(null).map(() =>
+      GET(new Request('http://localhost/api/stocks/trending'))
+    );
     await Promise.all(requests);
     const duration = Date.now() - start;
 

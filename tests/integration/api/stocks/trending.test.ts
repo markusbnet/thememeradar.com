@@ -4,6 +4,11 @@ jest.mock('@/lib/db/storage', () => ({
   getSparklineData: jest.fn(),
 }));
 
+// Helper to create a NextRequest-like object for GET handler
+function makeRequest(url: string): Request {
+  return new Request(url);
+}
+
 jest.mock('@/lib/db/enrichment', () => ({
   getEnrichmentMap: jest.fn().mockResolvedValue(new Map()),
 }));
@@ -87,7 +92,7 @@ describe('GET /api/stocks/trending', () => {
   });
 
   it('should return 200 with success response', async () => {
-    const response = await GET();
+    const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -95,7 +100,7 @@ describe('GET /api/stocks/trending', () => {
   });
 
   it('should return trending and fading arrays', async () => {
-    const response = await GET();
+    const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
     const data = await response.json();
 
     expect(data.data).toBeDefined();
@@ -105,7 +110,7 @@ describe('GET /api/stocks/trending', () => {
 
   it('should include a timestamp', async () => {
     const before = Date.now();
-    const response = await GET();
+    const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
     const data = await response.json();
     const after = Date.now();
 
@@ -114,7 +119,7 @@ describe('GET /api/stocks/trending', () => {
   });
 
   it('should return empty arrays when no data exists', async () => {
-    const response = await GET();
+    const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
     const data = await response.json();
 
     // With no scan data, both should be empty
@@ -129,14 +134,14 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should return all 3 trending stocks', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       expect(data.data.trending).toHaveLength(3);
     });
 
     it('should include the correct structure for each trending stock', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       const stock = data.data.trending[0];
@@ -149,7 +154,7 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should attach sparkline data to each trending stock', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       for (const stock of data.data.trending) {
@@ -159,7 +164,7 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should preserve velocity ordering from getTrendingStocks', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       expect(data.data.trending[0].ticker).toBe('GME');
@@ -175,14 +180,14 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should return all 2 fading stocks', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       expect(data.data.fading).toHaveLength(2);
     });
 
     it('should include the correct structure for each fading stock', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       const stock = data.data.fading[0];
@@ -195,7 +200,7 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should have negative velocity for all fading stocks', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       for (const stock of data.data.fading) {
@@ -204,7 +209,7 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should attach sparkline data to each fading stock', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       for (const stock of data.data.fading) {
@@ -222,17 +227,17 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should call getTrendingStocks only once when called twice in succession', async () => {
-      await GET();
-      await GET();
+      await GET(makeRequest('http://localhost/api/stocks/trending'));
+      await GET(makeRequest('http://localhost/api/stocks/trending'));
 
       expect(mockGetTrendingStocks).toHaveBeenCalledTimes(1);
     });
 
     it('should return cached data on the second call', async () => {
-      const first = await GET();
+      const first = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const firstData = await first.json();
 
-      const second = await GET();
+      const second = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const secondData = await second.json();
 
       expect(secondData.data.trending).toEqual(firstData.data.trending);
@@ -241,8 +246,8 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should not call getFadingStocks on the second call', async () => {
-      await GET();
-      await GET();
+      await GET(makeRequest('http://localhost/api/stocks/trending'));
+      await GET(makeRequest('http://localhost/api/stocks/trending'));
 
       expect(mockGetFadingStocks).toHaveBeenCalledTimes(1);
     });
@@ -251,7 +256,7 @@ describe('GET /api/stocks/trending', () => {
   describe('response timestamp', () => {
     it('should include a timestamp that is a recent number', async () => {
       const before = Date.now();
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const after = Date.now();
       const data = await response.json();
 
@@ -261,8 +266,8 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('should return the same timestamp on cached calls', async () => {
-      const first = await (await GET()).json();
-      const second = await (await GET()).json();
+      const first = await (await GET(makeRequest('http://localhost/api/stocks/trending'))).json();
+      const second = await (await GET(makeRequest('http://localhost/api/stocks/trending'))).json();
 
       expect(second.data.timestamp).toBe(first.data.timestamp);
     });
@@ -297,10 +302,10 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('includes price data for tickers with price rows', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
-      const gme = data.data.trending.find((s: any) => s.ticker === 'GME');
+      const gme = data.data.trending.find((s: { ticker: string }) => s.ticker === 'GME');
       expect(gme.price).toBeDefined();
       expect(gme.price.price).toBe(24.50);
       expect(gme.price.changePct24h).toBe(3.21);
@@ -308,10 +313,10 @@ describe('GET /api/stocks/trending', () => {
     });
 
     it('returns null price for tickers with no price row', async () => {
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
-      const amc = data.data.trending.find((s: any) => s.ticker === 'AMC');
+      const amc = data.data.trending.find((s: { ticker: string }) => s.ticker === 'AMC');
       expect(amc.price).toBeNull();
     });
 
@@ -319,7 +324,7 @@ describe('GET /api/stocks/trending', () => {
       const { getLatestPriceMap } = jest.requireMock('@/lib/db/prices');
       getLatestPriceMap.mockResolvedValue(new Map());
 
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       expect(response.status).toBe(200);
     });
   });
@@ -328,7 +333,7 @@ describe('GET /api/stocks/trending', () => {
     it('should return 500 with the error message when getTrendingStocks throws', async () => {
       mockGetTrendingStocks.mockRejectedValueOnce(new Error('DynamoDB connection failed'));
 
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -339,12 +344,71 @@ describe('GET /api/stocks/trending', () => {
     it('should return 500 with fallback message when a non-Error is thrown', async () => {
       mockGetTrendingStocks.mockRejectedValueOnce('network failure');
 
-      const response = await GET();
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
       const data = await response.json();
 
       expect(response.status).toBe(500);
       expect(data.success).toBe(false);
       expect(data.error).toBe('Failed to fetch trending stocks');
+    });
+  });
+
+  describe('timeframe query parameter', () => {
+    beforeEach(() => {
+      mockGetTrendingStocks.mockResolvedValue(mockTrendingStocks);
+      mockGetFadingStocks.mockResolvedValue(mockFadingStocks);
+      mockGetSparklineData.mockResolvedValue([]);
+    });
+
+    it('GET ?timeframe=1h returns 200 with valid data', async () => {
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=1h'));
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(Array.isArray(data.data.trending)).toBe(true);
+    });
+
+    it('GET ?timeframe=4h returns 200', async () => {
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=4h'));
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('GET ?timeframe=7d returns 200', async () => {
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=7d'));
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('GET with no timeframe param defaults to 24h', async () => {
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending'));
+      const data = await response.json();
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      // Should call getTrendingStocks with '24h'
+      expect(mockGetTrendingStocks).toHaveBeenCalledWith(10, '24h');
+    });
+
+    it('GET ?timeframe=invalid returns 400 with error message', async () => {
+      const response = await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=invalid'));
+      const data = await response.json();
+      expect(response.status).toBe(400);
+      expect(data.success).toBe(false);
+      expect(typeof data.error).toBe('string');
+    });
+
+    it('passes the timeframe to getTrendingStocks', async () => {
+      await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=1h'));
+      expect(mockGetTrendingStocks).toHaveBeenCalledWith(10, '1h');
+    });
+
+    it('different timeframes use separate cache keys', async () => {
+      await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=1h'));
+      await GET(makeRequest('http://localhost/api/stocks/trending?timeframe=4h'));
+      // Two different cache keys → getTrendingStocks called twice
+      expect(mockGetTrendingStocks).toHaveBeenCalledTimes(2);
     });
   });
 });

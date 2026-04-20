@@ -1,22 +1,36 @@
 import { logger } from '@/lib/logger';
 /**
  * Trending Stocks API Endpoint
- * GET /api/stocks/trending
+ * GET /api/stocks/trending?timeframe=1h|4h|24h|7d
  *
- * Returns top trending and fading stocks
+ * Returns top trending and fading stocks for the given timeframe.
+ * Defaults to 24h when ?timeframe is omitted.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getTrendingStocks, getFadingStocks, getSparklineData } from '@/lib/db/storage';
+import type { Timeframe } from '@/lib/db/storage';
 import { getEnrichmentMap } from '@/lib/db/enrichment';
 import { getLatestPriceMap } from '@/lib/db/prices';
 import { getLatestApewisdomSnapshot } from '@/lib/db/apewisdom';
 import { mergeCoverage } from '@/lib/coverage/apewisdom';
 import { apiCache } from '@/lib/cache';
 
-const CACHE_KEY = 'trending-fading';
+const VALID_TIMEFRAMES = ['1h', '4h', '24h', '7d'] as const;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rawTimeframe = new URL(request.url).searchParams.get('timeframe') ?? '24h';
+
+  if (!(VALID_TIMEFRAMES as readonly string[]).includes(rawTimeframe)) {
+    return NextResponse.json(
+      { success: false, error: `Invalid timeframe "${rawTimeframe}". Valid values: ${VALID_TIMEFRAMES.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
+  const timeframe = rawTimeframe as Timeframe;
+  const CACHE_KEY = `trending-fading-${timeframe}`;
+
   try {
     // Return cached response if available
     const cached = apiCache.get<{ trending: unknown[]; fading: unknown[]; timestamp: number }>(CACHE_KEY);
@@ -29,8 +43,8 @@ export async function GET() {
 
     // Fetch trending and fading stocks plus ApeWisdom snapshot in parallel
     const [trendingRaw, fadingRaw, awSnapshot] = await Promise.all([
-      getTrendingStocks(10),
-      getFadingStocks(10),
+      getTrendingStocks(10, timeframe),
+      getFadingStocks(10, timeframe),
       getLatestApewisdomSnapshot('wallstreetbets'),
     ]);
 

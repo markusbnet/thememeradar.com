@@ -40,7 +40,15 @@ jest.mock('@/lib/db/client', () => {
           return { Items: filtered, Count: filtered.length };
         }
         if (command.constructor.name === 'ScanCommand') {
-          return { Items: Array.from(table.values()), Count: table.size };
+          const scanValues = command.input.ExpressionAttributeValues || {};
+          let scanItems = Array.from(table.values());
+          // Apply BETWEEN filter if present (for timestamp range scans)
+          if (scanValues[':windowStart'] !== undefined && scanValues[':now'] !== undefined) {
+            scanItems = scanItems.filter(
+              (i: any) => i.timestamp >= scanValues[':windowStart'] && i.timestamp <= scanValues[':now']
+            );
+          }
+          return { Items: scanItems, Count: scanItems.length };
         }
         return {};
       }),
@@ -72,7 +80,7 @@ import {
   getRankSnapshot,
   clearRankSnapshotCache,
 } from '@/lib/db/storage';
-import type { ScanResult } from '@/lib/scanner/scanner';
+import type { ScanResult, Timeframe } from '@/lib/db/storage';
 import { docClient, TABLES, PutCommand } from '@/lib/db/client';
 
 // Helper to seed stock_mentions data
@@ -857,6 +865,102 @@ describe('Storage Layer', () => {
       expect(stock?.rankStatus).toBe('steady');
       expect(stock?.rankDelta24h).toBe(0);
       expect(stock?.rank24hAgo).toBe(1);
+    });
+  });
+
+  describe('getTrendingStocks — timeframe parameter', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+      clearRankSnapshotCache();
+    });
+
+    it('should accept timeframe=1h and aggregate mentions over a 1h window', async () => {
+      const frozen = roundToInterval(new Date('2025-07-01T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 60 * 60 * 1000; // 1h
+
+      // Seed data inside the current 1h window (multiple 15-min buckets)
+      await seedMention({ ticker: 'TF1H', timestamp: frozen - 10 * 60 * 1000, mentionCount: 3 });
+      await seedMention({ ticker: 'TF1H', timestamp: frozen - 30 * 60 * 1000, mentionCount: 4 });
+      // Seed data inside the previous 1h window
+      await seedMention({ ticker: 'TF1H', timestamp: frozen - windowMs - 10 * 60 * 1000, mentionCount: 2 });
+
+      const result = await getTrendingStocks(10, '1h');
+      expect(Array.isArray(result)).toBe(true);
+      const stock = result.find(s => s.ticker === 'TF1H');
+      // total in current window = 7 (>= 5), so it qualifies
+      expect(stock).toBeDefined();
+    });
+
+    it('should accept timeframe=4h and aggregate mentions over a 4h window', async () => {
+      const frozen = roundToInterval(new Date('2025-07-02T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 4 * 60 * 60 * 1000; // 4h
+
+      // Seed several buckets within the current 4h window totalling >= 5
+      await seedMention({ ticker: 'TF4H', timestamp: frozen - 30 * 60 * 1000, mentionCount: 2 });
+      await seedMention({ ticker: 'TF4H', timestamp: frozen - 90 * 60 * 1000, mentionCount: 2 });
+      await seedMention({ ticker: 'TF4H', timestamp: frozen - 150 * 60 * 1000, mentionCount: 2 });
+      // Previous window data
+      await seedMention({ ticker: 'TF4H', timestamp: frozen - windowMs - 30 * 60 * 1000, mentionCount: 1 });
+
+      const result = await getTrendingStocks(10, '4h');
+      expect(Array.isArray(result)).toBe(true);
+      const stock = result.find(s => s.ticker === 'TF4H');
+      // total current = 6 >= 5, qualifies
+      expect(stock).toBeDefined();
+    });
+
+    it('should default to 24h behavior when no timeframe arg is provided', async () => {
+      const frozen = roundToInterval(new Date('2025-07-03T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+
+      // Seed data at various points in the 24h window
+      await seedMention({ ticker: 'TFDEF', timestamp: frozen - 1 * 60 * 60 * 1000, mentionCount: 3 });
+      await seedMention({ ticker: 'TFDEF', timestamp: frozen - 5 * 60 * 60 * 1000, mentionCount: 3 });
+
+      const result = await getTrendingStocks(10);
+      expect(Array.isArray(result)).toBe(true);
+      // TFDEF has 6 total in the 24h window, should qualify
+      const stock = result.find(s => s.ticker === 'TFDEF');
+      expect(stock).toBeDefined();
+    });
+
+    it('should accept timeframe=7d and aggregate over a 7-day window', async () => {
+      const frozen = roundToInterval(new Date('2025-07-04T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 7 * 24 * 60 * 60 * 1000; // 7d
+
+      // Seed 20 mentions spread across current 7d window (>= 15 threshold)
+      await seedMention({ ticker: 'TF7D', timestamp: frozen - 1 * 24 * 60 * 60 * 1000, mentionCount: 8 });
+      await seedMention({ ticker: 'TF7D', timestamp: frozen - 3 * 24 * 60 * 60 * 1000, mentionCount: 7 });
+      await seedMention({ ticker: 'TF7D', timestamp: frozen - 5 * 24 * 60 * 60 * 1000, mentionCount: 5 });
+      // Previous 7d window data
+      await seedMention({ ticker: 'TF7D', timestamp: frozen - windowMs - 1 * 24 * 60 * 60 * 1000, mentionCount: 10 });
+
+      const result = await getTrendingStocks(10, '7d');
+      expect(Array.isArray(result)).toBe(true);
+      const stock = result.find(s => s.ticker === 'TF7D');
+      // total current = 20 >= 15 threshold for 7d
+      expect(stock).toBeDefined();
+    });
+
+    it('should exclude stocks with < 15 mentions for 7d timeframe', async () => {
+      const frozen = roundToInterval(new Date('2025-07-05T12:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+
+      // Only 10 mentions in current 7d window (below 15 threshold)
+      await seedMention({ ticker: 'TF7DLOW', timestamp: frozen - 1 * 24 * 60 * 60 * 1000, mentionCount: 5 });
+      await seedMention({ ticker: 'TF7DLOW', timestamp: frozen - 3 * 24 * 60 * 60 * 1000, mentionCount: 5 });
+
+      const result = await getTrendingStocks(10, '7d');
+      const stock = result.find(s => s.ticker === 'TF7DLOW');
+      expect(stock).toBeUndefined();
+    });
+
+    it('Timeframe type should be a valid exported type', () => {
+      const validTimeframes: Timeframe[] = ['1h', '4h', '24h', '7d'];
+      expect(validTimeframes).toHaveLength(4);
     });
   });
 });
