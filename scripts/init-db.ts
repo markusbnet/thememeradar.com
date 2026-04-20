@@ -59,6 +59,7 @@ const TABLES = {
   STOCK_PRICES: 'stock_prices',
   APEWISDOM_SNAPSHOT: 'apewisdom_snapshot',
   EMAIL_ALERTS: 'email_alerts',
+  STOCK_OPTIONS: 'stock_options',
 };
 
 async function prepareTable(tableName: string): Promise<boolean> {
@@ -305,6 +306,31 @@ async function createEmailAlertsTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createStockOptionsTable() {
+  const tableName = TABLES.STOCK_OPTIONS;
+  if (!(await prepareTable(tableName))) return;
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'timestamp', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'timestamp', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log(
     `=== Initializing DynamoDB Tables ===${RESET ? ' (--reset: dropping existing)' : ''}\n`
@@ -322,6 +348,7 @@ async function main() {
     await createStockPricesTable();
     await createApewisdomSnapshotTable();
     await createEmailAlertsTable();
+    await createStockOptionsTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
@@ -333,6 +360,7 @@ async function main() {
     console.log('- stock_prices (Finnhub price snapshots per ticker, TTL 7d)');
     console.log('- apewisdom_snapshot (ApeWisdom ranked ticker lists per subreddit, TTL 48h)');
     console.log('- email_alerts (hot opportunity email alerts, TTL 24h)');
+    console.log('- stock_options (SwaggyStocks options OI + IV per ticker, TTL 30d)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.

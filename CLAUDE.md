@@ -818,6 +818,7 @@ SESSION_COOKIE_NAME=meme_radar_session
 
 # Internal API secrets
 # ALERTS_API_SECRET=       # Bearer token for /api/internal/pending-alerts (Cowork polling)
+# OPTIONS_INGEST_SECRET=   # Bearer token for /api/internal/options-enrichment (Cowork SwaggyStocks scrape)
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -842,6 +843,7 @@ SESSION_COOKIE_NAME=meme_radar_session
 
 # Internal API secrets
 ALERTS_API_SECRET=       # Bearer token for /api/internal/pending-alerts (Cowork polling)
+OPTIONS_INGEST_SECRET=   # Bearer token for /api/internal/options-enrichment (Cowork SwaggyStocks scrape)
 
 # App
 NEXT_PUBLIC_APP_URL=https://thememeradar.com

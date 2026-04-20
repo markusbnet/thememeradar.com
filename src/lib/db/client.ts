@@ -47,6 +47,7 @@ export const TABLES = {
   STOCK_PRICES: `${TABLE_PREFIX}stock_prices`,
   APEWISDOM_SNAPSHOT: `${TABLE_PREFIX}apewisdom_snapshot`,
   EMAIL_ALERTS: `${TABLE_PREFIX}email_alerts`,
+  STOCK_OPTIONS: `${TABLE_PREFIX}stock_options`,
 };
 
 // Export commands for easy access

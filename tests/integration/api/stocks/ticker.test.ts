@@ -18,6 +18,10 @@ jest.mock('@/lib/db/prices', () => ({
   getPriceHistory: jest.fn().mockResolvedValue([]),
 }));
 
+jest.mock('@/lib/market/swaggystocks', () => ({
+  getLatestOptionsActivity: jest.fn().mockResolvedValue(null),
+}));
+
 import {
   getStockDetails,
   getStockEvidence,

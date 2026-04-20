@@ -8,6 +8,7 @@ import StockChart from '@/components/StockChart';
 import CollapsibleSection from '@/components/CollapsibleSection';
 import { detectCreatorSignal } from '@/lib/creators';
 import type { LunarCrushCreator } from '@/types/lunarcrush';
+import OptionsActivitySection from '@/components/OptionsActivitySection';
 
 interface StockDetails {
   ticker: string;
@@ -62,6 +63,13 @@ interface PriceSnapshot {
   fetchedAt: number;
 }
 
+interface OptionsActivityData {
+  callOpenInterest: number;
+  putOpenInterest: number;
+  putCallRatio: number;
+  iv30d: number | null;
+}
+
 interface PricePoint {
   timestamp: number;
   price: number;
@@ -85,6 +93,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const [enrichment, setEnrichment] = useState<StockEnrichment | null>(null);
   const [priceSnapshot, setPriceSnapshot] = useState<PriceSnapshot | null>(null);
   const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
+  const [options, setOptions] = useState<OptionsActivityData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -120,6 +129,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           }
           if (result.data.priceHistory) {
             setPriceHistory(result.data.priceHistory);
+          }
+          if (result.data.options) {
+            setOptions(result.data.options);
           }
         } else {
           setError(result.error || 'Stock not found');
@@ -466,6 +478,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 })}
               </div>
             </CollapsibleSection>
+          </div>
+        )}
+
+        {/* Options Activity */}
+        {options && (
+          <div className="mt-8">
+            <OptionsActivitySection options={options} />
           </div>
         )}
 

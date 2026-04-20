@@ -5,6 +5,7 @@ import {
 } from '@/lib/opportunity-score';
 import type { TrendingStock } from '@/lib/db/storage';
 import type { StoredEnrichment } from '@/lib/db/enrichment';
+import type { OptionsActivity } from '@/types/options';
 
 const baseStock: TrendingStock = {
   ticker: 'GME',
@@ -164,6 +165,87 @@ describe('computeOpportunityScore', () => {
   it('includes signalLevel in result', () => {
     const result = computeOpportunityScore(baseStock, baseEnrichment);
     expect(['hot', 'rising', 'watch', 'none']).toContain(result.signalLevel);
+  });
+});
+
+const baseOptions: OptionsActivity = {
+  ticker: 'GME',
+  timestamp: 1713600000000,
+  callOpenInterest: 450000,
+  putOpenInterest: 180000,
+  putCallRatio: 0.40,
+  iv30d: 0.85,
+  fetchedAt: 1713600000000,
+  ttl: 1716278400,
+};
+
+describe('computeOpportunityScore with options data', () => {
+  it('without options data (default null) returns same score as 2-arg call', () => {
+    const twoArg = computeOpportunityScore(baseStock, baseEnrichment);
+    const threeArgNull = computeOpportunityScore(baseStock, baseEnrichment, null);
+    expect(threeArgNull.score).toBe(twoArg.score);
+  });
+
+  it('with options data returns a score (may differ from no-options score)', () => {
+    const withOptions = computeOpportunityScore(baseStock, baseEnrichment, baseOptions);
+    expect(withOptions.score).toBeGreaterThanOrEqual(0);
+    expect(withOptions.score).toBeLessThanOrEqual(100);
+  });
+
+  it('with options data the score can differ from without-options score', () => {
+    // GME putCallRatio=0.40 → callPutRatio=2.5 → optionsActivityScore=83
+    // This non-zero options score shifts the weighted sum away from the 5-factor result
+    const withOptions = computeOpportunityScore(baseStock, baseEnrichment, baseOptions);
+    const withoutOptions = computeOpportunityScore(baseStock, baseEnrichment, null);
+    // The scores should differ (options weight 0.10 rebalances everything)
+    expect(withOptions.score).not.toBe(withoutOptions.score);
+  });
+
+  it('subScores includes optionsActivity when options provided', () => {
+    const result = computeOpportunityScore(baseStock, baseEnrichment, baseOptions);
+    expect(result.subScores.optionsActivity).toBeDefined();
+  });
+
+  it('subScores does NOT include optionsActivity when options is null', () => {
+    const result = computeOpportunityScore(baseStock, baseEnrichment, null);
+    expect(result.subScores.optionsActivity).toBeUndefined();
+  });
+
+  it('optionsActivityScore for GME (putCallRatio=0.40) is 83', () => {
+    // callPutRatio = 1/0.40 = 2.5; min(2.5,3)/3*100 = 83.33 → floor/round to 83
+    const result = computeOpportunityScore(baseStock, baseEnrichment, baseOptions);
+    expect(result.subScores.optionsActivity).toBe(83);
+  });
+
+  it('optionsActivityScore for AMC (putCallRatio=1.50) is 22', () => {
+    // callPutRatio = 1/1.50 = 0.667; min(0.667,3)/3*100 = 22.22 → round to 22
+    const amcOptions: OptionsActivity = { ...baseOptions, ticker: 'AMC', putCallRatio: 1.50 };
+    const result = computeOpportunityScore(baseStock, baseEnrichment, amcOptions);
+    expect(result.subScores.optionsActivity).toBe(22);
+  });
+
+  it('optionsActivityScore caps at 100 for very bullish (putCallRatio=0.1)', () => {
+    // callPutRatio = 1/0.1 = 10; min(10,3)/3*100 = 100
+    const bullishOptions: OptionsActivity = { ...baseOptions, putCallRatio: 0.1 };
+    const result = computeOpportunityScore(baseStock, baseEnrichment, bullishOptions);
+    expect(result.subScores.optionsActivity).toBe(100);
+  });
+
+  it('all weights sum to 1.0 when options provided (implicit in score = max 100 at all 100)', () => {
+    // Verify: all sub-scores=100 with options should yield score=100
+    const stock = { ...baseStock, velocity: 500, sentimentScore: 1 };
+    const enrichment = {
+      ...baseEnrichment,
+      percent_change_24h: 20,
+      social_dominance: 20,
+      top_creators: [
+        { screen_name: 'influencer', network: 'twitter', influencer_rank: 1, followers: 1_000_000, posts: 1, engagements: 1000 },
+      ],
+    };
+    const opts: OptionsActivity = { ...baseOptions, putCallRatio: 0.01 }; // callPutRatio=100→capped=100
+    const result = computeOpportunityScore(stock, enrichment, opts);
+    // 100*0.225 + 100*0.135 + 100*0.18 + 100*0.225 + 100*0.135 + 100*0.10 = 100
+    expect(result.score).toBe(100);
   });
 });
 

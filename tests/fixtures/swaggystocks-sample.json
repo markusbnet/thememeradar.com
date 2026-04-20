@@ -1,0 +1,49 @@
+{
+  "rows": [
+    {
+      "ticker": "GME",
+      "timestamp": 1713600000000,
+      "callOpenInterest": 450000,
+      "putOpenInterest": 180000,
+      "putCallRatio": 0.40,
+      "iv30d": 0.85,
+      "fetchedAt": 1713600000000
+    },
+    {
+      "ticker": "AMC",
+      "timestamp": 1713600000000,
+      "callOpenInterest": 320000,
+      "putOpenInterest": 480000,
+      "putCallRatio": 1.50,
+      "iv30d": 0.65,
+      "fetchedAt": 1713600000000
+    },
+    {
+      "ticker": "TSLA",
+      "timestamp": 1713600000000,
+      "callOpenInterest": 1200000,
+      "putOpenInterest": 1100000,
+      "putCallRatio": 0.92,
+      "iv30d": 0.45,
+      "fetchedAt": 1713600000000
+    },
+    {
+      "ticker": "BIRD",
+      "timestamp": 1713600000000,
+      "callOpenInterest": 25000,
+      "putOpenInterest": 8000,
+      "putCallRatio": 0.32,
+      "iv30d": null,
+      "fetchedAt": 1713600000000
+    },
+    {
+      "ticker": "SPY",
+      "timestamp": 1713600000000,
+      "callOpenInterest": 5000000,
+      "putOpenInterest": 5200000,
+      "putCallRatio": 1.04,
+      "iv30d": 0.12,
+      "fetchedAt": 1713600000000
+    }
+  ]
+}

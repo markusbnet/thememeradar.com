@@ -24,6 +24,10 @@ jest.mock('@/lib/db/apewisdom', () => ({
   getLatestApewisdomSnapshot: jest.fn().mockResolvedValue(null),
 }));
 
+jest.mock('@/lib/market/swaggystocks', () => ({
+  getLatestOptionsActivity: jest.fn().mockResolvedValue(null),
+}));
+
 import { apiCache } from '@/lib/cache';
 
 describe('API Load Testing', () => {
