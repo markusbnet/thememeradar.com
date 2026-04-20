@@ -25,6 +25,7 @@ const TABLES = {
   STOCK_EVIDENCE: 'memeradar-stock_evidence',
   STOCK_ENRICHMENT: 'memeradar-stock_enrichment',
   OPPORTUNITY_SIGNALS: 'memeradar-opportunity_signals',
+  EMAIL_ALERTS: 'memeradar-email_alerts',
 };
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -215,6 +216,36 @@ async function createOpportunitySignalsTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createEmailAlertsTable() {
+  const tableName = TABLES.EMAIL_ALERTS;
+
+  if (await tableExists(tableName)) {
+    console.log(`✓ Table already exists: ${tableName}`);
+    return;
+  }
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'createdAt', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'createdAt', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  await waitForTableActive(tableName);
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing Production DynamoDB Tables ===\n');
   console.log(`Region: ${process.env.AWS_REGION || 'us-east-1'}\n`);
@@ -231,6 +262,7 @@ async function main() {
     await createStockEvidenceTable();
     await createStockEnrichmentTable();
     await createOpportunitySignalsTable();
+    await createEmailAlertsTable();
     console.log('\n✓ All tables ready!');
     console.log('\nTables:');
     console.log('- memeradar-users (stores user accounts)');
@@ -238,6 +270,7 @@ async function main() {
     console.log('- memeradar-stock_evidence (stores sample posts/comments for each ticker)');
     console.log('- memeradar-stock_enrichment (LunarCrush social + price data, TTL 30d)');
     console.log('- memeradar-opportunity_signals (composite opportunity scores, TTL 30d)');
+    console.log('- memeradar-email_alerts (hot opportunity email alerts, TTL 24h)');
     console.log('\nBilling: PAY_PER_REQUEST (on-demand, free tier eligible)');
     console.log('TTL: Enabled (data expires after 30 days automatically)');
   } catch (error: any) {

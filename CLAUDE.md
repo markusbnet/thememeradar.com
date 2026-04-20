@@ -816,6 +816,9 @@ AWS_SECRET_ACCESS_KEY=local
 JWT_SECRET=generate_with_openssl_rand_base64_32
 SESSION_COOKIE_NAME=meme_radar_session
 
+# Internal API secrets
+# ALERTS_API_SECRET=       # Bearer token for /api/internal/pending-alerts (Cowork polling)
+
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
@@ -836,6 +839,9 @@ AWS_SECRET_ACCESS_KEY=
 # Authentication
 JWT_SECRET=              # Generate new for production
 SESSION_COOKIE_NAME=meme_radar_session
+
+# Internal API secrets
+ALERTS_API_SECRET=       # Bearer token for /api/internal/pending-alerts (Cowork polling)
 
 # App
 NEXT_PUBLIC_APP_URL=https://thememeradar.com

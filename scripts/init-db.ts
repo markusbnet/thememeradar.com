@@ -11,6 +11,11 @@ import {
   DeleteTableCommand,
 } from '@aws-sdk/client-dynamodb';
 
+// Idempotent by default: existing tables are skipped so this can safely run
+// on every `npm run dev`. Pass --reset to drop and recreate everything.
+const RESET = process.argv.includes('--reset');
+let existingTables: Set<string> = new Set();
+
 // Fail fast if required env vars are missing. No silent defaults for the
 // endpoint — a wrong default is how port 8000 vs 8080 drift happens.
 const requiredEnv = [
@@ -53,23 +58,29 @@ const TABLES = {
   OPPORTUNITY_SIGNALS: 'opportunity_signals',
   STOCK_PRICES: 'stock_prices',
   APEWISDOM_SNAPSHOT: 'apewisdom_snapshot',
+  EMAIL_ALERTS: 'email_alerts',
 };
 
-async function deleteTableIfExists(tableName: string) {
-  // Deliberately not catching here — if listing tables fails (e.g. DynamoDB
-  // Local is down), we want the error to propagate so main() can print a
-  // clear diagnostic instead of silently falling through to CreateTable.
-  const listResult = await client.send(new ListTablesCommand({}));
-  if (listResult.TableNames?.includes(tableName)) {
+async function prepareTable(tableName: string): Promise<boolean> {
+  // Returns true if the caller should proceed to create the table, false if
+  // it already exists and should be skipped. In --reset mode, drops first.
+  const exists = existingTables.has(tableName);
+  if (exists && RESET) {
     console.log(`Deleting existing table: ${tableName}...`);
     await client.send(new DeleteTableCommand({ TableName: tableName }));
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    return true;
   }
+  if (exists) {
+    console.log(`✓ Table already exists: ${tableName} (skipped)`);
+    return false;
+  }
+  return true;
 }
 
 async function createUsersTable() {
   const tableName = TABLES.USERS;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -106,7 +117,7 @@ async function createUsersTable() {
 
 async function createStockMentionsTable() {
   const tableName = TABLES.STOCK_MENTIONS;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -144,7 +155,7 @@ async function createStockMentionsTable() {
 
 async function createStockEvidenceTable() {
   const tableName = TABLES.STOCK_EVIDENCE;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -171,7 +182,7 @@ async function createStockEvidenceTable() {
 
 async function createStockEnrichmentTable() {
   const tableName = TABLES.STOCK_ENRICHMENT;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -196,7 +207,7 @@ async function createStockEnrichmentTable() {
 
 async function createOpportunitySignalsTable() {
   const tableName = TABLES.OPPORTUNITY_SIGNALS;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -221,7 +232,7 @@ async function createOpportunitySignalsTable() {
 
 async function createStockPricesTable() {
   const tableName = TABLES.STOCK_PRICES;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -246,7 +257,7 @@ async function createStockPricesTable() {
 
 async function createApewisdomSnapshotTable() {
   const tableName = TABLES.APEWISDOM_SNAPSHOT;
-  await deleteTableIfExists(tableName);
+  if (!(await prepareTable(tableName))) return;
 
   console.log(`Creating table: ${tableName}...`);
 
@@ -269,10 +280,40 @@ async function createApewisdomSnapshotTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createEmailAlertsTable() {
+  const tableName = TABLES.EMAIL_ALERTS;
+  if (!(await prepareTable(tableName))) return;
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'ticker', KeyType: 'HASH' },
+        { AttributeName: 'createdAt', KeyType: 'RANGE' },
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'ticker', AttributeType: 'S' },
+        { AttributeName: 'createdAt', AttributeType: 'N' },
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      // TTL (on 'ttl' attribute) must be enabled via UpdateTimeToLiveCommand after table creation.
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
-  console.log('=== Initializing DynamoDB Tables ===\n');
+  console.log(
+    `=== Initializing DynamoDB Tables ===${RESET ? ' (--reset: dropping existing)' : ''}\n`
+  );
 
   try {
+    const listResult = await client.send(new ListTablesCommand({}));
+    existingTables = new Set(listResult.TableNames ?? []);
+
     await createUsersTable();
     await createStockMentionsTable();
     await createStockEvidenceTable();
@@ -280,6 +321,7 @@ async function main() {
     await createOpportunitySignalsTable();
     await createStockPricesTable();
     await createApewisdomSnapshotTable();
+    await createEmailAlertsTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
@@ -290,6 +332,7 @@ async function main() {
     console.log('- opportunity_signals (composite opportunity scores, TTL 30d)');
     console.log('- stock_prices (Finnhub price snapshots per ticker, TTL 7d)');
     console.log('- apewisdom_snapshot (ApeWisdom ranked ticker lists per subreddit, TTL 48h)');
+    console.log('- email_alerts (hot opportunity email alerts, TTL 24h)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.

@@ -13,6 +13,7 @@ import { saveScanResults } from '@/lib/db/storage';
 import { enrichWithLunarCrush } from '@/lib/lunarcrush';
 import { enrichWithPrices } from '@/lib/market/finnhub';
 import { parseSubredditList } from '@/lib/scan-config';
+import { checkAndCreateAlerts } from '@/lib/alert-pipeline';
 
 // Configuration from environment variables
 const REDDIT_CONFIG = {
@@ -175,6 +176,11 @@ export async function GET(request: NextRequest) {
     const topTickers = allTickers.slice(0, 50);
     enrichWithPrices(topTickers).catch((err: unknown) =>
       logger.error('Finnhub price enrichment error:', err)
+    );
+
+    // Check for hot opportunities and generate email alerts (fire-and-forget)
+    checkAndCreateAlerts(allTickers).catch((err: unknown) =>
+      logger.error('Alert generation error:', err)
     );
 
     // Calculate summary
