@@ -166,7 +166,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
-                className={`w-full px-4 py-2 border ${
+                className={`w-full px-4 py-2 min-h-[44px] border ${
                   emailError ? 'border-red-300' : 'border-slate-300'
                 } rounded-lg focus:ring-2 ${
                   emailError ? 'focus:ring-red-500' : 'focus:ring-purple-500'
@@ -198,7 +198,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={handlePasswordChange}
                   onBlur={handlePasswordBlur}
-                  className={`w-full px-4 py-2 border ${
+                  className={`w-full px-4 py-2 min-h-[44px] border ${
                     passwordError ? 'border-red-300' : 'border-slate-300'
                   } rounded-lg focus:ring-2 ${
                     passwordError ? 'focus:ring-red-500' : 'focus:ring-purple-500'

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/console-guard';
 
 // Helper function to delete test user
 async function deleteTestUser(email: string, baseURL: string) {

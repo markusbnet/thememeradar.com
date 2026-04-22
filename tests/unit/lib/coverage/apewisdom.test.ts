@@ -162,4 +162,41 @@ describe('mergeCoverage', () => {
     const bird = result.find(s => s.ticker === 'BIRD');
     expect(bird?.rankDelta24h).toBeNull();
   });
+
+  it('sets rankStatus=climbing for apewisdom-only tickers with positive delta', () => {
+    const stocks: TrendingStock[] = [];
+    const result = mergeCoverage(stocks, freshSnapshot, NOW);
+    // GME: rank=1, rank_24h_ago=3 → delta = +2 (climbed)
+    const gme = result.find(s => s.ticker === 'GME');
+    expect(gme?.coverageSource).toBe('apewisdom');
+    expect(gme?.rankStatus).toBe('climbing');
+    expect(gme?.rankDelta24h).toBe(2);
+  });
+
+  it('sets rankStatus=unknown for apewisdom-only tickers with null rank_24h_ago', () => {
+    const stocks: TrendingStock[] = [];
+    const result = mergeCoverage(stocks, freshSnapshot, NOW);
+    // BIRD: rank_24h_ago = null → delta = null → unknown
+    const bird = result.find(s => s.ticker === 'BIRD');
+    expect(bird?.rankStatus).toBe('unknown');
+  });
+
+  it('derives rankStatus from aw delta for both-coverage stocks with unknown status', () => {
+    // Our own stock has rankStatus=unknown (no 24h history), but ApeWisdom has data
+    const stocks = [makeTrendingStock('GME', { rankDelta24h: null, rankStatus: 'unknown' })];
+    const result = mergeCoverage(stocks, freshSnapshot, NOW);
+    const gme = result.find(s => s.ticker === 'GME');
+    // fixture: GME rank=1, rank_24h_ago=3 → delta = +2 (climbing)
+    expect(gme?.coverageSource).toBe('both');
+    expect(gme?.rankDelta24h).toBe(2);
+    expect(gme?.rankStatus).toBe('climbing');
+  });
+
+  it('preserves rankStatus for both-coverage stocks that already have climbing/falling', () => {
+    const stocks = [makeTrendingStock('GME', { rankDelta24h: 5, rankStatus: 'climbing' })];
+    const result = mergeCoverage(stocks, freshSnapshot, NOW);
+    const gme = result.find(s => s.ticker === 'GME');
+    expect(gme?.rankStatus).toBe('climbing');
+    expect(gme?.rankDelta24h).toBe(5); // our value preserved
+  });
 });

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/console-guard';
 
 test.describe('Dashboard Interactions', () => {
   const testEmail = `dashboard-test-${Date.now()}@example.com`;

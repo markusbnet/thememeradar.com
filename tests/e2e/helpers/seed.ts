@@ -6,6 +6,7 @@
  */
 
 import { docClient, TABLES, PutCommand } from '../../../src/lib/db/client';
+import type { ApewisdomSnapshot } from '../../../src/types/apewisdom';
 
 const THIRTY_DAYS_SEC = 30 * 24 * 60 * 60;
 const FIFTEEN_MIN = 15 * 60 * 1000;
@@ -100,4 +101,70 @@ export async function seedEvidence(ticker: string, count = 2) {
       })
     );
   }
+}
+
+/**
+ * Seed an ApeWisdom snapshot so mergeCoverage attaches coverage badges and
+ * rank deltas to the seeded tickers.
+ */
+export async function seedApewisdomSnapshot(
+  subreddit: string,
+  rows: Array<{
+    rank: number;
+    rank_24h_ago: number | null;
+    ticker: string;
+    mentions: number;
+    mentions_24h_ago: number;
+    upvotes: number;
+  }>
+): Promise<void> {
+  const now = Date.now();
+  const snapshot: ApewisdomSnapshot = {
+    subreddit,
+    fetchedAt: now,
+    rows: rows.map(r => ({ ...r, name: r.ticker })),
+    ttl: Math.floor(now / 1000) + 48 * 60 * 60,
+  };
+  await docClient.send(new PutCommand({ TableName: TABLES.APEWISDOM_SNAPSHOT, Item: snapshot }));
+}
+
+/**
+ * Seed a Finnhub price snapshot. Pass staleness to control how old the
+ * fetchedAt timestamp appears: 'fresh' < 15min, 'normal' < 60min, 'grey' < 24h.
+ */
+export async function seedPrice(
+  ticker: string,
+  price: number,
+  options: {
+    changePct24h?: number;
+    staleness?: 'fresh' | 'normal' | 'grey';
+  } = {}
+): Promise<void> {
+  const { changePct24h = 1.5, staleness = 'fresh' } = options;
+  const now = Date.now();
+  const ageMs =
+    staleness === 'grey'   ? 2 * 60 * 60 * 1000  // 2 hours
+    : staleness === 'normal' ? 30 * 60 * 1000       // 30 minutes
+    : 5 * 60 * 1000;                                // 5 minutes (fresh)
+  const fetchedAt = now - ageMs;
+
+  await docClient.send(
+    new PutCommand({
+      TableName: TABLES.STOCK_PRICES,
+      Item: {
+        ticker,
+        timestamp: fetchedAt,
+        price,
+        changePct24h,
+        volume: 1_000_000,
+        dayHigh: price * 1.05,
+        dayLow: price * 0.95,
+        dayOpen: price * 0.99,
+        previousClose: price * 0.98,
+        staleness,
+        fetchedAt,
+        ttl: Math.floor(fetchedAt / 1000) + 7 * 24 * 60 * 60,
+      },
+    })
+  );
 }

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/console-guard';
 
 test.describe('API Endpoints', () => {
   const testEmail = `api-test-${Date.now()}@example.com`;

@@ -1,0 +1,73 @@
+/**
+ * Task 74: Console-error and hydration-mismatch guard fixture
+ *
+ * Exports a Playwright `test` that is extended with a page-level guard.
+ * Import `test` and `expect` from this module (not from '@playwright/test')
+ * in every E2E spec to automatically detect:
+ *  - console.error calls
+ *  - React hydration mismatch warnings
+ *  - Uncaught JS exceptions / unhandled promise rejections
+ *
+ * Any violation fails the test at the end of the test body.
+ *
+ * Allowlist entries (explain the WHY — never use this to silence real bugs):
+ *  1. React DevTools prompt — browser-extension noise, not application code
+ *  2. Next.js HMR websocket — dev-mode only, not present in production
+ */
+
+import { test as base, expect } from '@playwright/test';
+
+export { expect };
+
+// Known-benign messages. Document each entry with a justification.
+const ALLOWLIST: RegExp[] = [
+  // 1. React DevTools browser-extension installation prompt (extension noise)
+  /Download the React DevTools/i,
+  // 2. Next.js Hot Module Replacement — dev-mode, never ships to production
+  /\[HMR\]/i,
+];
+
+function isAllowlisted(message: string): boolean {
+  return ALLOWLIST.some(pattern => pattern.test(message));
+}
+
+export const test = base.extend<{ consoleGuard: void }>({
+  consoleGuard: [
+    async ({ page }, use) => {
+      const violations: string[] = [];
+
+      // Capture console.error — includes React errors and app-level errors
+      page.on('console', msg => {
+        if (msg.type() === 'error') {
+          const text = msg.text();
+          if (!isAllowlisted(text)) {
+            violations.push(`[console.error] ${text}`);
+          }
+        }
+        // React hydration warnings arrive as console.warn in dev
+        if (msg.type() === 'warning') {
+          const text = msg.text();
+          if (/hydrat|did not match/i.test(text) && !isAllowlisted(text)) {
+            violations.push(`[hydration] ${text}`);
+          }
+        }
+      });
+
+      // Capture uncaught exceptions and unhandled promise rejections
+      page.on('pageerror', err => {
+        const text = err.message;
+        if (!isAllowlisted(text)) {
+          violations.push(`[uncaught] ${text}`);
+        }
+      });
+
+      await use();
+
+      expect(
+        violations,
+        `Console guard detected errors:\n${violations.join('\n')}`
+      ).toHaveLength(0);
+    },
+    { auto: true }, // automatically applied to every test that imports this `test`
+  ],
+});

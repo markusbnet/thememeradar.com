@@ -136,6 +136,10 @@ export default function DashboardPage() {
     fetchStockData(tf);
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([fetchStockData(timeframe), fetchSurgeData(), fetchOpportunities()]);
+  };
+
   const handleLogout = async () => {
     const success = await logout();
     if (success) {
@@ -167,7 +171,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <RefreshTimer />
+              <RefreshTimer onRefresh={handleRefresh} />
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md transition"
@@ -263,7 +267,7 @@ export default function DashboardPage() {
         )}
 
         {/* Timeframe Selector */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
           <div className="text-sm text-gray-500">
             Showing data for the last <span className="font-medium text-gray-700">{timeframe}</span>
           </div>

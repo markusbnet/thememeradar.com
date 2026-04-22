@@ -5,7 +5,7 @@
  * test boots the real stack and verifies data flows all the way to the UI.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/console-guard';
 import { seedTrendingTicker } from './helpers/seed';
 
 // Use a namespaced ticker so we don't collide with real scan data or parallel

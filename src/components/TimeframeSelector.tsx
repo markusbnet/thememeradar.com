@@ -18,7 +18,7 @@ export default function TimeframeSelector({ value, onChange }: TimeframeSelector
           type="button"
           onClick={() => onChange(tf)}
           aria-pressed={value === tf}
-          className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors min-h-[36px] ${
+          className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors min-h-[44px] ${
             value === tf
               ? 'bg-white text-purple-700 shadow-sm'
               : 'text-gray-600 hover:text-gray-900'

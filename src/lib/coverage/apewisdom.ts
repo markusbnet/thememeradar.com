@@ -101,10 +101,20 @@ export function mergeCoverage(
     const awRow = awMap.get(key);
 
     if (awRow) {
+      const effectiveDelta = stock.rankDelta24h ?? awRankDelta(awRow);
+      // When our own rank history is missing (new/unknown), derive rankStatus
+      // from the ApeWisdom delta so the rank badge renders correctly.
+      const effectiveStatus: TrendingStock['rankStatus'] =
+        (stock.rankStatus === 'new' || stock.rankStatus === 'unknown') && effectiveDelta !== null
+          ? effectiveDelta > 0 ? 'climbing'
+            : effectiveDelta < 0 ? 'falling'
+            : 'steady'
+          : stock.rankStatus;
       merged.push({
         ...stock,
         coverageSource: 'both',
-        rankDelta24h: stock.rankDelta24h ?? awRankDelta(awRow),
+        rankDelta24h: effectiveDelta,
+        rankStatus: effectiveStatus,
       });
     } else {
       merged.push({ ...stock, coverageSource: 'reddit' });
@@ -114,6 +124,14 @@ export function mergeCoverage(
   for (const [key, awRow] of awMap) {
     if (!seen.has(key)) {
       const prev = awRow.mentions_24h_ago;
+      const delta = awRankDelta(awRow);
+      // Derive rankStatus from the ApeWisdom delta for apewisdom-only stocks
+      // so the rank-delta badge renders when the stock is climbing or falling.
+      const rankStatus: TrendingStock['rankStatus'] =
+        delta === null ? 'unknown'
+          : delta > 0 ? 'climbing'
+          : delta < 0 ? 'falling'
+          : 'steady';
       merged.push({
         ticker: awRow.ticker,
         mentionCount: awRow.mentions,
@@ -123,8 +141,8 @@ export function mergeCoverage(
         sentimentCategory: 'neutral',
         velocity: awVelocity(awRow),
         timestamp: apewisdomSnapshot.fetchedAt,
-        rankDelta24h: awRankDelta(awRow),
-        rankStatus: 'unknown',
+        rankDelta24h: delta,
+        rankStatus,
         coverageSource: 'apewisdom',
       });
     }

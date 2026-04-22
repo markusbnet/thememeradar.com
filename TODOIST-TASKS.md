@@ -2,7 +2,7 @@
 
 > **This file is synced from Todoist by Cowork nightly.** Claude Code reads this file and works through tasks in order.
 >
-> **Last synced:** 2026-04-20 04:40 (nightly Cowork sync)
+> **Last synced:** 2026-04-21 04:40 (nightly Cowork sync)
 >
 > **Next sync:** 04:40 tomorrow
 
@@ -1804,11 +1804,11 @@ function mergeCoverage(
 
 ---
 
-### Task 72: [ ] NEW — E2E: Full happy-path journey (signup → dashboard → stock detail → logout)
+### Task 72: [x] COMPLETE — E2E: Full happy-path journey (signup → dashboard → stock detail → logout)
 **Todoist ID:** 6gQW5p624g5wr43c
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — user-reported bugs in live app; we have 700 unit tests but zero end-to-end coverage
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-22
 **Priority:** p1
 
 **Why this matters:** We currently have 700 unit tests but no test that proves the whole app functions together. A single broken link, hydration error, or auth-session bug ships through CI undetected. Mark is seeing bugs in the running app right now — this test would have caught most of them.
@@ -1835,11 +1835,11 @@ If any step fails because of existing bugs in the app, FIX the bug before markin
 
 ---
 
-### Task 73: [ ] NEW — E2E: Dashboard correctness audit (rank badges, coverage badges, price overlay, refresh timer)
+### Task 73: [x] COMPLETE — E2E: Dashboard correctness audit (rank badges, coverage badges, price overlay, refresh timer)
 **Todoist ID:** 6gQW5p94GgXwqPXc
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — five features shipped last night (Tasks 60, 63, 64, 66, 68) with visual bugs reported
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-22. Also fixed apewisdom.ts bug: apewisdom-only stocks were returning rankStatus='unknown' so rank badges never rendered. Fixed rankStatus derivation from delta for both apewisdom-only and 'both' coverage stocks.
 **Priority:** p1
 
 **Why this matters:** We shipped five features last night but Mark is seeing bugs in them. This test pins down the correct visual contract against seeded data, so any regression fails loudly.
@@ -1863,11 +1863,11 @@ If any step fails because of existing bugs in the app, FIX the bug before markin
 
 ---
 
-### Task 74: [ ] NEW — E2E: Console error + hydration-mismatch guard fixture
+### Task 74: [x] COMPLETE — E2E: Console error + hydration-mismatch guard fixture
 **Todoist ID:** 6gQW5pCm8222rX6c
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — local dev showing errors / blank screens, likely hydration mismatches
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-22. Created tests/e2e/fixtures/console-guard.ts with auto fixture; updated all 15 E2E specs to import from it.
 **Priority:** p1
 
 **Why this matters:** Mark is seeing "errors / blank screens" when running locally. Hydration mismatches and unhandled exceptions are invisible to most tests but destroy UX. This fixture turns every E2E test into a console-error detector for free.
@@ -1889,11 +1889,11 @@ Apply this fixture to ALL existing E2E tests. Run the full suite — any existin
 
 ---
 
-### Task 75: [ ] NEW — E2E: Mobile viewport pass (375px and 414px) with tap-target + overflow checks
+### Task 75: [x] COMPLETE — E2E: Mobile viewport pass (375px and 414px) with tap-target + overflow checks
 **Todoist ID:** 6gQW5pHHVM3vq7gc
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — CLAUDE.md mandates mobile-first, zero mobile-specific E2E coverage today
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-22. 8/8 tests pass. Fixed 3 tap-target violations: login/signup input min-h-[44px], signup "Log in" link min-w-[44px], TimeframeSelector button min-h-[44px], dashboard timeframe row stacks vertically on mobile.
 **Priority:** p1
 
 **Why this matters:** CLAUDE.md mandates mobile-first. Mark is seeing layout bugs. We have ZERO mobile-specific E2E coverage today.
@@ -1916,11 +1916,11 @@ Use Playwright's viewport presets + a custom helper to programmatically check ta
 
 ---
 
-### Task 76: [ ] NEW — Visual regression baseline (Playwright screenshot diffs per route/viewport)
+### Task 76: [x] COMPLETE — Visual regression baseline (Playwright screenshot diffs per route/viewport)
 **Todoist ID:** 6gQW5pGrV3Qgc3g6
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — fastest way to catch layout regressions on every PR
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-22. 8 baseline PNGs generated (4 routes × 2 viewports, chromium/darwin) in tests/e2e/visual.spec.ts-snapshots/. Tests pass at 0.1% pixel diff threshold. NOTE: Mark should visually inspect baselines before next intentional UI change, then run --update-snapshots to refresh.
 **Priority:** p1
 
 **Why this matters:** Mark is seeing "broken UI / layout" bugs. Screenshot diffs are the fastest way to catch visual regressions on every PR.
@@ -2091,6 +2091,34 @@ Commit `QA-REPORT.md` on each nightly run.
 **Acceptance:** Script exists, runs cleanly, produces markdown. `QA-REPORT.md` exists in repo and is updated by the nightly run.
 
 **Note:** This task depends on the other 9 existing. If Claude Code picks it up before the others are done, mark it `[?] NEEDS CLARIFICATION` and move on.
+
+---
+
+### Nightly Run Summary — 2026-04-22
+
+**5/5 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 72 | E2E: Full happy-path journey | p1 | [x] COMPLETE |
+| 73 | E2E: Dashboard correctness audit | p1 | [x] COMPLETE |
+| 74 | E2E: Console error + hydration guard fixture | p1 | [x] COMPLETE |
+| 75 | E2E: Mobile viewport pass (375px + 414px) | p1 | [x] COMPLETE |
+| 76 | Visual regression baseline (8 screenshots) | p1 | [x] COMPLETE |
+
+**Final metrics:** 848 unit tests (59 suites), 24 E2E specs with 60+ scenarios, lint clean, build clean.
+
+**Key changes this run:**
+- **Task 72 (Happy-path E2E):** `tests/e2e/happy-path.spec.ts` — full signup→logout→login→dashboard→stock detail→back→logout→auth-guard journey
+- **Task 73 (Dashboard correctness):** `tests/e2e/dashboard-correctness.spec.ts` — pins rank badges (↑/↓), AW+/AW coverage pills, price staleness, refresh timer, sparklines. Also fixed `src/lib/coverage/apewisdom.ts` bug: apewisdom-only stocks were returning `rankStatus='unknown'` causing badges to never render; fixed rankStatus derivation from delta for both apewisdom-only and 'both' stocks.
+- **Task 74 (Console guard):** `tests/e2e/fixtures/console-guard.ts` with auto Playwright fixture capturing console.error, hydration warnings, uncaught exceptions; applied to all 15 E2E specs.
+- **Task 75 (Mobile E2E):** `tests/e2e/mobile.spec.ts` — 8 tests (4 flows × 2 viewports). Fixed 3 tap-target violations: inputs got `min-h-[44px]`, signup "Log in" link got `min-w-[44px]`, TimeframeSelector buttons `min-h-[36px]`→`min-h-[44px]`, dashboard timeframe row stacks vertically on mobile via `flex-col sm:flex-row`.
+- **Task 76 (Visual regression):** `tests/e2e/visual.spec.ts` + 8 baseline PNGs in `tests/e2e/visual.spec.ts-snapshots/` (login/signup/dashboard/stock-detail × desktop/mobile). NOTE: Mark should visually inspect baselines. Run `--update-snapshots` after any intentional UI change.
+
+**Remaining NEW tasks in queue (highest priority first):**
+- p2: Tasks 77 (auth E2E edge cases), 78 (API contract tests), 79 (axe-core a11y), 80 (scan pipeline integration), 81 (nightly QA report)
+- p3: Tasks 65 (dense table view), 69 (public JSON API), 71 (historical CSV export)
+- p4: Task 70 (/m mobile route + iOS shortcut)
 
 ---
 

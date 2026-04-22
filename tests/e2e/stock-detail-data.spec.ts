@@ -5,7 +5,7 @@
  * the detail view silently falls back to an error or empty state.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/console-guard';
 import { seedTrendingTicker, seedEvidence } from './helpers/seed';
 
 const DETAIL_TICKER = 'ZZDETAIL';

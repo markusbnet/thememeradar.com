@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/console-guard';
 
 /**
  * COMPREHENSIVE FORM INTERACTION E2E TESTS

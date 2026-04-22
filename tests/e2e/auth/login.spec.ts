@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/console-guard';
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {

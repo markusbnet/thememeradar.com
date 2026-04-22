@@ -6,7 +6,7 @@
  * test locks in the explicit empty-state message.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/console-guard';
 
 async function deleteTestUser(email: string, baseURL: string) {
   await fetch(`${baseURL}/api/test/delete-user`, {
