@@ -25,6 +25,11 @@ const ALLOWLIST: RegExp[] = [
   /Download the React DevTools/i,
   // 2. Next.js Hot Module Replacement — dev-mode, never ships to production
   /\[HMR\]/i,
+  // 3. Browser-generated "Failed to load resource" for 4xx/5xx HTTP responses.
+  //    When a fetch() gets a non-2xx status (401 wrong password, 409 duplicate email,
+  //    429 rate limit), the browser itself emits this console.error. The application
+  //    handles the error correctly; this is browser noise, not an application bug.
+  /Failed to load resource: the server responded with a status of \d{3}/i,
 ];
 
 function isAllowlisted(message: string): boolean {
