@@ -1944,11 +1944,11 @@ Commit the baselines to `tests/e2e/visual.spec.ts-snapshots/`. Configure a small
 
 ---
 
-### Task 77: [ ] NEW — E2E: Auth edge cases (bad password, rate limit, session expiry, double-submit)
+### Task 77: [x] COMPLETE — E2E: Auth edge cases (bad password, rate limit, session expiry, double-submit)
 **Todoist ID:** 6gQW5pM25JHqhmx6
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — auth has highest blast radius, zero edge-case coverage today
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-24. Created tests/e2e/auth-edge-cases.spec.ts (8 tests) and tests/e2e/fixtures/console-guard.ts allowlist entry #3 for browser-generated HTTP error console.errors. Rate limit tested via page.route() mocking (real limiter has AUTH_RATE_LIMIT_MAX=1000 in test env). All 8 E2E cases pass. Commit: efff9bb.
 **Priority:** p2
 
 **Why this matters:** Auth has the highest blast radius. A broken auth flow is a P0 incident. We have happy-path coverage but zero edge-case coverage.
@@ -1969,11 +1969,11 @@ Commit the baselines to `tests/e2e/visual.spec.ts-snapshots/`. Configure a small
 
 ---
 
-### Task 78: [ ] NEW — Integration: API route contract tests for every /api endpoint
+### Task 78: [x] COMPLETE — Integration: API route contract tests for every /api endpoint
 **Todoist ID:** 6gQW5pMM6rgFMcj6
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — "wrong data shown" bugs; contract tests catch response-shape regressions at the API boundary
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-24. Created tests/integration/api-contracts.test.ts with 33 tests covering all /api routes: health, auth (signup/login/logout/me), stocks (trending/surging/opportunities/ticker/evidence), scan, and 3 internal routes. Every route has happy-path + auth guard + validation assertions. Added withCookie() polyfill for NextRequest.cookies in Jest. All 33 tests pass. Commit: f55f037.
 **Priority:** p2
 
 **Why this matters:** Mark is seeing "wrong data shown" bugs. Contract tests catch response-shape regressions at the API boundary, independent of UI rendering.
@@ -2002,11 +2002,11 @@ Plus any newer routes introduced by Tasks 58, 60, 63, 64, 66, 68 (check `src/app
 
 ---
 
-### Task 79: [ ] NEW — Accessibility: axe-core integrated into Playwright with serious/critical fail gate
+### Task 79: [x] COMPLETE — Accessibility: axe-core integrated into Playwright with serious/critical fail gate
 **Todoist ID:** 6gQW5pJ993CRw7gc
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — a11y bugs don't crash the app so they're invisible; CLAUDE.md mandates mobile usability
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-24. Installed @axe-core/playwright. Created tests/e2e/fixtures/a11y.ts with checkA11y() helper + auto a11yGuard fixture. Chained into console-guard so all 19 E2E specs inherit both guards without changes. Fixed all serious/critical violations: text-gray-400→500 (6 components), text-green-500/600→700 (4 components), text-red-500→700 (4 components), text-orange-600→700 (SurgeAlert). Added net::ERR_FAILED allowlist for route.abort() tests. 208/208 chromium E2E pass, 905/905 unit tests pass. Commit: 1dc8fd6.
 **Priority:** p2
 
 **Why this matters:** Mobile usability is in CLAUDE.md's requirements. Tap targets < 44px, missing labels, bad heading order, low contrast all hurt real users. A11y bugs don't crash the app so they're invisible to existing tests.
@@ -2027,11 +2027,11 @@ Run the full suite. For every violation surfaced, either:
 
 ---
 
-### Task 80: [ ] NEW — Integration: Scan pipeline end-to-end (Reddit fixture → DynamoDB → dashboard API)
+### Task 80: [x] COMPLETE — Integration: Scan pipeline end-to-end (Reddit fixture → DynamoDB → dashboard API)
 **Todoist ID:** 6gQW5pQp6whG94Jc
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — "wrong data shown" bugs; composed-pipeline bugs hide between stage unit tests
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE — 2026-04-24. Created tests/fixtures/reddit-scan-sample.json (5 posts, 15 comments, GME bullish/AMC bullish/TSLA bearish scenario). Created tests/integration/scan-pipeline.test.ts (13 tests): DynamoDB write correctness, evidence storage, trending API with velocity vs seeded prev window, sentiment keyword verification. Mock Reddit client via jest.mocked(); all pipeline stages run against DynamoDB Local. 918/918 tests pass. Commit: 296ab8b.
 **Priority:** p2
 
 **Why this matters:** Mark is seeing "wrong data shown" bugs. The pipeline has four stages (fetch → ticker detect → sentiment → store) and each has unit tests, but no test proves they work correctly WHEN COMPOSED with real-ish data. This is where data-integrity bugs hide.
@@ -2950,3 +2950,19 @@ All tests passing: 700 / 700. Lint and build clean.
 - 0 recently completed tasks in Todoist
 - Notion Shipped Features database: empty (no pages)
 - Previous nightly runs (Mar 25-27) failed with "Not logged in" — Claude CLI auth expired
+
+---
+
+### Nightly Run — 2026-04-24
+
+**Tasks completed (5 of 5 limit):**
+- Task 77 [x] COMPLETE — E2E auth edge cases (8 tests): wrong password, rate limit mock, duplicate email, session expiry, double-submit. Plus console-guard allowlist entry for HTTP error status messages. Commit: efff9bb
+- Task 78 [x] COMPLETE — API route contract tests (33 tests): all /api routes covered with happy-path, auth guard, and validation assertions. Custom withCookie() polyfill for NextRequest.cookies in Jest. Commit: f55f037
+- Task 79 [x] COMPLETE — axe-core a11y guard integrated: tests/e2e/fixtures/a11y.ts created, chained into console-guard so all 19 E2E specs get auto a11y teardown. Fixed all WCAG AA color-contrast violations (gray-400→500, green-500/600→700, red-500→700, orange-600→700) across 13 components. 208/208 chromium E2E pass. Commit: 1dc8fd6
+- Task 80 [x] COMPLETE — Scan pipeline end-to-end integration test (13 tests): Reddit fixture → scanner → DynamoDB → trending API verified. GME bullish/AMC bullish/TSLA bearish scenario. Velocity vs seeded prev window. 918/918 unit tests pass. Commit: 296ab8b
+
+**Tasks failed:** None
+
+**Remaining NEW tasks:** Task 81 (p2 — nightly QA report), Task 65 (p3), Task 69 (p3), Task 71 (p3), Task 70 (p4)
+
+**Test suite health:** 918 unit/integration tests passing, 208 chromium E2E tests passing, lint clean
