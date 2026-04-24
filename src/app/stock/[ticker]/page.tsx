@@ -149,13 +149,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const getSentimentDisplay = (category: string) => {
     switch (category) {
       case 'strong_bullish':
-        return { emoji: '📈🚀', label: 'Strong Bullish', color: 'text-green-600 bg-green-50' };
+        return { emoji: '📈🚀', label: 'Strong Bullish', color: 'text-green-700 bg-green-50' };
       case 'bullish':
-        return { emoji: '📈', label: 'Bullish', color: 'text-green-500 bg-green-50' };
+        return { emoji: '📈', label: 'Bullish', color: 'text-green-700 bg-green-50' };
       case 'bearish':
-        return { emoji: '📉', label: 'Bearish', color: 'text-red-500 bg-red-50' };
+        return { emoji: '📉', label: 'Bearish', color: 'text-red-700 bg-red-50' };
       case 'strong_bearish':
-        return { emoji: '📉💥', label: 'Strong Bearish', color: 'text-red-600 bg-red-50' };
+        return { emoji: '📉💥', label: 'Strong Bearish', color: 'text-red-700 bg-red-50' };
       default:
         return { emoji: '➖', label: 'Neutral', color: 'text-gray-500 bg-gray-50' };
     }
@@ -249,22 +249,22 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Market Data</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-gray-400 mb-1">Price</p>
+                <p className="text-xs text-gray-500 mb-1">Price</p>
                 <div className="flex items-center gap-1">
-                  <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-400' : 'text-gray-900'}`}>
+                  <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-500' : 'text-gray-900'}`}>
                     ${(priceSnapshot?.price ?? enrichment?.price ?? 0).toFixed(2)}
                   </p>
                   {priceSnapshot?.staleness === 'grey' && (
-                    <span title="stale price" className="text-sm text-gray-400">⏰</span>
+                    <span title="stale price" className="text-sm text-gray-500">⏰</span>
                   )}
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">24h Change</p>
+                <p className="text-xs text-gray-500 mb-1">24h Change</p>
                 {(() => {
                   const pct = priceSnapshot?.changePct24h ?? enrichment?.percent_change_24h;
                   return pct !== undefined ? (
-                    <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-400' : pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xl font-bold ${priceSnapshot?.staleness === 'grey' ? 'text-gray-500' : pct >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                       {pct >= 0 ? '+' : ''}{pct.toFixed(2)}%
                     </p>
                   ) : null;
@@ -273,11 +273,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               {enrichment && (
                 <>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Social Dominance</p>
+                    <p className="text-xs text-gray-500 mb-1">Social Dominance</p>
                     <p className="text-xl font-bold text-purple-700">{enrichment.social_dominance.toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Cross-Platform Mentions</p>
+                    <p className="text-xs text-gray-500 mb-1">Cross-Platform Mentions</p>
                     <p className="text-xl font-bold text-gray-900">{enrichment.mentions_cross_platform.toLocaleString()}</p>
                   </div>
                 </>
@@ -349,9 +349,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   <tr className="border-b border-gray-200">
                     <th scope="col" className="text-left py-3 px-4 font-medium text-gray-500">Period</th>
                     <th scope="col" className="text-right py-3 px-4 font-medium text-gray-500">Mentions</th>
-                    <th scope="col" className="text-right py-3 px-4 font-medium text-green-600">Bullish %</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-green-700">Bullish %</th>
                     <th scope="col" className="text-right py-3 px-4 font-medium text-gray-500">Neutral %</th>
-                    <th scope="col" className="text-right py-3 px-4 font-medium text-red-600">Bearish %</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium text-red-700">Bearish %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -359,9 +359,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                     <tr key={period.label} className="border-b border-gray-100">
                       <td className="py-3 px-4 font-medium text-gray-900">{period.label}</td>
                       <td className="py-3 px-4 text-right text-gray-900">{period.mentions.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-right text-green-600">{period.bullishPct}%</td>
+                      <td className="py-3 px-4 text-right text-green-700">{period.bullishPct}%</td>
                       <td className="py-3 px-4 text-right text-gray-600">{period.neutralPct}%</td>
-                      <td className="py-3 px-4 text-right text-red-600">{period.bearishPct}%</td>
+                      <td className="py-3 px-4 text-right text-red-700">{period.bearishPct}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -375,7 +375,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           <CollapsibleSection title="Sentiment Breakdown">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-green-600 font-medium">📈 Bullish</span>
+                <span className="text-green-700 font-medium">📈 Bullish</span>
                 <span className="text-gray-900 font-semibold">{stockDetails.bullishCount} mentions</span>
               </div>
               <div className="flex items-center justify-between">
@@ -383,7 +383,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 <span className="text-gray-900 font-semibold">{stockDetails.neutralCount} mentions</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-red-600 font-medium">📉 Bearish</span>
+                <span className="text-red-700 font-medium">📉 Bearish</span>
                 <span className="text-gray-900 font-semibold">{stockDetails.bearishCount} mentions</span>
               </div>
             </div>
@@ -471,7 +471,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-900">{creator.followers >= 1_000_000 ? `${(creator.followers / 1_000_000).toFixed(1)}M` : creator.followers >= 1_000 ? `${(creator.followers / 1_000).toFixed(0)}K` : creator.followers} followers</p>
-                        <p className="text-xs text-gray-400">{creator.engagements.toLocaleString()} engagements</p>
+                        <p className="text-xs text-gray-500">{creator.engagements.toLocaleString()} engagements</p>
                       </div>
                     </div>
                   );

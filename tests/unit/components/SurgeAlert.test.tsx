@@ -89,19 +89,19 @@ describe('SurgeAlert', () => {
   it('should render bullish sentiment in green', () => {
     render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'bullish' })]} />);
     const label = screen.getByText('bullish');
-    expect(label.className).toMatch(/text-green-600/);
+    expect(label.className).toMatch(/text-green-700/);
   });
 
   it('should render strong_bullish sentiment in green (substring match)', () => {
     render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'strong_bullish' })]} />);
     const label = screen.getByText('strong bullish');
-    expect(label.className).toMatch(/text-green-600/);
+    expect(label.className).toMatch(/text-green-700/);
   });
 
   it('should render bearish sentiment in red', () => {
     render(<SurgeAlert stocks={[makeSurgeStock({ sentimentCategory: 'bearish' })]} />);
     const label = screen.getByText('bearish');
-    expect(label.className).toMatch(/text-red-600/);
+    expect(label.className).toMatch(/text-red-700/);
   });
 
   it('should render neutral sentiment in gray', () => {

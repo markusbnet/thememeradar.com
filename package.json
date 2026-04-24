@@ -8,7 +8,7 @@
     "check:env": "tsx --env-file=.env.local scripts/check-env.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --dir src --dir tests",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
@@ -17,7 +17,8 @@
     "test:smoke": "tsx --env-file=.env.local scripts/smoke-test.ts",
     "db:init": "tsx --env-file=.env.local scripts/init-db.ts",
     "db:reset": "tsx --env-file=.env.local scripts/init-db.ts --reset",
-    "db:seed": "tsx --env-file=.env.local scripts/seed-db.ts"
+    "db:seed": "tsx --env-file=.env.local scripts/seed-db.ts",
+    "scan": "tsx --env-file=.env.local scripts/run-scan.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.699.0",
@@ -31,6 +32,7 @@
     "uuid": "^11.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.2",
     "@edge-runtime/jest-environment": "^4.0.0",
     "@playwright/test": "^1.49.0",
     "@testing-library/jest-dom": "^6.6.3",

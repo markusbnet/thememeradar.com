@@ -1,5 +1,6 @@
 /**
  * Task 74: Console-error and hydration-mismatch guard fixture
+ * Task 79: Chains from a11y fixture so every spec gets both guards automatically.
  *
  * Exports a Playwright `test` that is extended with a page-level guard.
  * Import `test` and `expect` from this module (not from '@playwright/test')
@@ -7,15 +8,17 @@
  *  - console.error calls
  *  - React hydration mismatch warnings
  *  - Uncaught JS exceptions / unhandled promise rejections
+ *  - axe-core serious/critical accessibility violations (via a11y.ts)
  *
  * Any violation fails the test at the end of the test body.
  *
  * Allowlist entries (explain the WHY — never use this to silence real bugs):
  *  1. React DevTools prompt — browser-extension noise, not application code
  *  2. Next.js HMR websocket — dev-mode only, not present in production
+ *  3. Browser-generated "Failed to load resource" for 4xx/5xx HTTP responses
  */
 
-import { test as base, expect } from '@playwright/test';
+import { test as a11yBase, expect } from './a11y';
 
 export { expect };
 
@@ -30,13 +33,17 @@ const ALLOWLIST: RegExp[] = [
   //    429 rate limit), the browser itself emits this console.error. The application
   //    handles the error correctly; this is browser noise, not an application bug.
   /Failed to load resource: the server responded with a status of \d{3}/i,
+  // 4. Playwright route.abort() calls in error-simulation tests produce "net::ERR_FAILED".
+  //    This is intentional test infrastructure — the test aborts the request to simulate
+  //    a network failure and verify the UI's error handling. Not an application bug.
+  /Failed to load resource: net::ERR_FAILED/i,
 ];
 
 function isAllowlisted(message: string): boolean {
   return ALLOWLIST.some(pattern => pattern.test(message));
 }
 
-export const test = base.extend<{ consoleGuard: void }>({
+export const test = a11yBase.extend<{ consoleGuard: void }>({
   consoleGuard: [
     async ({ page }, use) => {
       const violations: string[] = [];

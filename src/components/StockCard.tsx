@@ -55,13 +55,13 @@ export default function StockCard({
   const getSentimentDisplay = (category: string) => {
     switch (category) {
       case 'strong_bullish':
-        return { emoji: '📈🚀', label: 'Strong Bullish', color: 'text-green-600' };
+        return { emoji: '📈🚀', label: 'Strong Bullish', color: 'text-green-700' };
       case 'bullish':
-        return { emoji: '📈', label: 'Bullish', color: 'text-green-500' };
+        return { emoji: '📈', label: 'Bullish', color: 'text-green-700' };
       case 'bearish':
-        return { emoji: '📉', label: 'Bearish', color: 'text-red-500' };
+        return { emoji: '📉', label: 'Bearish', color: 'text-red-700' };
       case 'strong_bearish':
-        return { emoji: '📉💥', label: 'Strong Bearish', color: 'text-red-600' };
+        return { emoji: '📉💥', label: 'Strong Bearish', color: 'text-red-700' };
       default:
         return { emoji: '➖', label: 'Neutral', color: 'text-gray-500' };
     }
@@ -69,6 +69,10 @@ export default function StockCard({
 
   const sentiment = getSentimentDisplay(sentimentCategory);
   const isPositiveVelocity = velocity > 0;
+  // First-appearance ticker: velocity is pinned at 100% by storage because
+  // there's no previous window to compare against. Show "NEW" instead so we
+  // don't mislead users into thinking a brand-new ticker just surged 100%.
+  const isNewTicker = mentionsPrev === 0;
 
   return (
     <Link href={`/stock/${ticker}`}>
@@ -100,15 +104,21 @@ export default function StockCard({
           </div>
 
           {/* Velocity indicator */}
-          <div className={`text-right ${isPositiveVelocity ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`text-right ${isNewTicker ? 'text-purple-600' : isPositiveVelocity ? 'text-green-700' : 'text-red-700'}`}>
             <div className="flex items-center justify-end gap-1">
-              <span className="text-lg sm:text-2xl">{isPositiveVelocity ? '↑' : '↓'}</span>
-              <span className="text-lg sm:text-xl font-bold">
-                {Math.abs(velocity).toFixed(0)}%
-              </span>
+              {isNewTicker ? (
+                <span className="text-lg sm:text-xl font-bold">NEW</span>
+              ) : (
+                <>
+                  <span className="text-lg sm:text-2xl">{isPositiveVelocity ? '↑' : '↓'}</span>
+                  <span className="text-lg sm:text-xl font-bold">
+                    {Math.abs(velocity).toFixed(0)}%
+                  </span>
+                </>
+              )}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {type === 'trending' ? 'Rising' : 'Fading'}
+              {isNewTicker ? 'First seen' : type === 'trending' ? 'Rising' : 'Fading'}
             </p>
           </div>
         </div>
@@ -126,32 +136,32 @@ export default function StockCard({
           </div>
         )}
 
-        {/* Enrichment: price + social dominance (hidden when staleness is 'drop') */}
-        {price !== undefined && staleness !== 'drop' && (
+        {/* Enrichment: price + social dominance (hidden when staleness is 'drop' or price is missing) */}
+        {price != null && staleness !== 'drop' && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-400">Price</p>
+                <p className="text-xs text-gray-500">Price</p>
                 <div className="flex items-center gap-1">
-                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-400' : 'text-gray-900'}`}>
+                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-500' : 'text-gray-900'}`}>
                     ${price.toFixed(2)}
                   </p>
                   {staleness === 'grey' && (
-                    <span title="stale price" className="text-xs text-gray-400">⏰</span>
+                    <span title="stale price" className="text-xs text-gray-500">⏰</span>
                   )}
                 </div>
               </div>
-              {changePct24h !== undefined && (
+              {changePct24h != null && (
                 <div className="text-right">
-                  <p className="text-xs text-gray-400">24h</p>
-                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-400' : changePct24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-xs text-gray-500">24h</p>
+                  <p className={`text-sm font-semibold ${staleness === 'grey' ? 'text-gray-500' : changePct24h >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                     {changePct24h >= 0 ? '+' : ''}{changePct24h.toFixed(2)}%
                   </p>
                 </div>
               )}
-              {socialDominance !== undefined && (
+              {socialDominance != null && (
                 <div className="text-right">
-                  <p className="text-xs text-gray-400">Social</p>
+                  <p className="text-xs text-gray-500">Social</p>
                   <p className="text-sm font-semibold text-purple-600">{socialDominance.toFixed(1)}%</p>
                 </div>
               )}
@@ -166,7 +176,7 @@ export default function StockCard({
             <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
               <p className="text-lg font-semibold text-gray-900">{mentionCount.toLocaleString()}</p>
               {mentionDelta !== undefined && mentionsPrev !== undefined && (
-                <p className={`text-xs font-medium ${mentionDelta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-xs font-medium ${mentionDelta >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {mentionsPrev === 0
                     ? 'NEW'
                     : `${mentionDelta >= 0 ? '+' : ''}${mentionDelta.toLocaleString()} vs prev`}

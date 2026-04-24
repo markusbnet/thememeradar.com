@@ -29,7 +29,7 @@ export default function SurgeAlert({ stocks }: SurgeAlertProps) {
           <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
         </span>
         <h2 className="text-lg font-semibold text-orange-900">Surge Alert</h2>
-        <span className="text-sm text-orange-600">Unusual mention spikes detected</span>
+        <span className="text-sm text-orange-700">Unusual mention spikes detected</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -38,7 +38,7 @@ export default function SurgeAlert({ stocks }: SurgeAlertProps) {
             <div className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-orange-100">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xl font-bold text-gray-900">${stock.ticker}</span>
-                <span className="text-lg font-bold text-orange-600">
+                <span className="text-lg font-bold text-orange-700">
                   {stock.surgeMultiplier === Infinity ? '...' : `${stock.surgeMultiplier}x`}
                 </span>
               </div>
@@ -48,9 +48,9 @@ export default function SurgeAlert({ stocks }: SurgeAlertProps) {
                 </span>
                 <span className={
                   stock.sentimentCategory.includes('bullish')
-                    ? 'text-green-600 font-medium'
+                    ? 'text-green-700 font-medium'
                     : stock.sentimentCategory.includes('bearish')
-                      ? 'text-red-600 font-medium'
+                      ? 'text-red-700 font-medium'
                       : 'text-gray-500 font-medium'
                 }>
                   {stock.sentimentCategory.replace('_', ' ')}

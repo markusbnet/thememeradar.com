@@ -6,6 +6,7 @@ import { checkAuth, logout, type User } from '@/lib/auth/client';
 import StockCard from '@/components/StockCard';
 import OpportunityCard from '@/components/OpportunityCard';
 import RefreshTimer from '@/components/RefreshTimer';
+import PipelineStatus from '@/components/PipelineStatus';
 import SurgeAlert from '@/components/SurgeAlert';
 import TimeframeSelector from '@/components/TimeframeSelector';
 import type { SurgeStock } from '@/lib/db/surge';
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   const [opportunities, setOpportunities] = useState<OpportunityScore[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>('24h');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     document.title = 'Dashboard - The Meme Radar';
@@ -137,6 +139,7 @@ export default function DashboardPage() {
   };
 
   const handleRefresh = async () => {
+    setRefreshKey(k => k + 1);
     await Promise.all([fetchStockData(timeframe), fetchSurgeData(), fetchOpportunities()]);
   };
 
@@ -171,6 +174,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <PipelineStatus refreshKey={refreshKey} />
               <RefreshTimer onRefresh={handleRefresh} />
               <button
                 onClick={handleLogout}
@@ -290,7 +294,7 @@ export default function DashboardPage() {
               <p className="text-gray-500">
                 No trending stocks found. Waiting for first scan to complete...
               </p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-sm text-gray-500 mt-2">
                 The background scanner runs every 5 minutes
               </p>
             </div>

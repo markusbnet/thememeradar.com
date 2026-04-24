@@ -76,7 +76,7 @@ export default function OpportunityCard({ opportunity, rank }: OpportunityCardPr
           {/* Score badge */}
           <div className="text-center">
             <div className={`text-3xl font-bold ${config.scoreClasses}`}>{score}</div>
-            <div className="text-xs text-gray-400 mt-0.5">/ 100</div>
+            <div className="text-xs text-gray-500 mt-0.5">/ 100</div>
           </div>
         </div>
 

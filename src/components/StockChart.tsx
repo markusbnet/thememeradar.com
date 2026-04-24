@@ -19,7 +19,7 @@ export default function StockChart({
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">{title}</h2>
-        <div style={{ height }} className="flex items-center justify-center text-gray-400">
+        <div style={{ height }} className="flex items-center justify-center text-gray-500">
           Not enough data to display chart
         </div>
       </div>

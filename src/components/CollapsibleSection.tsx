@@ -24,7 +24,7 @@ export default function CollapsibleSection({
         aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${title}`}
       >
         <h2 className="text-base sm:text-xl font-semibold text-gray-900">{title}</h2>
-        <span className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+        <span className={`text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
           ▼
         </span>
       </button>

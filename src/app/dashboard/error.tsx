@@ -12,7 +12,7 @@ export default function DashboardError({
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center max-w-md px-4">
-        <h1 className="text-4xl font-bold text-red-500 mb-4">Dashboard Error</h1>
+        <h1 className="text-4xl font-bold text-red-700 mb-4">Dashboard Error</h1>
         <p className="text-gray-600 mb-6">
           Failed to load the dashboard. This might be a temporary issue.
         </p>
