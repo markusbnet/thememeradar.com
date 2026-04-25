@@ -1420,11 +1420,12 @@ interface TrendingStock {
 
 ---
 
-### Task 65: [ ] NEW — A6: Dense table view toggle
+### Task 65: [x] COMPLETE — A6: Dense table view toggle
 **Todoist ID:** 6gQ53Cf4jxhpj4J6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase A — ApeWisdom parity)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-25
 **Priority:** p3
 
 **Why this matters:** Cards are great for casual browsing and mobile; tables win when you want to scan 50+ tickers and compare them at a glance. ApeWisdom's core UX is a dense, sortable, single-page table — and it works. Power users (which is what Mark wants to be) will use the table; everyone else stays on cards. Ship both, let the URL remember the choice.
@@ -1450,6 +1451,12 @@ interface TrendingStock {
 - Table works at 375px with horizontal scroll
 
 **TDD:** Component tests for sort ordering per column. E2E that toggle persists through URL and that table is sortable via keyboard.
+
+**Implementation:**
+- New `src/components/ViewToggle.tsx` — segmented two-button control (Cards/Table), aria-pressed, role="group", purple active state, 44px tap targets
+- New `src/components/StockTable.tsx` — dense table with sticky ticker+rank column, sortable headers (ticker/mentions/velocity/sentiment/price) with aria-sort and ↑/↓ indicators, rank delta badges, sparklines, price with staleness colors, AW/AW+ coverage pills, horizontal scroll at narrow viewports, empty state
+- Dashboard: reads `?view=` on mount, `handleViewChange` syncs to URL without refetch, conditional StockTable vs card grid rendering for both trending and fading sections
+- 7 new ViewToggle tests + 14 new StockTable tests; 946 total, lint clean
 
 ---
 
@@ -1707,12 +1714,13 @@ function mergeCoverage(
 
 ---
 
-### Task 69: [ ] NEW — C2: Public JSON API
+### Task 69: [x] COMPLETE — C2: Public JSON API
 **Todoist ID:** 6gQ53QV3jgqfPR36
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
 **Priority:** p3
+**Completed:** 2026-04-25
 
 **Why this matters:** Right now Meme Radar is a closed system — you can only consume it through the dashboard. Exposing a public read-only JSON endpoint unlocks three things: (1) Mark's Stock scraper Google Sheet can `IMPORTJSON` from Meme Radar and stop duplicating scrape work, (2) the iOS shortcut in Task 70 becomes possible, (3) the app becomes a usable data source for any future tool, notebook, or collaborator. This is low-effort, high-optionality.
 
@@ -1740,12 +1748,13 @@ function mergeCoverage(
 
 ---
 
-### Task 70: [ ] NEW — C3: /m ultra-light mobile route + iOS Shortcut guide
+### Task 70: [x] COMPLETE — C3: /m ultra-light mobile route + iOS Shortcut guide
 **Todoist ID:** 6gQ53RJF278xJG86
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
 **Priority:** p4
+**Completed:** 2026-04-25
 
 **Why this matters:** Mark checks Meme Radar most often on his phone. The main dashboard is too heavy for a five-second glance in a coffee shop. An ultra-light text-only mobile route closes the latency between "see a signal" and "act on it". The companion iOS Shortcut makes it Siri-accessible ("Hey Siri, what's hot?") so you don't even need to unlock the phone.
 
@@ -1773,12 +1782,13 @@ function mergeCoverage(
 
 ---
 
-### Task 71: [ ] NEW — C4: Historical export
+### Task 71: [x] COMPLETE — C4: Historical export
 **Todoist ID:** 6gQ53V6RgWpvW9w6
 **Added:** 2026-04-17
 **Source:** Gap Analysis 2026-04-17 (Phase C — freshness moat)
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
 **Priority:** p3
+**Completed:** 2026-04-25
 
 **Why this matters:** The dashboard is great for real-time decisions, but sometimes you want to regress a ticker's Reddit mentions against its price over 30 days, or export to a notebook to test a theory. Without a download option, users are locked into the dashboard's visualisations. CSV export makes Meme Radar into a data source, not just a product — and it's trivially cheap to ship because we already have the data in DynamoDB.
 
@@ -2053,11 +2063,12 @@ Run the full suite. For every violation surfaced, either:
 
 ---
 
-### Task 81: [ ] NEW — Standing nightly bug report (Playwright writes findings to QA-REPORT.md)
+### Task 81: [x] COMPLETE — Standing nightly bug report (Playwright writes findings to QA-REPORT.md)
 **Todoist ID:** 6gQW5pfcFgjVvM86
 **Added:** 2026-04-20
 **Source:** Mark (2026-04-19) — gives Mark a single file to check each morning rather than log-spelunking
-**Status:** [ ] NEW
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-25
 **Priority:** p2
 
 **Blocked by:** Tasks 72–80 should ship first so the suites actually exist before the nightly report runs against them.
@@ -2091,6 +2102,12 @@ Commit `QA-REPORT.md` on each nightly run.
 **Acceptance:** Script exists, runs cleanly, produces markdown. `QA-REPORT.md` exists in repo and is updated by the nightly run.
 
 **Note:** This task depends on the other 9 existing. If Claude Code picks it up before the others are done, mark it `[?] NEEDS CLARIFICATION` and move on.
+
+**Implementation:**
+- Created `scripts/nightly-qa-report.sh` — runs Jest (--json), Playwright per project (chromium, Mobile Chrome, Mobile Safari), parses results with embedded Python3 helpers, diffs against `logs/qa-state.json` for new-failure detection, appends dated summary to `QA-REPORT.md`
+- Supports `--dry-run` mode (skips running tests, generates a zero-count report) for testing and fast CI checks
+- 7 new unit tests in `tests/unit/scripts/nightly-qa-report.test.ts` (script exists, exit 0, file created, dated heading, all sections, append semantics, table rows)
+- **Metrics:** 66 suites, 925 tests, lint clean
 
 ---
 
@@ -2966,3 +2983,20 @@ All tests passing: 700 / 700. Lint and build clean.
 **Remaining NEW tasks:** Task 81 (p2 — nightly QA report), Task 65 (p3), Task 69 (p3), Task 71 (p3), Task 70 (p4)
 
 **Test suite health:** 918 unit/integration tests passing, 208 chromium E2E tests passing, lint clean
+
+---
+
+## Nightly Run — 2026-04-25
+
+**Tasks completed (5 of 5 limit):**
+- Task 81 [x] COMPLETE — `scripts/nightly-qa-report.sh` bash script that runs Jest + Playwright, parses JSON output via embedded Python3, diffs failures vs `logs/qa-state.json`, and appends a markdown table to `QA-REPORT.md`. 7 unit tests cover --dry-run mode, heading, sections, append-on-repeat, and row format. Commit: (session task)
+- Task 65 [x] COMPLETE — Dense table view toggle on dashboard. `ViewToggle.tsx` (group/aria-pressed, 44px tap targets, URL state `?view=table`), `StockTable.tsx` (sticky first column, client-side sort on all 6 columns with aria-sort + Enter key, RankDeltaBadge, sentiment/price cells, empty state). 21 new tests. Commit: (session task)
+- Task 69 [x] COMPLETE — Public JSON API v1 at `/api/public/v1/stocks/trending` and `/api/public/v1/stocks/:ticker` with CORS (`*`), `Cache-Control: public, max-age=60`, 60 req/min rate limiter per IP, trimmed response schema (no internal timestamps/TTL). Static docs page at `public/api-docs/index.html`. 17 integration tests. Commit: dec4b6b
+- Task 71 [x] COMPLETE — Historical CSV export at `GET /api/stocks/:ticker/export?format=csv|json&range=7d|30d`. Auth-gated (cookie JWT). `src/lib/export/csv.ts` utilities (escapeCsvField, formatCsvRow, generateExportCsv). `getStockMentionRange` added to storage with DynamoDB pagination. Price join via nearestPrice() (1-hour tolerance). "Export CSV" button on stock detail page. 29 tests (unit + integration). Commit: 46dfec1
+- Task 70 [x] COMPLETE — `/m` ultra-light server component (revalidate=60, no client JS, inline styles, 4-column table: rank/ticker/velocity/price). `docs/ios-shortcut.md` 10-minute guide (6 Shortcut actions, Siri phrase, troubleshooting). "📱 Mobile view" footer link on landing page. 7 unit tests + Playwright E2E spec with JS-disabled test. Commit: edd3e73
+
+**Tasks failed:** None
+
+**Remaining NEW tasks:** (all Phase C tasks now complete — check TODOIST-TASKS.md for next priority batch)
+
+**Test suite health:** 999 unit/integration tests passing, lint clean, 5 new Playwright E2E specs added
