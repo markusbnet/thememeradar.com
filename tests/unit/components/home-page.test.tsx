@@ -25,10 +25,14 @@ describe('Home Page', () => {
     expect(signupLink.getAttribute('href')).toBe('/signup');
   });
 
-  it('renders exactly two navigation links', () => {
+  it('renders navigation links including mobile view', () => {
     render(<Home />);
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(2);
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    const hrefs = links.map(l => l.getAttribute('href'));
+    expect(hrefs).toContain('/login');
+    expect(hrefs).toContain('/signup');
+    expect(hrefs).toContain('/m');
   });
 
   it('has a main landmark for accessibility', () => {
