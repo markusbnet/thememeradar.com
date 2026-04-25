@@ -212,11 +212,20 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 <span className="font-medium">{sentiment.label}</span>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Sentiment Score</p>
-              <p className={`text-2xl sm:text-3xl font-bold ${sentiment.color.split(' ')[0]}`}>
-                {stockDetails.avgSentimentScore.toFixed(2)}
-              </p>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Sentiment Score</p>
+                <p className={`text-2xl sm:text-3xl font-bold ${sentiment.color.split(' ')[0]}`}>
+                  {stockDetails.avgSentimentScore.toFixed(2)}
+                </p>
+              </div>
+              <a
+                href={`/api/stocks/${ticker}/export?format=csv&range=30d`}
+                download
+                className="inline-flex items-center min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Export CSV
+              </a>
             </div>
           </div>
         </div>

@@ -583,3 +583,33 @@ export async function getSparklineData(ticker: string, days: number = 7): Promis
 
   return Array.from(dailyBuckets.values());
 }
+
+/**
+ * Get raw mention buckets for a ticker within a time range.
+ * Paginates DynamoDB automatically. Used for historical export.
+ */
+export async function getStockMentionRange(
+  ticker: string,
+  fromMs: number,
+  toMs: number,
+): Promise<StoredStockMention[]> {
+  const all: StoredStockMention[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+
+  do {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLES.STOCK_MENTIONS,
+        KeyConditionExpression: 'ticker = :ticker AND #ts BETWEEN :from AND :to',
+        ExpressionAttributeNames: { '#ts': 'timestamp' },
+        ExpressionAttributeValues: { ':ticker': ticker, ':from': fromMs, ':to': toMs },
+        ScanIndexForward: true,
+        ...(lastKey ? { ExclusiveStartKey: lastKey } : {}),
+      })
+    );
+    all.push(...((result.Items ?? []) as StoredStockMention[]));
+    lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
+
+  return all;
+}
