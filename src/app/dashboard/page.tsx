@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkAuth, logout, type User } from '@/lib/auth/client';
 import StockCard from '@/components/StockCard';
+import StockTable from '@/components/StockTable';
+import ViewToggle from '@/components/ViewToggle';
 import OpportunityCard from '@/components/OpportunityCard';
 import RefreshTimer from '@/components/RefreshTimer';
 import PipelineStatus from '@/components/PipelineStatus';
@@ -55,6 +57,7 @@ export default function DashboardPage() {
   const [opportunities, setOpportunities] = useState<OpportunityScore[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<Timeframe>('24h');
+  const [view, setView] = useState<'cards' | 'table'>('cards');
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -73,7 +76,7 @@ export default function DashboardPage() {
       setUser(userData || null);
       setIsLoading(false);
 
-      // Read initial timeframe from URL
+      // Read initial timeframe and view from URL
       const params = new URLSearchParams(window.location.search);
       const tfParam = params.get('timeframe');
       const initialTf: Timeframe =
@@ -83,6 +86,11 @@ export default function DashboardPage() {
 
       if (initialTf !== '24h') {
         setTimeframe(initialTf);
+      }
+
+      const viewParam = params.get('view');
+      if (viewParam === 'table') {
+        setView('table');
       }
 
       // Fetch stock data, surge data, and opportunities in parallel
@@ -134,8 +142,21 @@ export default function DashboardPage() {
 
   const handleTimeframeChange = (tf: Timeframe) => {
     setTimeframe(tf);
-    window.history.replaceState({}, '', `?timeframe=${tf}`);
+    const params = new URLSearchParams(window.location.search);
+    params.set('timeframe', tf);
+    window.history.replaceState({}, '', `?${params.toString()}`);
     fetchStockData(tf);
+  };
+
+  const handleViewChange = (v: 'cards' | 'table') => {
+    setView(v);
+    const params = new URLSearchParams(window.location.search);
+    if (v === 'table') {
+      params.set('view', 'table');
+    } else {
+      params.delete('view');
+    }
+    window.history.replaceState({}, '', `?${params.toString()}`);
   };
 
   const handleRefresh = async () => {
@@ -270,12 +291,15 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Timeframe Selector */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
-          <div className="text-sm text-gray-500">
-            Showing data for the last <span className="font-medium text-gray-700">{timeframe}</span>
+        {/* Timeframe Selector + View Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="text-sm text-gray-500">
+              Showing data for the last <span className="font-medium text-gray-700">{timeframe}</span>
+            </div>
+            <TimeframeSelector value={timeframe} onChange={handleTimeframeChange} />
           </div>
-          <TimeframeSelector value={timeframe} onChange={handleTimeframeChange} />
+          <ViewToggle view={view} onChange={handleViewChange} />
         </div>
 
         {/* Trending Stocks Section */}
@@ -298,6 +322,13 @@ export default function DashboardPage() {
                 The background scanner runs every 5 minutes
               </p>
             </div>
+          ) : view === 'table' ? (
+            <StockTable stocks={stockData.trending.map(s => ({
+              ...s,
+              price: s.price?.price ?? s.enrichment?.price,
+              changePct24h: s.price?.changePct24h ?? s.enrichment?.percent_change_24h,
+              staleness: s.price?.staleness,
+            }))} type="trending" />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {stockData.trending.map((stock, index) => (
@@ -344,6 +375,13 @@ export default function DashboardPage() {
                 No fading stocks found. Waiting for data...
               </p>
             </div>
+          ) : view === 'table' ? (
+            <StockTable stocks={stockData.fading.map(s => ({
+              ...s,
+              price: s.price?.price ?? s.enrichment?.price,
+              changePct24h: s.price?.changePct24h ?? s.enrichment?.percent_change_24h,
+              staleness: s.price?.staleness,
+            }))} type="fading" />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {stockData.fading.map((stock, index) => (
