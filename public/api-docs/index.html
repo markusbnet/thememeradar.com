@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meme Radar — Public API Docs</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; line-height: 1.6; }
+    .container { max-width: 860px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { font-size: 1.875rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .subtitle { color: #6b7280; margin-bottom: 2rem; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 0.75rem; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 0.75rem; }
+    .badge { display: inline-block; background: #7c3aed; color: #fff; font-size: 0.7rem; font-weight: 700;
+             padding: 0.15rem 0.45rem; border-radius: 4px; margin-right: 0.4rem; }
+    .badge.get { background: #059669; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 1rem; border-radius: 6px; overflow-x: auto;
+          font-size: 0.82rem; line-height: 1.5; margin: 0.75rem 0; }
+    code { font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f3f4f6; font-weight: 600; }
+    .note { background: #eff6ff; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0;
+            font-size: 0.875rem; margin: 0.75rem 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📡 Meme Radar — Public API</h1>
+  <p class="subtitle">Free, read-only JSON API for Reddit meme stock trends. No API key required. Rate limit: 60 requests/min per IP.</p>
+
+  <div class="note">
+    <strong>Base URL:</strong> <code>https://thememeradar.com/api/public/v1</code><br>
+    All responses follow the shape <code>{ "success": true, "data": { ... } }</code> on success
+    and <code>{ "success": false, "error": "..." }</code> on failure.
+  </div>
+
+  <!-- ── Endpoints ── -->
+  <h2>Endpoints</h2>
+
+  <!-- Trending -->
+  <div class="card">
+    <p><span class="badge get">GET</span><code>/api/public/v1/stocks/trending</code></p>
+    <p>Returns the top 10 trending (rising) and top 10 fading (losing interest) stocks, ranked by mention velocity from Reddit.</p>
+
+    <h3>Query parameters</h3>
+    <table>
+      <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>timeframe</td><td>string</td><td><code>24h</code></td><td>Window size: <code>1h</code>, <code>4h</code>, <code>24h</code>, or <code>7d</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Example request</h3>
+<pre><code>GET https://thememeradar.com/api/public/v1/stocks/trending?timeframe=24h
+</code></pre>
+
+    <h3>Example response</h3>
+<pre><code>{
+  "success": true,
+  "data": {
+    "timeframe": "24h",
+    "timestamp": 1714065600000,
+    "trending": [
+      {
+        "ticker": "GME",
+        "mentionCount": 1243,
+        "mentionDelta": 820,
+        "velocity": 193,
+        "sentimentScore": 0.62,
+        "sentimentCategory": "bullish",
+        "rankDelta24h": 15,
+        "rankStatus": "climbing",
+        "coverageSource": "both",
+        "sparklineData": [230, 310, 480, 890, 1243],
+        "price": { "price": 28.45, "changePct24h": 12.3, "staleness": "fresh" }
+      }
+    ],
+    "fading": [ /* same shape */ ]
+  }
+}
+</code></pre>
+
+    <h3>Field reference</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>ticker</td><td>string</td><td>Stock symbol (uppercased)</td></tr>
+        <tr><td>mentionCount</td><td>number</td><td>Total mentions in window</td></tr>
+        <tr><td>mentionDelta</td><td>number | null</td><td>Change vs previous window</td></tr>
+        <tr><td>velocity</td><td>number</td><td>% change in mentions vs previous window</td></tr>
+        <tr><td>sentimentScore</td><td>number</td><td>-1 (strong bear) to +1 (strong bull)</td></tr>
+        <tr><td>sentimentCategory</td><td>string</td><td><code>strong_bullish</code> / <code>bullish</code> / <code>neutral</code> / <code>bearish</code> / <code>strong_bearish</code></td></tr>
+        <tr><td>rankDelta24h</td><td>number | null</td><td>Rank positions gained/lost vs 24h ago</td></tr>
+        <tr><td>rankStatus</td><td>string</td><td><code>climbing</code> / <code>falling</code> / <code>new</code> / <code>steady</code> / <code>unknown</code></td></tr>
+        <tr><td>coverageSource</td><td>string</td><td><code>reddit</code> / <code>apewisdom</code> / <code>both</code></td></tr>
+        <tr><td>sparklineData</td><td>number[]</td><td>Last 7 days of mention counts (daily buckets)</td></tr>
+        <tr><td>price</td><td>object | null</td><td>Finnhub price data when available</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Stock detail -->
+  <div class="card">
+    <p><span class="badge get">GET</span><code>/api/public/v1/stocks/:ticker</code></p>
+    <p>Returns full details for a single ticker including mention history, evidence posts, and enrichment data.</p>
+
+    <h3>Example request</h3>
+<pre><code>GET https://thememeradar.com/api/public/v1/stocks/GME
+</code></pre>
+
+    <h3>Example response (abbreviated)</h3>
+<pre><code>{
+  "success": true,
+  "data": {
+    "ticker": "GME",
+    "details": {
+      "mentionCount": 1243,
+      "sentimentScore": 0.62,
+      "sentimentCategory": "bullish",
+      "velocity": 193
+    },
+    "history": [ { "date": "2026-04-18", "mentionCount": 230, "sentimentScore": 0.45 } ],
+    "timeBreakdown": [ { "period": "1h", "mentionCount": 48, "sentimentScore": 0.71 } ],
+    "priceSnapshot": { "price": 28.45, "changePct24h": 12.3, "volume": 9400000 },
+    "timestamp": 1714065600000
+  }
+}
+</code></pre>
+  </div>
+
+  <!-- Rate limiting -->
+  <h2>Rate limiting</h2>
+  <div class="card">
+    <p>All public API endpoints share a rate limit of <strong>60 requests per minute</strong> per IP address.</p>
+    <p>Exceeding the limit returns HTTP <code>429</code> with body <code>{ "success": false, "error": "Rate limit exceeded. Max 60 requests/min." }</code></p>
+  </div>
+
+  <!-- Google Sheets -->
+  <h2>Google Sheets — IMPORTJSON recipe</h2>
+  <div class="card">
+    <p>Paste the formula below into any Google Sheet cell to pull live trending data. It requires the free
+       <a href="https://github.com/bradjasper/ImportJSON" target="_blank" rel="noopener">ImportJSON</a> add-on.</p>
+
+<pre><code>=IMPORTJSON("https://thememeradar.com/api/public/v1/stocks/trending?timeframe=24h",
+             "/data/trending",
+             "noHeaders")
+</code></pre>
+
+    <p>To get only specific columns (ticker + velocity + sentimentCategory):</p>
+<pre><code>=IMPORTJSON("https://thememeradar.com/api/public/v1/stocks/trending",
+             "/data/trending/ticker,/data/trending/velocity,/data/trending/sentimentCategory",
+             "noHeaders")
+</code></pre>
+
+    <div class="note">
+      <strong>Tip:</strong> Wrap the formula in <code>=IFERROR(…, "Loading…")</code> to display a
+      placeholder while the sheet refreshes. Google Sheets caches external data for ~1 hour by default.
+    </div>
+  </div>
+
+  <!-- CSV / Python -->
+  <h2>Python / pandas recipe</h2>
+  <div class="card">
+<pre><code>import requests, pandas as pd
+
+resp = requests.get(
+    "https://thememeradar.com/api/public/v1/stocks/trending",
+    params={"timeframe": "24h"},
+    timeout=10,
+)
+data = resp.json()["data"]
+df = pd.DataFrame(data["trending"])
+print(df[["ticker", "mentionCount", "velocity", "sentimentCategory"]])
+</code></pre>
+  </div>
+
+  <p style="margin-top:2rem; color:#9ca3af; font-size:0.8rem;">
+    Meme Radar Public API — v1. Data sourced from Reddit. For feedback, open an issue on GitHub.
+  </p>
+</div>
+</body>
+</html>
