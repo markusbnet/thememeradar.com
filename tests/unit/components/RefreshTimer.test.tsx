@@ -59,7 +59,7 @@ describe('RefreshTimer', () => {
     expect(screen.getByText('2 minutes ago')).toBeInTheDocument();
   });
 
-  it('should call router.refresh on manual refresh click', () => {
+  it('should call router.refresh on manual refresh click when no onRefresh prop is provided', () => {
     render(<RefreshTimer />);
 
     act(() => {
@@ -67,6 +67,30 @@ describe('RefreshTimer', () => {
     });
 
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('should invoke onRefresh callback on manual refresh click when provided', () => {
+    const onRefresh = jest.fn();
+    render(<RefreshTimer onRefresh={onRefresh} />);
+
+    act(() => {
+      screen.getByRole('button', { name: /refresh/i }).click();
+    });
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it('should invoke onRefresh callback on auto-refresh interval when provided', () => {
+    const onRefresh = jest.fn();
+    render(<RefreshTimer onRefresh={onRefresh} />);
+
+    act(() => {
+      jest.advanceTimersByTime(5 * 60 * 1000);
+    });
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it('should render singular "1 minute ago" at exactly 60 seconds elapsed', () => {

@@ -61,124 +61,183 @@ test.describe('Dashboard Interactions', () => {
   });
 
   test.describe('Empty State Handling', () => {
-    test('should display empty state message when no trending stocks', async ({ page }) => {
-      // If no stocks loaded yet, should show empty state
-      const emptyState = page.getByText(/No trending stocks found/i);
-      const hasEmptyState = await emptyState.isVisible().catch(() => false);
+    test('shows empty-state messaging when trending API returns no stocks', async ({ page, context }) => {
+      await context.route('**/api/stocks/trending*', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            data: { trending: [], fading: [], timestamp: Date.now() },
+          }),
+        })
+      );
+      await context.route('**/api/stocks/surging', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, data: { surging: [], timestamp: Date.now() } }),
+        })
+      );
+      await context.route('**/api/stocks/opportunities', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, data: { opportunities: [] } }),
+        })
+      );
 
-      if (hasEmptyState) {
-        await expect(emptyState).toBeVisible();
-        await expect(page.getByText(/Waiting for first scan/i)).toBeVisible();
-        await expect(page.getByText(/scanner runs every 5 minutes/i)).toBeVisible();
-      }
+      await page.reload();
+      await expect(page.getByText(/No trending stocks found/i)).toBeVisible();
+      await expect(page.getByText(/Waiting for first scan/i)).toBeVisible();
+      await expect(page.getByText(/scanner runs every 5 minutes/i)).toBeVisible();
     });
 
-    test('should display empty state for fading stocks when no data', async ({ page }) => {
-      const emptyState = page.getByText(/No fading stocks found/i);
-      const hasEmptyState = await emptyState.isVisible().catch(() => false);
+    test('shows fading empty-state message when fading array is empty', async ({ page, context }) => {
+      await context.route('**/api/stocks/trending*', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            data: { trending: [], fading: [], timestamp: Date.now() },
+          }),
+        })
+      );
 
-      if (hasEmptyState) {
-        await expect(emptyState).toBeVisible();
-      }
+      await page.reload();
+      await expect(page.getByText(/No fading stocks found/i)).toBeVisible();
     });
   });
 
   test.describe('Stock Cards Display', () => {
-    test('should display stock cards with correct structure if data exists', async ({ page }) => {
-      // Wait for potential data load
-      await page.waitForTimeout(1000);
+    test('renders a stock card with ticker, mentions, and sentiment when trending has data', async ({ page, context }) => {
+      const mockTrending = {
+        ticker: 'ZZMOCK',
+        mentionCount: 42,
+        mentionsPrev: 10,
+        mentionDelta: 32,
+        sentimentScore: 0.65,
+        sentimentCategory: 'strong_bullish',
+        velocity: 320,
+        timestamp: Date.now(),
+        rankDelta24h: null,
+        rankStatus: 'unknown',
+        coverageSource: 'reddit',
+        price: null,
+        enrichment: null,
+      };
 
-      const stockCards = page.locator('[data-testid="stock-card"], .stock-card').first();
-      const hasStockCards = await stockCards.isVisible().catch(() => false);
+      await context.route('**/api/stocks/trending*', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            data: { trending: [mockTrending], fading: [], timestamp: Date.now() },
+          }),
+        })
+      );
+      await context.route('**/api/stocks/surging', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, data: { surging: [], timestamp: Date.now() } }),
+        })
+      );
+      await context.route('**/api/stocks/opportunities', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, data: { opportunities: [] } }),
+        })
+      );
 
-      if (hasStockCards) {
-        // If stock cards exist, verify structure
-        await expect(stockCards).toBeVisible();
-      } else {
-        // If no cards, verify empty state
-        const emptyState = page.getByText(/No trending stocks found/i);
-        await expect(emptyState).toBeVisible();
-      }
+      await page.reload();
+      await expect(page.getByRole('heading', { name: '$ZZMOCK' })).toBeVisible();
+      await expect(page.getByText('42')).toBeVisible();
+      await expect(page.getByText(/Strong Bullish/i)).toBeVisible();
     });
 
-    test('should display stock cards in grid layout', async ({ page }) => {
-      await page.waitForTimeout(1000);
+    test('stock card grid has responsive column classes when cards are present', async ({ page, context }) => {
+      await context.route('**/api/stocks/trending*', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            data: {
+              trending: [
+                {
+                  ticker: 'ZZGRID',
+                  mentionCount: 20,
+                  mentionsPrev: 5,
+                  mentionDelta: 15,
+                  sentimentScore: 0.3,
+                  sentimentCategory: 'bullish',
+                  velocity: 300,
+                  timestamp: Date.now(),
+                  rankDelta24h: null,
+                  rankStatus: 'unknown',
+                  coverageSource: 'reddit',
+                  price: null,
+                  enrichment: null,
+                },
+              ],
+              fading: [],
+              timestamp: Date.now(),
+            },
+          }),
+        })
+      );
 
-      // Check if grid container exists
-      const gridContainer = page.locator('section').first().locator('div.grid');
-      const hasGrid = await gridContainer.isVisible().catch(() => false);
+      await page.reload();
+      await expect(page.getByRole('heading', { name: '$ZZGRID' })).toBeVisible();
 
-      if (hasGrid) {
-        // Verify grid has responsive classes
-        const classes = await gridContainer.getAttribute('class');
-        expect(classes).toContain('grid');
-        expect(classes).toContain('md:grid-cols-');
-      }
+      const gridContainer = page.locator('section').first().locator('div.grid').first();
+      const classes = await gridContainer.getAttribute('class');
+      expect(classes).toContain('grid');
+      expect(classes).toContain('md:grid-cols-');
     });
   });
 
   test.describe('Refresh Timer', () => {
-    test('should display refresh timer component', async ({ page }) => {
-      // Look for refresh timer text patterns - this is optional feature
-      const hasLastUpdated = await page.getByText(/last updated/i).isVisible().catch(() => false);
-      const hasNextUpdate = await page.getByText(/next update/i).isVisible().catch(() => false);
-
-      // Refresh timer component structure should exist (may not be visible if feature not implemented yet)
-      expect(typeof hasLastUpdated).toBe('boolean');
-      expect(typeof hasNextUpdate).toBe('boolean');
+    test('refresh timer is visible with last-updated and next-update labels', async ({ page }) => {
+      await expect(page.getByText(/last updated/i)).toBeVisible();
+      await expect(page.getByText(/next update in/i)).toBeVisible();
+      await expect(page.getByRole('button', { name: /^refresh$/i })).toBeVisible();
     });
 
-    test('should show time information in refresh timer', async ({ page }) => {
-      await page.waitForTimeout(500);
-
-      // Check for time-related text patterns
-      const timePatterns = [
-        /\d+ minute/i,
-        /\d+ second/i,
-        /just now/i,
-        /last updated/i,
-        /next update/i,
-      ];
-
-      let foundTimeInfo = false;
-      for (const pattern of timePatterns) {
-        const hasPattern = await page.getByText(pattern).isVisible().catch(() => false);
-        if (hasPattern) {
-          foundTimeInfo = true;
-          break;
-        }
-      }
-
-      expect(foundTimeInfo).toBe(true);
+    test('refresh timer shows elapsed time in expected format', async ({ page }) => {
+      const timeText = page.getByText(/\d+ seconds? ago|just now|\d+ minutes? ago/i).first();
+      await expect(timeText).toBeVisible();
     });
   });
 
   test.describe('Error Handling', () => {
-    test('should handle network errors gracefully', async ({ page, context }) => {
-      // Block API requests to simulate network failure
-      await context.route('**/api/stocks/trending', route => route.abort());
+    test('shows error banner when trending API returns a failure response', async ({ page, context }) => {
+      await context.route('**/api/stocks/trending*', route =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: false, error: 'Database unreachable' }),
+        })
+      );
 
       await page.reload();
-      await page.waitForTimeout(1000);
-
-      // Should show error message or handle gracefully
-      const errorMessage = page.getByText(/error|failed|could not/i);
-      const emptyState = page.getByText(/No trending stocks/i);
-
-      // Either error message or empty state should be visible
-      const hasError = await errorMessage.isVisible().catch(() => false);
-      const hasEmpty = await emptyState.isVisible().catch(() => false);
-
-      expect(hasError || hasEmpty).toBe(true);
+      await expect(page.getByText(/Database unreachable/i)).toBeVisible();
     });
 
-    test('should display error message when API returns error', async ({ page }) => {
-      // Check if error message is displayed (if API fails)
-      const errorBanner = page.locator('.bg-red-50, [role="alert"]');
-      const hasError = await errorBanner.isVisible().catch(() => false);
+    test('handles aborted trending request by showing error or empty state', async ({ page, context }) => {
+      await context.route('**/api/stocks/trending*', route => route.abort());
 
-      // Error handling should be present in the page structure
-      expect(typeof hasError).toBe('boolean');
+      await page.reload();
+      // Dashboard sets a "Network error" or generic error on fetch rejection,
+      // or falls through to the empty state. Either is acceptable; silence
+      // (no banner AND no empty state) is the regression we're guarding.
+      const errorBanner = page.locator('.bg-red-50').first();
+      const emptyState = page.getByText(/No trending stocks found/i);
+      await expect(errorBanner.or(emptyState)).toBeVisible();
     });
   });
 
@@ -245,17 +304,22 @@ test.describe('Dashboard Interactions', () => {
   });
 
   test.describe('Loading States', () => {
-    test('should show loading indicator on initial load', async ({ page }) => {
-      // Navigate away and back to dashboard
+    test('shows loading indicator while auth check is pending', async ({ page, context }) => {
+      // Delay /api/auth/me so the dashboard stays in its loading state long
+      // enough to assert on. Without the delay, the spinner flashes < 1ms
+      // and racy assertions flake.
+      await context.route('**/api/auth/me', async route => {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await route.continue();
+      });
+
       await page.goto('/');
-      await page.goto('/dashboard');
+      const navigation = page.goto('/dashboard');
 
-      // Should show loading state briefly
-      const loadingIndicator = page.locator('.animate-spin, [role="progressbar"]');
-      const hasLoading = await loadingIndicator.isVisible().catch(() => false);
+      await expect(page.locator('.animate-spin').first()).toBeVisible();
+      await expect(page.getByText(/^Loading\.\.\.$/)).toBeVisible();
 
-      // Loading indicator might be too fast to catch, but structure should exist
-      expect(typeof hasLoading).toBe('boolean');
+      await navigation;
     });
 
     test('should eventually load dashboard content', async ({ page }) => {

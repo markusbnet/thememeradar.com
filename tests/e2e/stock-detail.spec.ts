@@ -250,41 +250,11 @@ test.describe('Stock Detail Page', () => {
       }
     });
 
-    test('should display top keywords section if keywords exist', async ({ page }) => {
-      await page.goto('/stock/TSLA');
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(1000);
-
-      const errorHeading = page.getByRole('heading', { name: /Error/i });
-      const hasError = await errorHeading.isVisible().catch(() => false);
-
-      if (!hasError) {
-        // Check if keywords section exists
-        const keywordsSection = page.getByRole('heading', { name: /Top Keywords/i });
-        const hasKeywords = await keywordsSection.isVisible().catch(() => false);
-
-        // Keywords section is optional (only shows if keywords exist)
-        expect(typeof hasKeywords).toBe('boolean');
-      }
-    });
-
-    test('should display supporting evidence section if evidence exists', async ({ page }) => {
-      await page.goto('/stock/TSLA');
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(1000);
-
-      const errorHeading = page.getByRole('heading', { name: /Error/i });
-      const hasError = await errorHeading.isVisible().catch(() => false);
-
-      if (!hasError) {
-        // Check if evidence section exists
-        const evidenceSection = page.getByRole('heading', { name: /Supporting Evidence/i });
-        const hasEvidence = await evidenceSection.isVisible().catch(() => false);
-
-        // Evidence section is optional (only shows if evidence exists)
-        expect(typeof hasEvidence).toBe('boolean');
-      }
-    });
+    // Keywords and Supporting Evidence section rendering is covered by
+    // tests/e2e/stock-detail-data.spec.ts, which seeds the DB with real
+    // evidence rows and asserts the sections render. The previous `if (exists)`
+    // guards here produced tautological tests that passed whether or not the
+    // page actually worked.
   });
 
   test.describe('Error Handling', () => {
@@ -351,15 +321,17 @@ test.describe('Stock Detail Page', () => {
       testUsers.push(email);
     });
 
-    test('should show loading indicator on initial load', async ({ page }) => {
-      await page.goto('/stock/TSLA');
+    test('should show loading indicator while stock API is pending', async ({ page, context }) => {
+      // Delay the stock detail API so the loading state is observable.
+      // Without this delay the spinner may flash faster than we can assert.
+      await context.route('**/api/stocks/TSLA', async route => {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await route.continue();
+      });
 
-      // Should show loading state briefly
-      const loadingIndicator = page.locator('.animate-spin, text=/Loading/i');
-      const hasLoading = await loadingIndicator.isVisible().catch(() => false);
-
-      // Loading indicator might be too fast to catch, but structure should exist
-      expect(typeof hasLoading).toBe('boolean');
+      const navigation = page.goto('/stock/TSLA');
+      await expect(page.locator('.animate-spin').first()).toBeVisible();
+      await navigation;
     });
 
     test('should eventually load content or error', async ({ page }) => {
@@ -413,23 +385,10 @@ test.describe('Stock Detail Page', () => {
       }
     });
 
-    test('should display statistics in grid on desktop', async ({ page }) => {
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await page.goto('/stock/TSLA');
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(1000);
-
-      const errorHeading = page.getByRole('heading', { name: /Error/i });
-      const hasError = await errorHeading.isVisible().catch(() => false);
-
-      if (!hasError) {
-        // Grid container should exist
-        const gridContainer = page.locator('main div.grid').first();
-        const hasGrid = await gridContainer.isVisible().catch(() => false);
-
-        expect(typeof hasGrid).toBe('boolean');
-      }
-    });
+    // Desktop statistics-grid rendering is verified by stock-detail-data.spec.ts
+    // where seeded data guarantees the grid renders. A conditional viewport-only
+    // test without seeded data cannot distinguish "renders correctly" from
+    // "silently swallowed by the error branch".
   });
 
   test.describe('Data Integrity', () => {

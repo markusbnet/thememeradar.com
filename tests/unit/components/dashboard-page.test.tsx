@@ -1,12 +1,14 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import DashboardPage from '@/app/dashboard/page';
 
-// Mock next/navigation
+// Mock next/navigation. The real useRouter returns a stable object across
+// renders; returning a fresh object each call would cause any
+// `useEffect([router])` to re-run on every re-render, which produces
+// phantom extra fetches in tests that rely on counting fetch calls.
 const mockPush = jest.fn();
+const mockRouter = { push: mockPush };
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
+  useRouter: () => mockRouter,
 }));
 
 // Mock auth client
@@ -37,8 +39,19 @@ jest.mock('@/components/SurgeAlert', () => {
 });
 
 jest.mock('@/components/RefreshTimer', () => {
-  return function MockRefreshTimer() {
-    return <div data-testid="refresh-timer">RefreshTimer</div>;
+  return function MockRefreshTimer({ onRefresh }: { onRefresh?: () => void | Promise<void> }) {
+    return (
+      <div data-testid="refresh-timer">
+        <button
+          type="button"
+          onClick={() => {
+            if (onRefresh) void onRefresh();
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+    );
   };
 });
 
@@ -324,6 +337,39 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('refresh-timer')).toBeInTheDocument();
     });
+  });
+
+  it('re-fetches trending, surging, and opportunities when Refresh is clicked', async () => {
+    const mockFetch = createMockFetch();
+    global.fetch = mockFetch as unknown as typeof fetch;
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('refresh-timer')).toBeInTheDocument();
+    });
+
+    const countCalls = (predicate: (url: string) => boolean) =>
+      mockFetch.mock.calls.filter(([url]) => predicate(url as string)).length;
+
+    // Wait for initial data fetches to settle before snapshotting counts
+    await waitFor(() => {
+      expect(countCalls((u) => u.startsWith('/api/stocks/trending'))).toBeGreaterThan(0);
+      expect(countCalls((u) => u === '/api/stocks/surging')).toBeGreaterThan(0);
+      expect(countCalls((u) => u === '/api/stocks/opportunities')).toBeGreaterThan(0);
+    });
+
+    const initialTrending = countCalls((u) => u.startsWith('/api/stocks/trending'));
+    const initialSurging = countCalls((u) => u === '/api/stocks/surging');
+    const initialOpps = countCalls((u) => u === '/api/stocks/opportunities');
+
+    await act(async () => {
+      screen.getByRole('button', { name: /refresh/i }).click();
+    });
+
+    expect(countCalls((u) => u.startsWith('/api/stocks/trending'))).toBe(initialTrending + 1);
+    expect(countCalls((u) => u === '/api/stocks/surging')).toBe(initialSurging + 1);
+    expect(countCalls((u) => u === '/api/stocks/opportunities')).toBe(initialOpps + 1);
   });
 
   it('does not redirect when user is authenticated', async () => {

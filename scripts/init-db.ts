@@ -60,6 +60,7 @@ const TABLES = {
   APEWISDOM_SNAPSHOT: 'apewisdom_snapshot',
   EMAIL_ALERTS: 'email_alerts',
   STOCK_OPTIONS: 'stock_options',
+  SCAN_STATE: 'scan_state',
 };
 
 async function prepareTable(tableName: string): Promise<boolean> {
@@ -331,6 +332,27 @@ async function createStockOptionsTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createScanStateTable() {
+  // Holds scan mutex lock + heartbeat. Key is lockKey ('lock' | 'heartbeat').
+  // TTL on 'ttl' auto-expires abandoned locks (function killed mid-scan) so
+  // the pipeline is self-healing without manual intervention.
+  const tableName = TABLES.SCAN_STATE;
+  if (!(await prepareTable(tableName))) return;
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [{ AttributeName: 'lockKey', KeyType: 'HASH' }],
+      AttributeDefinitions: [{ AttributeName: 'lockKey', AttributeType: 'S' }],
+      BillingMode: 'PAY_PER_REQUEST',
+    })
+  );
+
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log(
     `=== Initializing DynamoDB Tables ===${RESET ? ' (--reset: dropping existing)' : ''}\n`
@@ -349,6 +371,7 @@ async function main() {
     await createApewisdomSnapshotTable();
     await createEmailAlertsTable();
     await createStockOptionsTable();
+    await createScanStateTable();
 
     console.log('\n✓ All tables created successfully!');
     console.log('\nTables:');
@@ -361,6 +384,7 @@ async function main() {
     console.log('- apewisdom_snapshot (ApeWisdom ranked ticker lists per subreddit, TTL 48h)');
     console.log('- email_alerts (hot opportunity email alerts, TTL 24h)');
     console.log('- stock_options (SwaggyStocks options OI + IV per ticker, TTL 30d)');
+    console.log('- scan_state (scan mutex lock + heartbeat, TTL self-healing 10min lock)');
   } catch (error: any) {
     // AWS SDK connection errors (DynamoDB Local down) arrive as AggregateError
     // with an empty top-level message — inspect nested errors for something useful.

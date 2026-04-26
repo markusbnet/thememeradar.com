@@ -27,6 +27,7 @@ const TABLES = {
   OPPORTUNITY_SIGNALS: 'memeradar-opportunity_signals',
   EMAIL_ALERTS: 'memeradar-email_alerts',
   STOCK_OPTIONS: 'memeradar-stock_options',
+  SCAN_STATE: 'memeradar-scan_state',
 };
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -277,6 +278,32 @@ async function createStockOptionsTable() {
   console.log(`✓ Created table: ${tableName}`);
 }
 
+async function createScanStateTable() {
+  // Scan mutex lock + heartbeat. One row per lockKey ('lock'|'heartbeat').
+  // TTL on 'ttl' auto-expires abandoned locks so a killed function doesn't
+  // permanently block the cron.
+  const tableName = TABLES.SCAN_STATE;
+
+  if (await tableExists(tableName)) {
+    console.log(`✓ Table already exists: ${tableName}`);
+    return;
+  }
+
+  console.log(`Creating table: ${tableName}...`);
+
+  await client.send(
+    new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [{ AttributeName: 'lockKey', KeyType: 'HASH' }],
+      AttributeDefinitions: [{ AttributeName: 'lockKey', AttributeType: 'S' }],
+      BillingMode: 'PAY_PER_REQUEST',
+    })
+  );
+
+  await waitForTableActive(tableName);
+  console.log(`✓ Created table: ${tableName}`);
+}
+
 async function main() {
   console.log('=== Initializing Production DynamoDB Tables ===\n');
   console.log(`Region: ${process.env.AWS_REGION || 'us-east-1'}\n`);
@@ -295,6 +322,7 @@ async function main() {
     await createOpportunitySignalsTable();
     await createEmailAlertsTable();
     await createStockOptionsTable();
+    await createScanStateTable();
     console.log('\n✓ All tables ready!');
     console.log('\nTables:');
     console.log('- memeradar-users (stores user accounts)');
@@ -304,6 +332,7 @@ async function main() {
     console.log('- memeradar-opportunity_signals (composite opportunity scores, TTL 30d)');
     console.log('- memeradar-email_alerts (hot opportunity email alerts, TTL 24h)');
     console.log('- memeradar-stock_options (SwaggyStocks options OI + IV per ticker, TTL 30d)');
+    console.log('- memeradar-scan_state (scan mutex lock + heartbeat, TTL self-healing)');
     console.log('\nBilling: PAY_PER_REQUEST (on-demand, free tier eligible)');
     console.log('TTL: Enabled (data expires after 30 days automatically)');
   } catch (error: any) {

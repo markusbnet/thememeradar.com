@@ -129,22 +129,20 @@ test.describe('Security Tests', () => {
       expect(errorMessage?.toLowerCase()).not.toContain('does not exist');
     });
 
-    test('should rate limit login attempts (if implemented)', async ({ page }) => {
+    test('should rate limit login attempts after 5 failures (CLAUDE.md contract)', async ({ page }) => {
       await page.goto('/login');
 
-      // Make multiple failed login attempts
+      // CLAUDE.md: "Rate limiting on auth endpoints (5 attempts per 15 min)".
+      // Six failed attempts must trigger the rate-limit UI — anything less
+      // violates the documented auth-security contract.
       for (let i = 0; i < 6; i++) {
-        await page.getByLabel(/email/i).fill('test@example.com');
+        await page.getByLabel(/email/i).fill('ratelimit-test@example.com');
         await page.getByRole('textbox', { name: /password/i }).fill('WrongPassword' + i);
         await page.getByRole('button', { name: /log in/i }).click();
         await page.waitForTimeout(500);
       }
 
-      // Check if rate limiting message appears (if implemented)
-      const rateLimitMessage = await page.getByText(/too many attempts|rate limit/i).isVisible().catch(() => false);
-
-      // This test documents expected behavior
-      expect(typeof rateLimitMessage).toBe('boolean');
+      await expect(page.getByText(/too many attempts|rate limit/i)).toBeVisible();
     });
 
     test('should not allow SQL injection in email field', async ({ page }) => {

@@ -48,6 +48,9 @@ export const TABLES = {
   APEWISDOM_SNAPSHOT: `${TABLE_PREFIX}apewisdom_snapshot`,
   EMAIL_ALERTS: `${TABLE_PREFIX}email_alerts`,
   STOCK_OPTIONS: `${TABLE_PREFIX}stock_options`,
+  // Holds one row per lock key. Used by the scan pipeline for mutex lock
+  // (lockKey='lock') and heartbeat record (lockKey='heartbeat').
+  SCAN_STATE: `${TABLE_PREFIX}scan_state`,
 };
 
 // Export commands for easy access

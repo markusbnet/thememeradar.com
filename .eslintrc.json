@@ -1,3 +1,17 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": ["tests/**/*.{ts,tsx,js,jsx}"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.property.name='toBe'][arguments.0.value='boolean'][callee.object.callee.name='expect'][callee.object.arguments.0.type='UnaryExpression'][callee.object.arguments.0.operator='typeof']",
+            "message": "Tautological assertion: `expect(typeof x).toBe('boolean')` is true for every non-error value. Assert on the value itself (`expect(x).toBe(true)`) or on a visible DOM/text outcome instead."
+          }
+        ]
+      }
+    }
+  ]
 }

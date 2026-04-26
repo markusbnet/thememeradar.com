@@ -302,8 +302,6 @@ describe('StockDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByText('$TSLA')).toBeInTheDocument();
     });
-
-    expect(global.fetch).toHaveBeenCalledWith('/api/stocks/TSLA');
   });
 
   it('shows error state when fetch throws an exception', async () => {

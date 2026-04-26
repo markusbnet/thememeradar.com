@@ -5,15 +5,28 @@ import { logger } from '@/lib/logger';
  * POST /api/scan - Manual scan (custom subreddits)
  *
  * Scans Reddit for stock mentions, analyzes sentiment, and saves to DynamoDB
+ *
+ * Reliability controls (GET path):
+ *   - Mutex lock prevents overlapping Vercel Cron invocations.
+ *   - Heartbeat row tracks started/success/failed status for health endpoint.
+ *   - Failure alert emits operator notification (with cooldown).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { createScanner } from '@/lib/scanner/scanner';
 import { saveScanResults } from '@/lib/db/storage';
 import { enrichWithLunarCrush } from '@/lib/lunarcrush';
 import { enrichWithPrices } from '@/lib/market/finnhub';
 import { parseSubredditList } from '@/lib/scan-config';
 import { checkAndCreateAlerts } from '@/lib/alert-pipeline';
+import { acquireScanLock, releaseScanLock } from '@/lib/db/scan-lock';
+import {
+  recordScanStarted,
+  recordScanSuccess,
+  recordScanFailed,
+} from '@/lib/db/scan-heartbeat';
+import { recordScanFailureAlert } from '@/lib/scan-failure-alert';
 
 // Configuration from environment variables
 const REDDIT_CONFIG = {
@@ -140,60 +153,79 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    // Validate Reddit credentials
-    if (!REDDIT_CONFIG.clientId || !REDDIT_CONFIG.clientSecret) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Reddit API credentials not configured',
-        },
-        { status: 500 }
-      );
-    }
+  // Validate Reddit credentials before taking the lock — no point locking out
+  // the next cron tick over a config error.
+  if (!REDDIT_CONFIG.clientId || !REDDIT_CONFIG.clientSecret) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Reddit API credentials not configured',
+      },
+      { status: 500 }
+    );
+  }
 
+  const runId = randomUUID();
+  const lock = await acquireScanLock({ holder: runId });
+  if (!lock.acquired) {
+    logger.info(`⏭  Skipping scan: another run holds the lock (runId=${runId})`);
+    return NextResponse.json(
+      {
+        success: true,
+        skipped: true,
+        reason: 'another scan is in progress',
+      },
+      { status: 200 }
+    );
+  }
+
+  const startedAt = Date.now();
+  await recordScanStarted({ runId, now: startedAt });
+
+  try {
     const subredditsToScan = parseSubredditList(process.env.SCAN_SUBREDDITS);
 
-    logger.info('🔄 Starting automated Reddit scan...');
+    logger.info(`🔄 Starting Reddit scan (runId=${runId})`);
     logger.info(`📡 Scanning subreddits: ${subredditsToScan.join(', ')}`);
 
-    // Create scanner instance
     const scanner = createScanner(REDDIT_CONFIG);
-
-    // Scan configured subreddits
     const results = await scanner.scanMultipleSubreddits(subredditsToScan, 25);
-
-    // Save results to DynamoDB
     await saveScanResults(results);
 
-    // Enrich top tickers with LunarCrush data (no-op if LUNARCRUSH_API_KEY is absent)
     const allTickers = [...new Set(results.flatMap(r => Array.from(r.tickers.keys())))];
     enrichWithLunarCrush(allTickers).catch((err: unknown) =>
       logger.error('LunarCrush enrichment error:', err)
     );
 
-    // Enrich top 50 tickers with Finnhub price data (no-op if FINNHUB_API_KEY is absent)
     const topTickers = allTickers.slice(0, 50);
     enrichWithPrices(topTickers).catch((err: unknown) =>
       logger.error('Finnhub price enrichment error:', err)
     );
 
-    // Check for hot opportunities and generate email alerts (fire-and-forget)
     checkAndCreateAlerts(allTickers).catch((err: unknown) =>
       logger.error('Alert generation error:', err)
     );
 
-    // Calculate summary
     const summary = {
       scannedAt: new Date().toISOString(),
       subreddits: subredditsToScan,
       totalPosts: results.reduce((sum, r) => sum + r.stats.totalPosts, 0),
       totalComments: results.reduce((sum, r) => sum + r.stats.totalComments, 0),
-      totalUniqueTickers: new Set(
-        results.flatMap((r) => Array.from(r.tickers.keys()))
-      ).size,
+      totalUniqueTickers: allTickers.length,
       totalMentions: results.reduce((sum, r) => sum + r.stats.totalMentions, 0),
     };
+
+    await recordScanSuccess({
+      runId,
+      startedAt,
+      summary: {
+        totalPosts: summary.totalPosts,
+        totalComments: summary.totalComments,
+        totalMentions: summary.totalMentions,
+        totalUniqueTickers: summary.totalUniqueTickers,
+        subreddits: summary.subreddits,
+      },
+    });
 
     logger.info('✅ Scan completed:', summary);
 
@@ -203,14 +235,30 @@ export async function GET(request: NextRequest) {
       data: summary,
     });
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Scan failed';
     logger.error('❌ Automated scan error:', error);
+
+    // Best-effort: record failure on heartbeat + write operator alert. Both
+    // swallow their own errors so the client still gets a 500 from the scan.
+    await recordScanFailed({ runId, startedAt, errorMessage: message }).catch(
+      err => logger.error('Failed to record scan-failed heartbeat:', err)
+    );
+    await recordScanFailureAlert({ runId, errorMessage: message }).catch(err =>
+      logger.error('Failed to write scan-failure alert:', err)
+    );
 
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Scan failed',
+        error: message,
       },
       { status: 500 }
+    );
+  } finally {
+    // Release the lock even if the response encoding threw — lockup on a
+    // process crash is bounded by the lock's TTL (10 min by default).
+    await releaseScanLock({ holder: runId }).catch(err =>
+      logger.error('Failed to release scan lock:', err)
     );
   }
 }

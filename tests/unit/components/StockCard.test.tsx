@@ -51,9 +51,28 @@ describe('StockCard', () => {
   });
 
   it('should display positive velocity with up arrow', () => {
-    render(<StockCard {...defaultProps} velocity={245} />);
+    render(<StockCard {...defaultProps} velocity={245} mentionsPrev={10} />);
     expect(screen.getByText('245%')).toBeInTheDocument();
     expect(screen.getByText('↑')).toBeInTheDocument();
+  });
+
+  it('shows "NEW" in the velocity indicator when the ticker has no previous window', () => {
+    // First-scan tickers have mentionsPrev=0 and storage pins velocity at 100%,
+    // which visually reads as "+100% rising" — misleading. The indicator must
+    // render "NEW" instead so users aren't told the stock just spiked when in
+    // reality it just appeared.
+    render(
+      <StockCard {...defaultProps} velocity={100} mentionsPrev={0} mentionDelta={8} />
+    );
+    // The big velocity number should NOT say 100%.
+    expect(screen.queryByText('100%')).not.toBeInTheDocument();
+    // "NEW" should appear at least once (also rendered in the mention-delta area).
+    expect(screen.getAllByText('NEW').length).toBeGreaterThan(0);
+  });
+
+  it('still shows the velocity percentage when mentionsPrev > 0', () => {
+    render(<StockCard {...defaultProps} velocity={100} mentionsPrev={5} mentionDelta={5} />);
+    expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
   it('should display negative velocity with down arrow', () => {
@@ -148,7 +167,8 @@ describe('StockCard', () => {
 
     it('renders "NEW" when mentionsPrev is 0', () => {
       render(<StockCard {...defaultProps} mentionCount={8} mentionsPrev={0} mentionDelta={8} />);
-      expect(screen.getByText('NEW')).toBeInTheDocument();
+      // "NEW" appears in both the velocity indicator and the mention-delta area.
+      expect(screen.getAllByText('NEW').length).toBeGreaterThan(0);
     });
 
     it('does not render velocity as Infinity% or NaN%', () => {

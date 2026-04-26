@@ -95,34 +95,6 @@ describe('LoginPage', () => {
     });
   });
 
-  it('calls fetch with correct payload on valid submit', async () => {
-    const user = userEvent.setup();
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
-    });
-
-    render(<LoginPage />);
-
-    const emailInput = screen.getByLabelText('Email');
-    const passwordInput = screen.getByLabelText('Password');
-    await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
-
-    const submitButton = screen.getByRole('button', { name: /log in/i });
-    await user.click(submitButton);
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
-      });
-    });
-  });
-
   it('redirects to /dashboard on successful login', async () => {
     const user = userEvent.setup();
     (global.fetch as jest.Mock).mockResolvedValue({

@@ -10,7 +10,11 @@ import { useRouter } from 'next/navigation';
 
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-export default function RefreshTimer() {
+interface RefreshTimerProps {
+  onRefresh?: () => void | Promise<void>;
+}
+
+export default function RefreshTimer({ onRefresh }: RefreshTimerProps = {}) {
   const router = useRouter();
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeAgo, setTimeAgo] = useState<string>('just now');
@@ -53,15 +57,23 @@ export default function RefreshTimer() {
     // Auto-refresh every 5 minutes
     const refreshTimer = setInterval(() => {
       setLastUpdated(new Date());
-      router.refresh();
+      if (onRefresh) {
+        void onRefresh();
+      } else {
+        router.refresh();
+      }
     }, REFRESH_INTERVAL);
 
     return () => clearInterval(refreshTimer);
-  }, [router]);
+  }, [router, onRefresh]);
 
   const handleManualRefresh = () => {
     setLastUpdated(new Date());
-    router.refresh();
+    if (onRefresh) {
+      void onRefresh();
+    } else {
+      router.refresh();
+    }
   };
 
   return (

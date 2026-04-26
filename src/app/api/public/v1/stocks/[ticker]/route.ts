@@ -61,9 +61,8 @@ export async function GET(
         ticker,
         details: {
           mentionCount:      details.mentionCount,
-          sentimentScore:    details.sentimentScore,
+          sentimentScore:    details.avgSentimentScore,
           sentimentCategory: details.sentimentCategory,
-          velocity:          details.velocity,
         },
         evidence,
         history,

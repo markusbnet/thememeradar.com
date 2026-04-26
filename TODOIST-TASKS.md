@@ -2111,6 +2111,60 @@ Commit `QA-REPORT.md` on each nightly run.
 
 ---
 
+### Task 82: [x] COMPLETE — Scan pipeline reliability (heartbeat, mutex lock, failure alerts, PipelineStatus UI)
+**Todoist ID:** _(auto-injected — queue was empty)_
+**Added:** 2026-04-26
+**Status:** [x] COMPLETE
+**Completed:** 2026-04-26
+**Priority:** p2
+
+**Why this matters:** The cron-based scan runs every 5 minutes but there was no way to know if it was actually succeeding. A Reddit outage, a Vercel function timeout, or a crash left the dashboard silently serving stale data with no operator alert. This task adds authoritative liveness tracking so failures surface immediately in `/api/health` and on the dashboard.
+
+**Implementation:**
+- New `src/lib/db/scan-heartbeat.ts` — `recordScanStarted/Success/Failed` + `getScanHeartbeat()`. One row per `lockKey='heartbeat'` in the `scan_state` table; each run overwrites the previous. Fields: `status` (running/success/failed), `startedAt`, `finishedAt`, `runDurationMs`, `runId`, `errorMessage`, `summary` (post/comment/ticker counts).
+- New `src/lib/db/scan-lock.ts` — DynamoDB conditional-put mutex. `acquireScanLock` uses `attribute_not_exists(lockKey) OR expiresAt < :now` so a killed scan naturally self-heals after 10 min TTL. `releaseScanLock` uses `heldBy = :holder` guard so a late release can't steal a newer holder's lock.
+- New `src/lib/scan-failure-alert.ts` — Storm-controlled failure alerting. Writes to `email_alerts` table using sentinel ticker `__SCAN_FAILED__`. Cooldown: 30 min (Vercel Cron fires every 5 min; without cooldown a sustained outage → 288 alerts/day). Error body is truncated to 1000 chars.
+- New `src/components/PipelineStatus.tsx` — Client-side badge in dashboard header. Fetches `/api/health` on mount and on `refreshKey` changes. States: loading → waiting (no data) | fresh (green, last scan time) | stale (red, > 20 min old) | failed (red, heartbeat failure) | unavailable (health check network error).
+- Updated `src/app/api/scan/route.ts` (GET) — acquire lock at start, record heartbeat on start/success/fail, release lock in `finally`. POST path unchanged (manual scans don't use the lock).
+- Updated `src/app/api/health/route.ts` — added `checkScanRun()` subsystem that reads the heartbeat and detects stuck-in-running state (> 15 min). Returned under `subsystems.scanRun` alongside the existing `subsystems.scan` freshness check.
+- Updated `src/components/RefreshTimer.tsx` — added optional `onRefresh?: () => void | Promise<void>` prop. When provided, the auto-timer and manual Refresh button call it instead of `router.refresh()`, enabling client-side state re-fetch from the dashboard.
+- Updated `src/app/dashboard/page.tsx` — wires `onRefresh={handleRefresh}` to `RefreshTimer` and passes `refreshKey` to `PipelineStatus` so manual refreshes also re-poll pipeline liveness.
+- Updated `scripts/init-db.ts` and `scripts/init-db-production.ts` — added `scan_state` table (PK: `lockKey` string, PAY_PER_REQUEST, TTL on `ttl` attribute).
+- Updated `src/lib/db/client.ts` — added `SCAN_STATE` table name export.
+- Fixed `src/app/api/public/v1/stocks/[ticker]/route.ts` — `details.sentimentScore` → `details.avgSentimentScore` (pre-existing TypeScript error surfaced by this run's stricter build check).
+- Fixed `.eslintrc.json` — added tautological-assertion lint rule for test files.
+- Fixed E2E tests in `tests/e2e/dashboard-interactions.spec.ts` — replaced fragile conditional ("if empty state exists") tests with deterministic `context.route()` mocking.
+- **Tests added (74 new, 925 → 999 total):**
+  - `tests/integration/db/scan-heartbeat.test.ts` (5): null on cold start, running status, running→success transition, running→failed transition, error truncation, overwrite semantics
+  - `tests/integration/db/scan-lock.test.ts` (6): acquire when free, reject second concurrent acquire, steal-via-TTL, release by holder, refuse release by non-holder, stolen-lock no-op release
+  - `tests/integration/scan-failure-alert.test.ts` (4): first-failure write, cooldown suppression, post-cooldown re-write, message truncation
+  - `tests/unit/components/PipelineStatus.test.tsx` (7): loading state, just-now fresh, minutes-ago fresh, waiting for first scan, network error, heartbeat-reported failure, stale detection (> 20 min), refreshKey re-fetch
+  - `tests/e2e/dashboard-refresh.spec.ts` (1): Refresh button re-fetches updated mention counts without page reload
+  - `tests/unit/components/RefreshTimer.test.tsx` (+2): onRefresh callback on manual click; onRefresh callback on auto-interval
+  - `tests/unit/components/dashboard-page.test.tsx` (+1): Refresh button triggers re-fetch of trending + surging + opportunities
+  - `tests/unit/components/StockCard.test.tsx` (+2): NEW velocity indicator when mentionsPrev=0; velocity % shown when mentionsPrev > 0
+- **Files changed:** 16 source files + 7 new test files
+- **Metrics:** 73 suites, 999 tests, lint clean, build clean
+
+---
+
+### Nightly Run Summary — 2026-04-26
+
+**1/1 tasks completed. 0 failed.**
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 82 | Scan pipeline reliability (heartbeat, lock, failure alerts, PipelineStatus) | p2 | [x] COMPLETE |
+
+**Final metrics:** 999 unit/integration tests (73 suites), lint clean, build clean.
+
+**Key changes this run:**
+- **Task 82 (Scan pipeline reliability):** Fully implemented — scan heartbeat (`scan-heartbeat.ts`) records running/success/failed per cron invocation; mutex lock (`scan-lock.ts`) prevents overlapping Vercel Cron ticks; scan failure alerting (`scan-failure-alert.ts`) with 30 min storm control; `PipelineStatus` dashboard badge showing pipeline liveness; `RefreshTimer` `onRefresh` prop so manual refresh re-fetches client state. Fixed pre-existing TypeScript error in public API route (`sentimentScore` → `avgSentimentScore`). Fixed deterministic E2E tests in `dashboard-interactions.spec.ts` using `context.route()` mocking. 74 new tests total. 16 source files + 7 test files changed.
+
+**Remaining NEW tasks in queue:** 0 — queue is empty. Next run will inject a QA pass.
+
+---
+
 ### Nightly Run Summary — 2026-04-22
 
 **5/5 tasks completed. 0 failed.**

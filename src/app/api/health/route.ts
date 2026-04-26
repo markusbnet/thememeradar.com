@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server';
 import { DynamoDBClient, ListTablesCommand } from '@aws-sdk/client-dynamodb';
 import { docClient, TABLES } from '@/lib/db/client';
 import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { getScanHeartbeat, type ScanRunStatus } from '@/lib/db/scan-heartbeat';
 
 const REQUIRED_ENV_VARS = [
   'CRON_SECRET',
@@ -101,6 +102,72 @@ async function checkScanFreshness() {
   }
 }
 
+// Heartbeat is the authoritative "did the last scan succeed" signal. The
+// older scan-freshness check above just looks at mention timestamps, which
+// can lag for benign reasons (no tickers matched the last run). Heartbeat
+// gives us a reliable failure detector within one cron cycle.
+const STUCK_RUNNING_THRESHOLD_MS = 15 * 60 * 1000;
+
+async function checkScanRun(): Promise<{
+  ok: boolean;
+  status: ScanRunStatus | 'unknown';
+  lastRunStartedAt: number | null;
+  lastRunFinishedAt: number | null;
+  runDurationMs: number | null;
+  errorMessage: string | null;
+  runId: string | null;
+}> {
+  try {
+    const hb = await getScanHeartbeat();
+    if (!hb) {
+      // No heartbeat row yet — fresh deployment or pre-migration DB. Don't
+      // mark the system as degraded on absence alone; the scan-freshness
+      // check already handles "no data yet" via status=degraded at the
+      // higher level. ok=true here prevents false alarms on cold-start.
+      return {
+        ok: true,
+        status: 'unknown',
+        lastRunStartedAt: null,
+        lastRunFinishedAt: null,
+        runDurationMs: null,
+        errorMessage: null,
+        runId: null,
+      };
+    }
+
+    // A 'running' status older than the stuck threshold almost always means
+    // the function was killed mid-scan. Degrade on that even though the
+    // heartbeat row itself reports no failure. An actively-running scan
+    // (started recently) is fine — don't degrade on it.
+    const stuck =
+      hb.status === 'running' &&
+      Date.now() - hb.startedAt > STUCK_RUNNING_THRESHOLD_MS;
+    const ok = (hb.status === 'success' || hb.status === 'running') && !stuck;
+
+    return {
+      ok,
+      status: stuck ? 'failed' : hb.status,
+      lastRunStartedAt: hb.startedAt,
+      lastRunFinishedAt: hb.finishedAt,
+      runDurationMs: hb.runDurationMs,
+      errorMessage: stuck
+        ? `Scan stuck in running state since ${new Date(hb.startedAt).toISOString()}`
+        : hb.errorMessage,
+      runId: hb.runId,
+    };
+  } catch (error: any) {
+    return {
+      ok: false,
+      status: 'unknown',
+      lastRunStartedAt: null,
+      lastRunFinishedAt: null,
+      runDurationMs: null,
+      errorMessage: error?.message || String(error),
+      runId: null,
+    };
+  }
+}
+
 function checkEnv() {
   const required: Record<string, boolean> = {};
   const missing: string[] = [];
@@ -113,14 +180,15 @@ function checkEnv() {
 }
 
 export async function GET() {
-  const [dbTables, scan] = await Promise.all([
+  const [dbTables, scan, scanRun] = await Promise.all([
     checkDbAndTables(),
     checkScanFreshness(),
+    checkScanRun(),
   ]);
   const env = checkEnv();
 
   const down = !dbTables.db.ok || !dbTables.tables.ok;
-  const degraded = !down && (!env.ok || !scan.ok);
+  const degraded = !down && (!env.ok || !scan.ok || !scanRun.ok);
   const status = down ? 'down' : degraded ? 'degraded' : 'ok';
 
   const body = {
@@ -133,6 +201,7 @@ export async function GET() {
         tables: dbTables.tables,
         env,
         scan,
+        scanRun,
       },
     },
   };
