@@ -5,10 +5,15 @@
  * working. Each step prints its status and exits non-zero on first failure
  * so CI / the user gets a single clear error instead of a wall of output.
  *
- * Assumes DynamoDB Local is running. Starts its own dev server on an
- * isolated port so it never fights a developer-run `npm run dev`.
+ * Assumes DynamoDB Local is running. Starts its own server on an isolated
+ * port so it never fights a developer-run `npm run dev`.
+ *
+ * In CI (process.env.CI=true) or when a .next build exists, uses
+ * `next start` so the prebuilt artifact is validated and startup is fast.
+ * Falls back to `next dev` for local runs without a build.
  */
 
+import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -75,13 +80,27 @@ function runCommand(cmd: string, args: string[]): Promise<void> {
   });
 }
 
+function killServer(srv: ReturnType<typeof spawn>) {
+  try {
+    srv.kill('SIGTERM');
+  } catch {}
+  // Escalate to SIGKILL after 3s so lingering Next.js workers don't block exit.
+  setTimeout(() => {
+    try { srv.kill('SIGKILL'); } catch {}
+  }, 3000).unref();
+}
+
 async function startServer(): Promise<() => void> {
-  console.log(`\n[4/6] dev server on :${SMOKE_PORT}`);
-  // Spawn `next start` on a build would be slow; `next dev` reuses source
-  // and is what a developer boots, which is what we want to validate. We
-  // skip `predev` because env/db were already verified above, and predev
-  // would re-run them.
-  const srv = spawn('npx', ['next', 'dev', '-p', String(SMOKE_PORT)], {
+  // Use `next start` (prebuilt) when a build exists or when running in CI —
+  // it starts in ~1s vs 30-60s for `next dev` on a cold compile.
+  const hasBuild = existsSync('.next/BUILD_ID');
+  const useStart = hasBuild || process.env.CI === 'true';
+  const nextArgs = useStart
+    ? ['next', 'start', '-p', String(SMOKE_PORT)]
+    : ['next', 'dev', '-p', String(SMOKE_PORT)];
+  console.log(`\n[4/6] server on :${SMOKE_PORT} (${useStart ? 'next start' : 'next dev'})`);
+
+  const srv = spawn('npx', nextArgs, {
     env: {
       ...process.env,
       CRON_SECRET,
@@ -94,14 +113,14 @@ async function startServer(): Promise<() => void> {
   srv.stdout?.on('data', () => {});
   srv.stderr?.on('data', (d) => process.stderr.write(d));
 
-  // Wait for readiness by polling /api/health — more reliable than parsing
-  // Next.js's "Ready" line across versions.
-  const deadline = Date.now() + 60_000;
+  // Poll /api/health — more reliable than parsing Next.js "Ready" log lines.
+  const readyTimeout = useStart ? 30_000 : 90_000;
+  const deadline = Date.now() + readyTimeout;
   while (Date.now() < deadline) {
     try {
       const r = await fetch(`${BASE_URL}/api/health`);
       if (r.status === 200 || r.status === 503) {
-        record('dev server responds', true);
+        record('server responds', true);
         break;
       }
     } catch {
@@ -110,11 +129,11 @@ async function startServer(): Promise<() => void> {
     await delay(500);
   }
   if (Date.now() >= deadline) {
-    srv.kill('SIGTERM');
-    record('dev server responds', false, 'timeout');
+    killServer(srv);
+    record('server responds', false, 'timeout');
   }
 
-  return () => srv.kill('SIGTERM');
+  return () => killServer(srv);
 }
 
 async function checkApis() {
@@ -181,6 +200,10 @@ async function main() {
     process.exitCode = 1;
   } finally {
     if (stopServer) stopServer();
+    // Force exit — fetch keep-alive connections and child process streams can
+    // otherwise hold the event loop open indefinitely.
+    setTimeout(() => process.exit(process.exitCode ?? 0), 4000).unref();
+    process.exit(process.exitCode ?? 0);
   }
 }
 
