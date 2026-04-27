@@ -37,6 +37,15 @@ const ALLOWLIST: RegExp[] = [
   //    This is intentional test infrastructure — the test aborts the request to simulate
   //    a network failure and verify the UI's error handling. Not an application bug.
   /Failed to load resource: net::ERR_FAILED/i,
+  // 5. WebKit/Safari emits cross-origin access-control errors when Next.js RSC tries to
+  //    pre-fetch RSC payloads across navigation boundaries in dev mode. The app falls back
+  //    to a full browser navigation gracefully — this is webkit-specific infrastructure
+  //    noise that does not occur in production (Vercel serves RSC without CORS issues).
+  /due to access control checks/i,
+  /Failed to fetch RSC payload/i,
+  // 6. WebKit reports fetch failures as "Load failed" (not "net::ERR_FAILED" like Chromium).
+  //    Covers the same route.abort() and RSC noise as entries 4 and 5 above.
+  /TypeError: Load failed/i,
 ];
 
 function isAllowlisted(message: string): boolean {

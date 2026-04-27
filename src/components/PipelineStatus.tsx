@@ -105,10 +105,10 @@ export default function PipelineStatus({ refreshKey = 0 }: PipelineStatusProps) 
 
   switch (view.kind) {
     case 'loading':
-      return <span className={`${base} bg-gray-100 text-gray-500`}>Checking pipeline…</span>;
+      return <span className={`${base} bg-gray-100 text-gray-600`}>Checking pipeline…</span>;
     case 'waiting':
       return (
-        <span className={`${base} bg-amber-50 text-amber-700`}>
+        <span className={`${base} bg-amber-50 text-amber-800`}>
           Waiting for first scan
         </span>
       );
@@ -120,7 +120,7 @@ export default function PipelineStatus({ refreshKey = 0 }: PipelineStatusProps) 
       );
     case 'stale':
       return (
-        <span className={`${base} bg-red-50 text-red-700`}>
+        <span className={`${base} bg-amber-50 text-amber-800`}>
           Last scan {formatAge(view.ageMs)} — pipeline stale
         </span>
       );
@@ -138,7 +138,7 @@ export default function PipelineStatus({ refreshKey = 0 }: PipelineStatusProps) 
     }
     case 'unavailable':
       return (
-        <span className={`${base} bg-gray-100 text-gray-500`}>
+        <span className={`${base} bg-gray-100 text-gray-600`}>
           Pipeline status unavailable
         </span>
       );

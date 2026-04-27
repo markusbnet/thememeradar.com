@@ -22,10 +22,27 @@ const INITIAL_MENTIONS = 25;
 const UPDATED_MENTIONS = 77;
 
 async function signUpAndLogin(page: Page, email: string, password: string) {
-  await page.goto('/signup');
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByRole('textbox', { name: /password/i }).fill(password);
-  await page.getByRole('button', { name: /sign up/i }).click();
+  // Sign up via API then inject the session cookie at the CDP level.
+  // In webkit, cookies set by fetch() responses are silently dropped in
+  // full-page navigations (SameSite + ITP). addCookies() bypasses that
+  // restriction so the dashboard loads without a middleware redirect.
+  const signupResponse = await page.request.post('/api/auth/signup', {
+    data: { email, password },
+  });
+  const body = await signupResponse.json();
+  const token = body?.data?.token;
+  if (token) {
+    await page.context().addCookies([{
+      name: 'meme_radar_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax',
+    }]);
+  }
+  await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/dashboard/);
 }
 
