@@ -116,6 +116,7 @@ jobs:
           REDDIT_CLIENT_SECRET: ci-reddit-secret
 
       - name: Run E2E tests
+        timeout-minutes: 20
         run: npm run test:e2e
         env:
           CI: true
@@ -123,6 +124,11 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
+          JWT_SECRET: test-secret-key-for-ci
+          SESSION_COOKIE_NAME: meme_radar_session
+          CRON_SECRET: ci-cron-secret
+          REDDIT_CLIENT_ID: ci-reddit-client
+          REDDIT_CLIENT_SECRET: ci-reddit-secret
 
       - name: Upload test results
         if: always()

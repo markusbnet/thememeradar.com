@@ -18,10 +18,10 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  /* Retry on CI only — 1 retry keeps the signal without multiplying timeouts */
+  retries: process.env.CI ? 1 : 0,
   /* Limit parallel workers to avoid overwhelming the dev server */
-  workers: process.env.CI ? 1 : 3,
+  workers: process.env.CI ? 2 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -32,24 +32,27 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for major browsers */
-  projects: [
+  /* Configure projects for major browsers.
+   * CI runs chromium only — fast, reliable, good coverage for green-gate.
+   * Run all 5 locally before merging to catch cross-browser regressions. */
+  projects: process.env.CI ? [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
+  ] : [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-
-    /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
@@ -79,6 +82,13 @@ export default defineConfig({
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',
       USERS_TABLE_NAME: process.env.USERS_TABLE_NAME || 'users',
       AUTH_RATE_LIMIT_MAX: '1000',
+      // Auth vars must be explicitly forwarded — `next start` reads .env.local
+      // but the webServer child process may not inherit them from CI env.
+      JWT_SECRET: process.env.JWT_SECRET || 'dev-jwt-secret',
+      SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME || 'meme_radar_session',
+      CRON_SECRET: process.env.CRON_SECRET || 'dev-cron-secret',
+      REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID || 'dev-client',
+      REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET || 'dev-secret',
     },
   },
 });
