@@ -14,24 +14,19 @@ export interface User {
  * This makes a request to the server to validate the session cookie
  */
 export async function checkAuth(): Promise<{ authenticated: boolean; user?: User }> {
-  try {
-    const response = await fetch('/api/auth/me', {
-      method: 'GET',
-      credentials: 'include', // Include cookies
-    });
+  // Let network errors propagate — callers distinguish abort/error (no redirect)
+  // from server 4xx (redirect to login).
+  const response = await fetch('/api/auth/me', {
+    method: 'GET',
+    credentials: 'include',
+  });
 
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        authenticated: true,
-        user: data.user,
-      };
-    }
-
-    return { authenticated: false };
-  } catch (error) {
-    return { authenticated: false };
+  if (response.ok) {
+    const data = await response.json();
+    return { authenticated: true, user: data.user };
   }
+
+  return { authenticated: false };
 }
 
 /**

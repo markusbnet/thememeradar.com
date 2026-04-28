@@ -39,7 +39,7 @@ function RankDeltaBadge({ delta, status }: { delta: number | null | undefined; s
     );
   }
   if (status === 'unknown' || delta == null) {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-gray-500">—</span>;
   }
   if (delta === 0) return <span className="text-gray-500 text-xs">—</span>;
   return (
@@ -71,17 +71,17 @@ function PriceCell({
   staleness?: string;
 }) {
   if (price == null || staleness === 'drop') {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-gray-500">—</span>;
   }
   const isGrey = staleness === 'grey';
   const changeColor = isGrey
-    ? 'text-gray-400'
+    ? 'text-gray-500'
     : (changePct24h ?? 0) >= 0
       ? 'text-green-700'
       : 'text-red-700';
   return (
     <div>
-      <div className={`font-medium ${isGrey ? 'text-gray-400' : 'text-gray-900'}`}>
+      <div className={`font-medium ${isGrey ? 'text-gray-500' : 'text-gray-900'}`}>
         ${price.toFixed(2)}
       </div>
       {changePct24h != null && (
@@ -230,7 +230,7 @@ export default function StockTable({ stocks, type }: StockTableProps) {
                 {/* Sticky rank + ticker */}
                 <td className={`sticky left-0 z-10 ${rowBg} px-3 py-2.5 whitespace-nowrap`}>
                   <Link href={`/stock/${stock.ticker}`} className="flex items-center gap-2 group">
-                    <span className="text-xs text-gray-400 w-4 shrink-0 tabular-nums">
+                    <span className="text-xs text-gray-500 w-4 shrink-0 tabular-nums">
                       {originalRank}
                     </span>
                     <span className="font-bold text-purple-700 group-hover:text-purple-900 transition-colors">
@@ -299,7 +299,7 @@ export default function StockTable({ stocks, type }: StockTableProps) {
                   {stock.sparklineData && stock.sparklineData.length > 1 ? (
                     <Sparkline data={stock.sparklineData} />
                   ) : (
-                    <span className="text-gray-400 text-xs">—</span>
+                    <span className="text-gray-500 text-xs">—</span>
                   )}
                 </td>
               </tr>

@@ -1,9 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { checkAuth } from '@/lib/auth/client';
 import StockChart from '@/components/StockChart';
 import CollapsibleSection from '@/components/CollapsibleSection';
 import { detectCreatorSignal } from '@/lib/creators';
@@ -79,7 +77,6 @@ interface PricePoint {
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker: tickerParam } = use(params);
   const ticker = tickerParam.toUpperCase();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [stockDetails, setStockDetails] = useState<StockDetails | null>(null);
   const [evidence, setEvidence] = useState<Evidence[]>([]);
@@ -100,12 +97,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
     document.title = `${ticker} - Stock Details`;
 
     const fetchData = async () => {
-      // Check authentication
-      const { authenticated } = await checkAuth();
-      if (!authenticated) {
-        router.push('/login');
-        return;
-      }
+      // Middleware (src/middleware.ts) protects /stock/:path* server-side — no client-side auth check needed.
 
       // Fetch stock details
       try {
@@ -144,7 +136,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
     };
 
     fetchData();
-  }, [ticker, router]);
+  }, [ticker]);
 
   const getSentimentDisplay = (category: string) => {
     switch (category) {
@@ -299,7 +291,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         {priceHistory.length >= 2 && (
           <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">7-Day Price History</h2>
-            <div className="w-full overflow-x-auto">
+            <div className="w-full overflow-x-auto" tabIndex={0}>
               {(() => {
                 const prices = priceHistory.map(p => p.price);
                 const volumes = priceHistory.map(p => p.volume);
@@ -352,7 +344,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         {timeBreakdown && timeBreakdown.periods.length > 0 && (
           <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistics by Time Period</h2>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0}>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">

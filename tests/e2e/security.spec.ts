@@ -130,19 +130,28 @@ test.describe('Security Tests', () => {
     });
 
     test('should rate limit login attempts after 5 failures (CLAUDE.md contract)', async ({ page }) => {
-      await page.goto('/login');
+      // playwright.config sets AUTH_RATE_LIMIT_MAX=1000 to prevent accidental rate-limiting
+      // during other tests. Lower it to 5 (the CLAUDE.md contract value) just for this test,
+      // then restore afterwards so other tests are unaffected.
+      await page.request.post('/api/test/reset-rate-limit', { data: { max: 5 } });
 
-      // CLAUDE.md: "Rate limiting on auth endpoints (5 attempts per 15 min)".
-      // Six failed attempts must trigger the rate-limit UI — anything less
-      // violates the documented auth-security contract.
-      for (let i = 0; i < 6; i++) {
-        await page.getByLabel(/email/i).fill('ratelimit-test@example.com');
-        await page.getByRole('textbox', { name: /password/i }).fill('WrongPassword' + i);
-        await page.getByRole('button', { name: /log in/i }).click();
-        await page.waitForTimeout(500);
+      try {
+        await page.goto('/login');
+
+        // CLAUDE.md: "Rate limiting on auth endpoints (5 attempts per 15 min)".
+        // Six failed attempts must trigger the rate-limit UI — anything less
+        // violates the documented auth-security contract.
+        for (let i = 0; i < 6; i++) {
+          await page.getByLabel(/email/i).fill('ratelimit-test@example.com');
+          await page.getByRole('textbox', { name: /password/i }).fill('WrongPassword' + i);
+          await page.getByRole('button', { name: /log in/i }).click();
+          await page.waitForTimeout(500);
+        }
+
+        await expect(page.getByText(/too many attempts|rate limit/i)).toBeVisible();
+      } finally {
+        await page.request.post('/api/test/reset-rate-limit', { data: { max: 1000 } });
       }
-
-      await expect(page.getByText(/too many attempts|rate limit/i)).toBeVisible();
     });
 
     test('should not allow SQL injection in email field', async ({ page }) => {

@@ -61,14 +61,28 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     document.title = 'Dashboard - The Meme Radar';
 
     // Check authentication on mount
     const verifyAuth = async () => {
-      const { authenticated, user: userData } = await checkAuth();
+      let authenticated = false;
+      let userData: User | undefined;
+
+      try {
+        const result = await checkAuth();
+        authenticated = result.authenticated;
+        userData = result.user;
+      } catch {
+        // Network error or fetch aborted by navigation — bail without redirecting.
+        // The middleware handles server-side protection; a transient fetch failure
+        // should not log the user out mid-session.
+        return;
+      }
+
+      if (cancelled) return;
 
       if (!authenticated) {
-        // Redirect to login if not authenticated
         router.push('/login');
         return;
       }
@@ -93,11 +107,14 @@ export default function DashboardPage() {
         setView('table');
       }
 
+      if (cancelled) return;
+
       // Fetch stock data, surge data, and opportunities in parallel
       await Promise.all([fetchStockData(initialTf), fetchSurgeData(), fetchOpportunities()]);
     };
 
     verifyAuth();
+    return () => { cancelled = true; };
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStockData = async (tf: Timeframe = timeframe) => {
@@ -195,8 +212,8 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <PipelineStatus refreshKey={refreshKey} />
-              <RefreshTimer onRefresh={handleRefresh} />
+              <span data-testid="pipeline-status-region"><PipelineStatus refreshKey={refreshKey} /></span>
+              <span data-testid="refresh-timer-region"><RefreshTimer onRefresh={handleRefresh} /></span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md transition"
@@ -266,11 +283,11 @@ export default function DashboardPage() {
         )}
 
         {/* Surge Alert */}
-        <SurgeAlert stocks={surgeData} />
+        <div data-testid="surge-alert-region"><SurgeAlert stocks={surgeData} /></div>
 
         {/* Opportunities Section — only shown when signal-qualifying stocks exist */}
         {opportunities.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-12" data-testid="opportunities-section">
             <div className="flex items-center mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
                 🎯 Opportunities

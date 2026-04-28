@@ -21,8 +21,8 @@ export default function Home() {
           </a>
         </div>
       </main>
-      <footer className="absolute bottom-4 text-center w-full text-sm text-gray-400">
-        <a href="/m" className="hover:text-gray-600">📱 Mobile view</a>
+      <footer className="absolute bottom-4 text-center w-full text-sm text-gray-500">
+        <a href="/m" className="hover:text-gray-700">📱 Mobile view</a>
       </footer>
     </div>
   );

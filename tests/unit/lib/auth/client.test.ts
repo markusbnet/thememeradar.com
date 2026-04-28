@@ -36,12 +36,10 @@ describe('auth/client', () => {
       expect(result.user).toBeUndefined();
     });
 
-    it('should return authenticated false on network error', async () => {
+    it('should throw on network error so callers can distinguish abort from 401', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await checkAuth();
-
-      expect(result.authenticated).toBe(false);
+      await expect(checkAuth()).rejects.toThrow('Network error');
     });
   });
 

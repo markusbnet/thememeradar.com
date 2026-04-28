@@ -87,10 +87,10 @@ export default function StockCard({
                 <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">NEW</span>
               )}
               {coverageSource === 'both' && (
-                <span title="tracked by Reddit + ApeWisdom" className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AW+</span>
+                <span role="img" aria-label="tracked by Reddit + ApeWisdom" title="tracked by Reddit + ApeWisdom" className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">AW+</span>
               )}
               {coverageSource === 'apewisdom' && (
-                <span title="ApeWisdom-only signal" className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">AW</span>
+                <span role="img" aria-label="ApeWisdom-only signal" title="ApeWisdom-only signal" className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">AW</span>
               )}
               {(rankStatus === 'climbing' || rankStatus === 'falling') && rankDelta24h !== null && rankDelta24h !== undefined && (
                 <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${rankDelta24h > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -147,7 +147,7 @@ export default function StockCard({
                     ${price.toFixed(2)}
                   </p>
                   {staleness === 'grey' && (
-                    <span title="stale price" className="text-xs text-gray-500">⏰</span>
+                    <span role="img" aria-label="price data may be stale" title="stale price" className="text-xs text-gray-500">⏰</span>
                   )}
                 </div>
               </div>

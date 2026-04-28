@@ -5,7 +5,7 @@
  * tests don't stomp each other.
  */
 
-import { docClient, TABLES, PutCommand } from '../../../src/lib/db/client';
+import { docClient, TABLES, PutCommand, ScanCommand, DeleteCommand, BatchWriteCommand, QueryCommand } from '../../../src/lib/db/client';
 import type { ApewisdomSnapshot } from '../../../src/types/apewisdom';
 
 const THIRTY_DAYS_SEC = 30 * 24 * 60 * 60;
@@ -167,4 +167,67 @@ export async function seedPrice(
       },
     })
   );
+}
+
+/**
+ * Delete all stock_mentions rows for tickers starting with the given prefix.
+ * Used by visual regression tests to ensure a deterministic, isolated baseline.
+ */
+export async function clearMentionsByPrefix(prefix: string): Promise<void> {
+  const scanResult = await docClient.send(
+    new ScanCommand({
+      TableName: TABLES.STOCK_MENTIONS,
+      FilterExpression: 'begins_with(ticker, :prefix)',
+      ExpressionAttributeValues: { ':prefix': prefix },
+      ProjectionExpression: 'ticker, #ts',
+      ExpressionAttributeNames: { '#ts': 'timestamp' },
+    })
+  );
+
+  const items = scanResult.Items ?? [];
+  if (items.length === 0) return;
+
+  // Batch delete in chunks of 25 (DynamoDB batch write limit)
+  for (let i = 0; i < items.length; i += 25) {
+    const chunk = items.slice(i, i + 25);
+    await docClient.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [TABLES.STOCK_MENTIONS]: chunk.map((item) => ({
+            DeleteRequest: { Key: { ticker: item.ticker, timestamp: item.timestamp } },
+          })),
+        },
+      })
+    );
+  }
+}
+
+/**
+ * Delete all stock_evidence rows for a ticker.
+ */
+export async function clearEvidenceByTicker(ticker: string): Promise<void> {
+  const result = await docClient.send(
+    new QueryCommand({
+      TableName: TABLES.STOCK_EVIDENCE,
+      KeyConditionExpression: 'ticker = :ticker',
+      ExpressionAttributeValues: { ':ticker': ticker },
+      ProjectionExpression: 'ticker, evidenceId',
+    })
+  );
+
+  const items = result.Items ?? [];
+  if (items.length === 0) return;
+
+  for (let i = 0; i < items.length; i += 25) {
+    const chunk = items.slice(i, i + 25);
+    await docClient.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [TABLES.STOCK_EVIDENCE]: chunk.map((item) => ({
+            DeleteRequest: { Key: { ticker: item.ticker, evidenceId: item.evidenceId } },
+          })),
+        },
+      })
+    );
+  }
 }

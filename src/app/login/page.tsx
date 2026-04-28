@@ -152,7 +152,7 @@ export default function LoginPage() {
             Log In
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             {/* Email Field */}
             <div>
               <label
@@ -163,7 +163,7 @@ export default function LoginPage() {
               </label>
               <input
                 id="email"
-                type="text"
+                type="email"
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
@@ -288,7 +288,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <p className="mt-8 text-center text-sm text-slate-400">
+        <p className="mt-8 text-center text-sm text-slate-500">
           Welcome back to tracking meme stocks to the moon
         </p>
       </div>

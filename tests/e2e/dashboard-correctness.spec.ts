@@ -16,11 +16,12 @@
 
 import { type Page } from '@playwright/test';
 import { test, expect } from './fixtures/console-guard';
-import { seedTrendingTicker, seedApewisdomSnapshot, seedPrice } from './helpers/seed';
+import { seedTrendingTicker, seedApewisdomSnapshot, seedPrice, clearMentionsByPrefix } from './helpers/seed';
 
-const TICKER_A = 'ZZDCA'; // both coverage, climbing
-const TICKER_B = 'ZZDCB'; // apewisdom-only, falling, fresh price
-const TICKER_C = 'ZZDCC'; // reddit-only, no badge, stale price
+// Prefixed with 'TT' instead of 'ZZ' to avoid the visual spec's clearMentionsByPrefix('ZZ') cleanup.
+const TICKER_A = 'TTDCA'; // both coverage, climbing
+const TICKER_B = 'TTDCB'; // apewisdom-only, falling, fresh price
+const TICKER_C = 'TTDCC'; // reddit-only, no badge, stale price
 
 const PRICE_B = 42.5;
 const PRICE_C = 18.75;
@@ -58,6 +59,9 @@ test.describe('Dashboard correctness audit', () => {
   const testEmails: string[] = [];
 
   test.beforeAll(async () => {
+    // Clear any stale TT-prefix test data from previous runs.
+    await clearMentionsByPrefix('TT');
+
     // Stock A: in stock_mentions (trending) + ApeWisdom → 'both', rankDelta=+3
     // ApeWisdom rank=4, rank_24h_ago=7 → delta = 7-4 = +3
     await seedTrendingTicker(TICKER_A, { mentionCount: 150, sentimentScore: 0.7, sentimentCategory: 'strong_bullish' });

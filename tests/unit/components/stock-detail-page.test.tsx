@@ -1,9 +1,8 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 
-// Mock next/navigation
-const mockPush = jest.fn();
+// Mock next/navigation (still needed to prevent import errors from next internals)
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: jest.fn() }),
 }));
 
 // Mock next/link
@@ -13,11 +12,6 @@ jest.mock('next/link', () => {
   };
 });
 
-// Mock auth client
-const mockCheckAuth = jest.fn();
-jest.mock('@/lib/auth/client', () => ({
-  checkAuth: (...args: unknown[]) => mockCheckAuth(...args),
-}));
 
 // Mock child components as simple stubs
 jest.mock('@/components/StockChart', () => {
@@ -69,7 +63,6 @@ const mockStockDetails = {
 describe('StockDetailPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCheckAuth.mockResolvedValue({ authenticated: true, user: { email: 'test@example.com' } });
     global.fetch = jest.fn().mockResolvedValue({
       json: () => Promise.resolve(mockStockDetails),
     });
@@ -80,26 +73,14 @@ describe('StockDetailPage', () => {
   });
 
   it('shows loading spinner initially', async () => {
-    // Make checkAuth hang so the component stays in loading state
-    mockCheckAuth.mockReturnValue(new Promise(() => {}));
+    // Make fetch hang so the component stays in loading state
+    global.fetch = jest.fn().mockReturnValue(new Promise(() => {}));
 
     await act(async () => {
       render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
     });
 
     expect(screen.getByText('Loading stock details...')).toBeInTheDocument();
-  });
-
-  it('redirects to login when not authenticated', async () => {
-    mockCheckAuth.mockResolvedValue({ authenticated: false });
-
-    await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
-    });
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/login');
-    });
   });
 
   it('shows error state with Error heading and Back to Dashboard link when stock not found', async () => {

@@ -26,6 +26,11 @@ export class RateLimiter {
     this.store.clear();
   }
 
+  resetWithMax(max: number): void {
+    this.config = { ...this.config, maxAttempts: max };
+    this.store.clear();
+  }
+
   get size(): number {
     return this.store.size;
   }

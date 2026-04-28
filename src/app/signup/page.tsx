@@ -175,7 +175,7 @@ export default function SignupPage() {
             Sign Up
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             {/* Email Field */}
             <div>
               <label
@@ -186,7 +186,7 @@ export default function SignupPage() {
               </label>
               <input
                 id="email"
-                type="text"
+                type="email"
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
@@ -317,7 +317,7 @@ export default function SignupPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-sm text-slate-400">
+        <p className="mt-8 text-center text-sm text-slate-500">
           By signing up, you agree to track meme stocks to the moon
         </p>
       </div>

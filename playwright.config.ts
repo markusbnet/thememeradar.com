@@ -82,6 +82,7 @@ export default defineConfig({
       AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || 'test',
       USERS_TABLE_NAME: process.env.USERS_TABLE_NAME || 'users',
       AUTH_RATE_LIMIT_MAX: '1000',
+      ALLOW_TEST_ENDPOINTS: 'true',
       // Auth vars must be explicitly forwarded — `next start` reads .env.local
       // but the webServer child process may not inherit them from CI env.
       JWT_SECRET: process.env.JWT_SECRET || 'dev-jwt-secret',
@@ -89,9 +90,10 @@ export default defineConfig({
       CRON_SECRET: process.env.CRON_SECRET || 'dev-cron-secret',
       REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID || 'dev-client',
       REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET || 'dev-secret',
-      // Forward CI so the server can skip in-process caches that cause
-      // race conditions between parallel test workers.
-      CI: process.env.CI || '',
+      // Always disable the server-side in-memory API cache during E2E runs —
+      // tests seed fresh data and expect to see it immediately. Caching with
+      // a 5-minute TTL would hide newly-seeded tickers from the trending API.
+      CI: 'true',
     },
   },
 });

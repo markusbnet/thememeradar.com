@@ -56,6 +56,19 @@ async function clearStockMentions() {
   }
 }
 
+async function clearScanHeartbeat() {
+  // Health checks scanRun.ok against the heartbeat row. Clear it before each
+  // test so real production/nightly scan state doesn't pollute assertions.
+  await docClient
+    .send(
+      new DeleteCommand({
+        TableName: TABLES.SCAN_STATE,
+        Key: { lockKey: 'heartbeat' },
+      })
+    )
+    .catch(() => {});
+}
+
 async function seedRecentMention(ticker = 'TEST', timestamp = Date.now()) {
   await docClient.send(
     new PutCommand({
@@ -81,6 +94,7 @@ async function seedRecentMention(ticker = 'TEST', timestamp = Date.now()) {
 describe('GET /api/health (real DynamoDB)', () => {
   beforeEach(async () => {
     await clearStockMentions();
+    await clearScanHeartbeat();
   });
 
   it('returns 200 and status=ok when DB, tables, and env are healthy', async () => {

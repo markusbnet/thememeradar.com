@@ -23,7 +23,7 @@ function VelocityBadge({ v }: { v: number }) {
 
 function PriceCell({ ticker, priceMap }: { ticker: string; priceMap: Map<string, StockPriceSnapshot> }) {
   const p = priceMap.get(ticker);
-  if (!p || p.staleness === 'drop') return <span style={{ color: '#9ca3af' }}>—</span>;
+  if (!p || p.staleness === 'drop') return <span style={{ color: '#6b7280' }}>—</span>;
   const changeColor = (p.changePct24h ?? 0) >= 0 ? '#15803d' : '#b91c1c';
   const changeSign = (p.changePct24h ?? 0) >= 0 ? '+' : '';
   return (
@@ -53,7 +53,7 @@ export default async function MobilePage() {
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { text-align: left; padding: 0.4rem 0.5rem; background: #f3f4f6; font-weight: 600; font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+        th { text-align: left; padding: 0.4rem 0.5rem; background: #f3f4f6; font-weight: 600; font-size: 0.75rem; color: #4b5563; text-transform: uppercase; }
         td { padding: 0.5rem; border-bottom: 1px solid #e5e7eb; }
       `}</style>
 
@@ -72,7 +72,7 @@ export default async function MobilePage() {
         <tbody>
           {stocks.slice(0, 10).map((stock, i) => (
             <tr key={stock.ticker}>
-              <td style={{ color: '#9ca3af', fontSize: '0.75rem' }}>{i + 1}</td>
+              <td style={{ color: '#6b7280', fontSize: '0.75rem' }}>{i + 1}</td>
               <td style={{ fontWeight: 700 }}>${stock.ticker}</td>
               <td><VelocityBadge v={stock.velocity} /></td>
               <td><PriceCell ticker={stock.ticker} priceMap={priceMap} /></td>
@@ -81,8 +81,8 @@ export default async function MobilePage() {
         </tbody>
       </table>
 
-      <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#9ca3af', textAlign: 'center' }}>
-        <a href="/dashboard" style={{ color: '#7c3aed', textDecoration: 'none' }}>Full Dashboard</a>
+      <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
+        <a href="/dashboard" style={{ color: '#7c3aed', textDecoration: 'underline' }}>Full Dashboard</a>
         {' · '}
         Updated {new Date(now).toLocaleTimeString()}
       </p>
