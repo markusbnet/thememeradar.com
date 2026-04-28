@@ -66,10 +66,12 @@ export default defineConfig({
    * We inherit the full parent env so .env.local values (CRON_SECRET, JWT_SECRET, REDDIT_*) reach
    * the spawned server. The `env` overrides below pin the ones that must be deterministic for tests. */
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
-    command: 'PORT=3005 npm run dev',
+    // In CI the build artifact already exists (built in a prior step), so
+    // `next start` is used — it comes up in ~1s vs 60-120s for `next dev`.
+    command: process.env.CI ? 'npx next start -p 3005' : 'PORT=3005 npm run dev',
     url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
-    timeout: 60000,
+    timeout: process.env.CI ? 30000 : 60000,
     env: {
       DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000',
       AWS_REGION: process.env.AWS_REGION || 'us-east-1',
