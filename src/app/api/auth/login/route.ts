@@ -22,7 +22,15 @@ export async function POST(request: NextRequest) {
         }
       );
     }
-    const body = await request.json();
+    let body: { email?: unknown; password?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Request body must be JSON' },
+        { status: 400 }
+      );
+    }
     const { email, password } = body;
 
     // Validate required fields
@@ -95,9 +103,15 @@ export async function POST(request: NextRequest) {
     const expirationDays = parseInt(process.env.SESSION_EXPIRATION_DAYS || '7');
     const maxAge = expirationDays * 24 * 60 * 60; // Convert days to seconds
 
+    // Use Secure flag only on HTTPS connections (not on HTTP test/dev servers).
+    // next start forces NODE_ENV=production even in CI, so checking NODE_ENV
+    // here would set Secure:true on HTTP test servers causing cookies to be dropped.
+    const isHttps =
+      request.url.startsWith('https://') ||
+      request.headers.get('x-forwarded-proto') === 'https';
     response.cookies.set(cookieName, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge,
       path: '/',

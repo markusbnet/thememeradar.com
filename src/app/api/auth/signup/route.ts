@@ -104,9 +104,12 @@ export async function POST(request: NextRequest) {
     const expirationDays = parseInt(process.env.SESSION_EXPIRATION_DAYS || '7');
     const maxAge = expirationDays * 24 * 60 * 60; // Convert days to seconds
 
+    const isHttps =
+      request.url.startsWith('https://') ||
+      request.headers.get('x-forwarded-proto') === 'https';
     response.cookies.set(cookieName, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge,
       path: '/',
