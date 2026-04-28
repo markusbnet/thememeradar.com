@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         }
       );
     }
-    let body: { email?: unknown; password?: unknown };
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { email, password } = body;
+    const { email, password } = body as { email?: string; password?: string };
 
     // Validate required fields
     if (!email) {
