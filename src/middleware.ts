@@ -37,10 +37,11 @@ async function verifyJWT(token: string): Promise<{ userId: string } | null> {
     const valid = await crypto.subtle.verify('HMAC', key, signature, signatureInput);
     if (!valid) return null;
 
-    // Signature verified — now decode the payload
-    const payload = JSON.parse(
-      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-    );
+    // Signature verified — now decode the payload.
+    // Must add padding before atob: Edge Runtime's atob is strict about it.
+    const b64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = b64Payload + '='.repeat((4 - b64Payload.length % 4) % 4);
+    const payload = JSON.parse(atob(paddedPayload));
 
     if (!payload.userId || typeof payload.userId !== 'string') return null;
     if (payload.exp && payload.exp * 1000 < Date.now()) return null;
