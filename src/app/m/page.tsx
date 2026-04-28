@@ -5,7 +5,9 @@ import { getLatestPriceMap } from '@/lib/db/prices';
 import type { Metadata } from 'next';
 import type { StockPriceSnapshot } from '@/types/market';
 
-export const revalidate = 60;
+// Always fetch fresh trending data — ISR would serve a build-time snapshot
+// (empty DynamoDB during CI build) and miss data seeded before E2E tests.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Meme Radar — Quick View',

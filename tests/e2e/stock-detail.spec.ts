@@ -161,6 +161,8 @@ test.describe('Stock Detail Page', () => {
       await page.goto('/stock/TSLA');
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
+      // Ensure the async fetch has finished (spinner gone) before snapshot checks.
+      await page.locator('.animate-spin').waitFor({ state: 'detached', timeout: 8000 }).catch(() => {});
 
       const errorHeading = page.getByRole('heading', { name: /Error/i });
       const hasError = await errorHeading.isVisible().catch(() => false);
@@ -192,6 +194,7 @@ test.describe('Stock Detail Page', () => {
       await page.goto('/stock/TSLA');
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
+      await page.locator('.animate-spin').waitFor({ state: 'detached', timeout: 8000 }).catch(() => {});
 
       const errorHeading = page.getByRole('heading', { name: /Error/i });
       const hasError = await errorHeading.isVisible().catch(() => false);
@@ -419,6 +422,7 @@ test.describe('Stock Detail Page', () => {
       await page.goto('/stock/TSLA');
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
+      await page.locator('.animate-spin').waitFor({ state: 'detached', timeout: 8000 }).catch(() => {});
 
       const errorHeading = page.getByRole('heading', { name: /Error/i });
       const hasError = await errorHeading.isVisible().catch(() => false);
@@ -459,6 +463,7 @@ test.describe('Stock Detail Page', () => {
       await page.goto('/stock/TSLA');
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
+      await page.locator('.animate-spin').waitFor({ state: 'detached', timeout: 8000 }).catch(() => {});
 
       const evidenceSection = page.getByRole('heading', { name: /Supporting Evidence/i });
       const hasEvidence = await evidenceSection.isVisible().catch(() => false);

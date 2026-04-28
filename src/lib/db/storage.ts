@@ -394,19 +394,25 @@ export async function getFadingStocks(limit: number = 10, timeframe: Timeframe =
  * Get stock details by ticker
  */
 export async function getStockDetails(ticker: string): Promise<StoredStockMention | null> {
-  const now = roundToInterval(Date.now());
+  // Query for the most recent record within the past 24h (newest first, limit 1).
+  // An exact current-bucket match misses seeded data when the 15-min window
+  // changes between seed time and query time (common in CI), causing a spurious
+  // "Stock not found" error for tickers that DO have data.
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
 
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLES.STOCK_MENTIONS,
-      KeyConditionExpression: 'ticker = :ticker AND #timestamp = :timestamp',
+      KeyConditionExpression: 'ticker = :ticker AND #timestamp >= :since',
       ExpressionAttributeNames: {
         '#timestamp': 'timestamp',
       },
       ExpressionAttributeValues: {
         ':ticker': ticker,
-        ':timestamp': now,
+        ':since': oneDayAgo,
       },
+      ScanIndexForward: false, // newest first
+      Limit: 1,
     })
   );
 
