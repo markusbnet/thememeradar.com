@@ -90,10 +90,13 @@ export default defineConfig({
       CRON_SECRET: process.env.CRON_SECRET || 'dev-cron-secret',
       REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID || 'dev-client',
       REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET || 'dev-secret',
-      // Always disable the server-side in-memory API cache during E2E runs —
-      // tests seed fresh data and expect to see it immediately. Caching with
-      // a 5-minute TTL would hide newly-seeded tickers from the trending API.
-      CI: 'true',
+      // Disable the server-side in-memory API cache during E2E runs — tests
+      // seed fresh data and expect to see it immediately. Using a dedicated var
+      // (not CI) so integration-test cache-behavior tests still pass in CI.
+      E2E_TEST_MODE: 'true',
+      // Forward CI so the server can skip in-process caches that cause
+      // race conditions between parallel test workers.
+      CI: process.env.CI || '',
     },
   },
 });

@@ -32,9 +32,11 @@ export async function GET(request: NextRequest) {
   const CACHE_KEY = `trending-fading-${timeframe}`;
 
   try {
-    // Return cached response if available (skipped in CI to prevent race
-    // conditions between parallel test workers that seed different tickers).
-    const cached = process.env.CI
+    // Return cached response if available (skipped during E2E runs to prevent
+    // race conditions between parallel Playwright workers seeding different tickers).
+    // E2E_TEST_MODE is set by the playwright webServer env only — not by the
+    // global CI environment — so integration-test cache-behavior tests still work.
+    const cached = process.env.E2E_TEST_MODE
       ? null
       : apiCache.get<{ trending: unknown[]; fading: unknown[]; timestamp: number }>(CACHE_KEY);
     if (cached) {
@@ -79,8 +81,8 @@ export async function GET(request: NextRequest) {
       timestamp: now,
     };
 
-    // Cache for 5 minutes (skipped in CI — see read comment above)
-    if (!process.env.CI) apiCache.set(CACHE_KEY, data);
+    // Cache for 5 minutes (skipped in E2E mode — see read comment above)
+    if (!process.env.E2E_TEST_MODE) apiCache.set(CACHE_KEY, data);
 
     return NextResponse.json({
       success: true,
