@@ -161,7 +161,9 @@ test.describe('Form Interactions', () => {
     });
 
     test('should handle very long email addresses', async ({ page }) => {
-      const longLocal = 'a'.repeat(64); // Max local part is 64 chars
+      // Use a unique suffix so re-runs never hit "already registered"
+      const suffix = Date.now().toString();
+      const longLocal = 'a'.repeat(64 - suffix.length) + suffix;
       const email = `${longLocal}@example.com`;
       const password = 'LongEmail123!';
 
@@ -169,20 +171,17 @@ test.describe('Form Interactions', () => {
       await page.getByRole('textbox', { name: /password/i }).fill(password);
       await page.getByRole('button', { name: /sign up/i }).click();
 
-      // Should handle gracefully (accept or show validation error)
-      await page.waitForTimeout(2000);
+      // Either the signup succeeds (redirect to /dashboard) or fails (shows error on /signup).
+      // Wait up to 8 s for a /dashboard redirect; if it doesn't arrive, expect a form-level error.
+      const redirected = await page.waitForURL(/\/dashboard/, { timeout: 8000 })
+        .then(() => true)
+        .catch(() => false);
 
-      // Either succeeds or shows validation error
-      const isOnDashboard = page.url().includes('/dashboard');
-      const hasError = await page.getByText(/email|invalid/i).isVisible().catch(() => false);
-
-      expect(isOnDashboard || hasError).toBe(true);
-
-      // Cleanup if succeeded
-      if (isOnDashboard) {
-        await page.request.delete('/api/test/delete-user', {
-          data: { email },
-        });
+      if (redirected) {
+        await page.request.delete('/api/test/delete-user', { data: { email } });
+      } else {
+        const hasError = await page.locator('.text-red-600, .text-red-700').isVisible().catch(() => false);
+        expect(hasError).toBe(true);
       }
     });
   });

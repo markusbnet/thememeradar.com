@@ -32,8 +32,11 @@ export async function GET(request: NextRequest) {
   const CACHE_KEY = `trending-fading-${timeframe}`;
 
   try {
-    // Return cached response if available
-    const cached = apiCache.get<{ trending: unknown[]; fading: unknown[]; timestamp: number }>(CACHE_KEY);
+    // Return cached response if available (skipped in CI to prevent race
+    // conditions between parallel test workers that seed different tickers).
+    const cached = process.env.CI
+      ? null
+      : apiCache.get<{ trending: unknown[]; fading: unknown[]; timestamp: number }>(CACHE_KEY);
     if (cached) {
       return NextResponse.json({
         success: true,
@@ -76,8 +79,8 @@ export async function GET(request: NextRequest) {
       timestamp: now,
     };
 
-    // Cache for 5 minutes
-    apiCache.set(CACHE_KEY, data);
+    // Cache for 5 minutes (skipped in CI — see read comment above)
+    if (!process.env.CI) apiCache.set(CACHE_KEY, data);
 
     return NextResponse.json({
       success: true,

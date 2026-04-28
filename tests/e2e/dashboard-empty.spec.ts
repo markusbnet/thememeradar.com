@@ -33,7 +33,7 @@ test.describe('Dashboard empty state', () => {
     // Intercept before any page navigation so the dashboard's initial fetch
     // hits the mock. Use fulfill rather than abort so the page sees a valid
     // API shape and doesn't crash into an error boundary.
-    await page.route('**/api/stocks/trending', (route) =>
+    await page.route('**/api/stocks/trending**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -43,14 +43,14 @@ test.describe('Dashboard empty state', () => {
         }),
       })
     );
-    await page.route('**/api/stocks/surging', (route) =>
+    await page.route('**/api/stocks/surging**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ success: true, data: { surges: [] } }),
       })
     );
-    await page.route('**/api/stocks/opportunities', (route) =>
+    await page.route('**/api/stocks/opportunities**', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',

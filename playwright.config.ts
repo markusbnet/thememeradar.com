@@ -89,6 +89,9 @@ export default defineConfig({
       CRON_SECRET: process.env.CRON_SECRET || 'dev-cron-secret',
       REDDIT_CLIENT_ID: process.env.REDDIT_CLIENT_ID || 'dev-client',
       REDDIT_CLIENT_SECRET: process.env.REDDIT_CLIENT_SECRET || 'dev-secret',
+      // Forward CI so the server can skip in-process caches that cause
+      // race conditions between parallel test workers.
+      CI: process.env.CI || '',
     },
   },
 });

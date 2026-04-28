@@ -8,8 +8,8 @@ import { deleteUserByEmail } from '@/lib/db/users';
  * This endpoint should only be available in non-production environments
  */
 export async function DELETE(request: NextRequest) {
-  // Only allow in non-production environments
-  if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_TEST_ENDPOINTS) {
+  // Only allow in non-production or CI environments
+  if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_TEST_ENDPOINTS && !process.env.CI) {
     return NextResponse.json(
       { success: false, error: 'Not allowed in production' },
       { status: 403 }

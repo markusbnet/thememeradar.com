@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-function base64UrlToArrayBuffer(base64url: string): ArrayBuffer {
+function base64UrlDecode(base64url: string): Uint8Array<ArrayBuffer> {
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
   const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
+  const buf = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buf);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return bytes.buffer;
+  return bytes;
 }
 
 async function verifyJWT(token: string): Promise<{ userId: string } | null> {
@@ -30,9 +31,11 @@ async function verifyJWT(token: string): Promise<{ userId: string } | null> {
       ['verify']
     );
 
-    // Verify the signature against header.payload
-    const signatureInput = encoder.encode(`${parts[0]}.${parts[1]}`);
-    const signature = base64UrlToArrayBuffer(parts[2]);
+    // Verify the signature against header.payload.
+    // Pass Uint8Array directly — the Edge Runtime's SubtleCrypto rejects
+    // .buffer (ArrayBuffer from a different V8 realm) but accepts TypedArray.
+    const signatureInput = encoder.encode(`${parts[0]}.${parts[1]}`) as Uint8Array<ArrayBuffer>;
+    const signature = base64UrlDecode(parts[2]);
 
     const valid = await crypto.subtle.verify('HMAC', key, signature, signatureInput);
     if (!valid) return null;
