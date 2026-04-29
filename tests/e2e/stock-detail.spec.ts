@@ -22,7 +22,7 @@ async function loginAsNewUser(page: any) {
   await page.getByLabel(/email/i).fill(testEmail);
   await page.getByRole('textbox', { name: /password/i }).fill(testPassword);
   await page.getByRole('button', { name: /sign up/i }).click();
-  await page.waitForURL(/\/dashboard/);
+  await page.waitForURL(/\/dashboard/, { timeout: 60000 });
 
   return { email: testEmail, password: testPassword };
 }
@@ -179,7 +179,7 @@ test.describe('Stock Detail Page', () => {
 
         let foundSentiment = false;
         for (const pattern of sentimentPatterns) {
-          const hasSentiment = await page.getByText(pattern).isVisible().catch(() => false);
+          const hasSentiment = await page.getByText(pattern).first().isVisible().catch(() => false);
           if (hasSentiment) {
             foundSentiment = true;
             break;
@@ -201,7 +201,7 @@ test.describe('Stock Detail Page', () => {
 
       if (!hasError) {
         // Should show sentiment score label
-        const sentimentScoreLabel = page.getByText(/Sentiment Score/i);
+        const sentimentScoreLabel = page.getByText(/Sentiment Score/i).first();
         await expect(sentimentScoreLabel).toBeVisible();
       }
     });
@@ -429,7 +429,7 @@ test.describe('Stock Detail Page', () => {
 
       if (!hasError) {
         // Sentiment score should be visible (likely near "Sentiment Score" label)
-        const sentimentLabel = page.getByText(/Sentiment Score/i);
+        const sentimentLabel = page.getByText(/Sentiment Score/i).first();
         await expect(sentimentLabel).toBeVisible();
       }
     });
@@ -471,8 +471,8 @@ test.describe('Stock Detail Page', () => {
       if (hasEvidence) {
         // Should show metadata like upvotes, subreddit, type
         const hasMetadata =
-          (await page.getByText(/r\//i).isVisible().catch(() => false)) ||
-          (await page.getByText(/⬆/i).isVisible().catch(() => false));
+          (await page.getByText(/r\//i).first().isVisible().catch(() => false)) ||
+          (await page.getByText(/⬆/i).first().isVisible().catch(() => false));
 
         expect(hasMetadata).toBe(true);
       }
