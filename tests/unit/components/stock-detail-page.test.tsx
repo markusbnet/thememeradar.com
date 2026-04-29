@@ -31,7 +31,13 @@ jest.mock('@/components/CollapsibleSection', () => {
   };
 });
 
-import StockDetailPage from '@/app/stock/[ticker]/page';
+jest.mock('@/components/OptionsActivitySection', () => {
+  return function MockOptionsActivitySection() {
+    return <div data-testid="options-activity">Options Activity</div>;
+  };
+});
+
+import StockDetailClient from '@/app/stock/[ticker]/StockDetailClient';
 
 const mockStockDetails = {
   success: true,
@@ -60,7 +66,7 @@ const mockStockDetails = {
   },
 };
 
-describe('StockDetailPage', () => {
+describe('StockDetailPage', () => {  // tests StockDetailClient
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn().mockResolvedValue({
@@ -77,7 +83,7 @@ describe('StockDetailPage', () => {
     global.fetch = jest.fn().mockReturnValue(new Promise(() => {}));
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     expect(screen.getByText('Loading stock details...')).toBeInTheDocument();
@@ -89,7 +95,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'ZZZZ' })} />);
+      render(<StockDetailClient ticker={'ZZZZ'} />);
     });
 
     await waitFor(() => {
@@ -103,7 +109,7 @@ describe('StockDetailPage', () => {
 
   it('shows stock header with $TICKER when data loads successfully', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -113,7 +119,7 @@ describe('StockDetailPage', () => {
 
   it('shows all 4 statistics cards', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -133,7 +139,7 @@ describe('StockDetailPage', () => {
 
   it('shows sentiment badge with Bullish label for bullish category', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -158,7 +164,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -183,7 +189,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -208,7 +214,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -233,7 +239,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -243,7 +249,7 @@ describe('StockDetailPage', () => {
 
   it('renders StockChart components for mentions and sentiment history', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -255,7 +261,7 @@ describe('StockDetailPage', () => {
 
   it('renders CollapsibleSection for Sentiment Breakdown and Subreddit Breakdown', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -267,7 +273,7 @@ describe('StockDetailPage', () => {
 
   it('displays sentiment score value', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -275,9 +281,9 @@ describe('StockDetailPage', () => {
     });
   });
 
-  it('uppercases the ticker from params', async () => {
+  it('displays ticker in header with $ prefix', async () => {
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'tsla' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -289,7 +295,7 @@ describe('StockDetailPage', () => {
     (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -325,7 +331,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -361,7 +367,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
@@ -395,7 +401,7 @@ describe('StockDetailPage', () => {
     });
 
     await act(async () => {
-      render(<StockDetailPage params={Promise.resolve({ ticker: 'TSLA' })} />);
+      render(<StockDetailClient ticker={'TSLA'} />);
     });
 
     await waitFor(() => {
