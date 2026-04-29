@@ -530,7 +530,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                           href={item.redditUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                          className="inline-flex items-center min-h-[44px] text-xs text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           View on Reddit →
                         </a>
