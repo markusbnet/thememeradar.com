@@ -1,6 +1,12 @@
 import '@testing-library/jest-dom';
 import 'whatwg-fetch';
 
+// AWS SDK >=3.973 calls structuredClone during response deserialization.
+// jsdom@20 does not expose it as a global even though Node 17+ has it natively.
+if (typeof global.structuredClone === 'undefined') {
+  (global as any).structuredClone = <T>(val: T): T => JSON.parse(JSON.stringify(val));
+}
+
 // Polyfill Response.json for Next.js API routes (missing in jsdom)
 if (typeof Response !== 'undefined' && !Response.json) {
   Response.json = function(data: any, init?: ResponseInit) {
