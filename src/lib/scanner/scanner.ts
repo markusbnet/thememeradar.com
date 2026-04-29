@@ -50,6 +50,7 @@ export interface TickerMention {
   subreddit: string;
   /** Listing-type weight: hot=1.0, new=0.5, rising=1.5 */
   listingWeight: number;
+  url?: string;
 }
 
 export interface ScanStats {
@@ -184,6 +185,7 @@ export class Scanner {
             upvotes: comment.upvotes,
             subreddit,
             listingWeight: weight,
+            url: `https://reddit.com/r/${subreddit}/comments/${comment.postId}/_/${comment.id}`,
           };
           if (!tickerMap.has(ticker)) tickerMap.set(ticker, []);
           tickerMap.get(ticker)!.push(mention);
@@ -215,6 +217,7 @@ export class Scanner {
           upvotes: post.upvotes,
           subreddit,
           listingWeight: weight,
+          url: post.url,
         };
         if (!tickerMap.has(ticker)) tickerMap.set(ticker, []);
         tickerMap.get(ticker)!.push(mention);

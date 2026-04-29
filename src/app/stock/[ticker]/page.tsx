@@ -33,6 +33,7 @@ interface Evidence {
   sentimentCategory: string;
   upvotes: number;
   subreddit: string;
+  redditUrl?: string;
   createdAt: number;
 }
 
@@ -521,6 +522,18 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                             {keyword}
                           </span>
                         ))}
+                      </div>
+                    )}
+                    {item.redditUrl && (
+                      <div className="mt-2">
+                        <a
+                          href={item.redditUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          View on Reddit →
+                        </a>
                       </div>
                     )}
                   </div>

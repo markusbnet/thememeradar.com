@@ -34,6 +34,7 @@ export interface StoredEvidence {
   sentimentCategory: string;
   upvotes: number;
   subreddit: string;
+  redditUrl?: string;
   createdAt: number;
   ttl: number;
 }
@@ -228,6 +229,7 @@ export async function saveScanResults(results: ScanResult[]): Promise<void> {
         sentimentCategory: mention.sentiment.category,
         upvotes: mention.upvotes,
         subreddit: mention.subreddit,
+        ...(mention.url && { redditUrl: mention.url }),
         createdAt: Date.now(),
         ttl: getTTL(),
       };
