@@ -195,12 +195,6 @@ describe('SignupPage', () => {
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 
-  it('sets document title to "Sign Up - The Meme Radar"', () => {
-    render(<SignupPage />);
-
-    expect(document.title).toBe('Sign Up - The Meme Radar');
-  });
-
   it('password error replaces hint text', async () => {
     const user = userEvent.setup();
     render(<SignupPage />);

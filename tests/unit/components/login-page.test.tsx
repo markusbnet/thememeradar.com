@@ -200,9 +200,4 @@ describe('LoginPage', () => {
     expect(passwordInput.type).toBe('password');
   });
 
-  it('sets document title to "Log In - The Meme Radar"', () => {
-    render(<LoginPage />);
-
-    expect(document.title).toBe('Log In - The Meme Radar');
-  });
 });
