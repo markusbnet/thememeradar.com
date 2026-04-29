@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect, ChangeEvent } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -14,11 +14,6 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
-
-  // Set page title
-  useEffect(() => {
-    document.title = 'Sign Up - The Meme Radar';
-  }, []);
 
   // Email validation
   const validateEmail = (email: string): boolean => {
@@ -157,6 +152,8 @@ export default function SignupPage() {
   };
 
   return (
+    <>
+    <title>Sign Up - The Meme Radar</title>
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8 sm:py-12">
       <div className="w-full max-w-md">
         {/* Logo/Title */}
@@ -322,5 +319,6 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }

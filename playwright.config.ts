@@ -24,6 +24,9 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  /* Bump default assertion timeout — AWS SDK 3.1039 cold-start on first DynamoDB
+     request is slower than 3.699; 5 s was too tight for signup → redirect flows. */
+  expect: { timeout: 15000 },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

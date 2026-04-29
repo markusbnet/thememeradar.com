@@ -95,8 +95,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = `${ticker} - Stock Details`;
-
     const fetchData = async () => {
       // Middleware (src/middleware.ts) protects /stock/:path* server-side — no client-side auth check needed.
 
@@ -187,6 +185,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const sentiment = getSentimentDisplay(stockDetails.sentimentCategory);
 
   return (
+    <>
+    <title>{ticker} - Stock Details</title>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
@@ -545,5 +545,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         )}
       </main>
     </div>
+    </>
   );
 }
