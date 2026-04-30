@@ -3,6 +3,10 @@
  * that matches what the scanner produces in production. Intentionally
  * different from scripts/seed-db.ts — tests need ticker isolation so parallel
  * tests don't stomp each other.
+ *
+ * When PLAYWRIGHT_BASE_URL points to a remote host (https://…) the helpers
+ * route through the /api/test/seed-ticker and /api/test/cleanup-ticker
+ * endpoints so the test runner never needs direct AWS credentials.
  */
 
 import { docClient, TABLES, PutCommand, ScanCommand, DeleteCommand, BatchWriteCommand, QueryCommand } from '../../../src/lib/db/client';
@@ -10,6 +14,11 @@ import type { ApewisdomSnapshot } from '../../../src/types/apewisdom';
 
 const THIRTY_DAYS_SEC = 30 * 24 * 60 * 60;
 const FIFTEEN_MIN = 15 * 60 * 1000;
+
+function remoteBase(): string | null {
+  const url = process.env.PLAYWRIGHT_BASE_URL ?? '';
+  return url.startsWith('https://') ? url : null;
+}
 
 export async function seedTrendingTicker(
   ticker: string,
@@ -20,6 +29,21 @@ export async function seedTrendingTicker(
     at?: number;
   } = {}
 ) {
+  const base = remoteBase();
+  if (base) {
+    const res = await fetch(`${base}/api/test/seed-ticker`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ticker,
+        mentionCount: overrides.mentionCount,
+        sentimentScore: overrides.sentimentScore,
+        sentimentCategory: overrides.sentimentCategory,
+      }),
+    });
+    if (!res.ok) throw new Error(`seed-ticker API failed: ${res.status} ${await res.text()}`);
+    return;
+  }
   const now = overrides.at ?? Date.now();
   const bucket = Math.floor(now / FIFTEEN_MIN) * FIFTEEN_MIN;
   const prev = bucket - FIFTEEN_MIN;
@@ -79,6 +103,9 @@ export async function seedTrendingTicker(
 }
 
 export async function seedEvidence(ticker: string, count = 2) {
+  // Remote mode: evidence is seeded as part of seed-ticker API call
+  if (remoteBase()) return;
+
   const now = Date.now();
   for (let i = 0; i < count; i++) {
     await docClient.send(

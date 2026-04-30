@@ -238,13 +238,13 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install chromium --with-deps
 
       - name: Wait for deployment to stabilize
-        run: sleep 30
+        run: sleep 15
 
-      - name: Run E2E tests against production
-        run: npm run test:e2e
+      - name: Run smoke tests against production
+        run: npx playwright test --config=playwright.production.config.ts
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: https://thememeradarcom.vercel.app

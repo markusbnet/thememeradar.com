@@ -21,7 +21,7 @@ export default defineConfig({
   /* Retry on CI only — 1 retry keeps the signal without multiplying timeouts */
   retries: process.env.CI ? 1 : 0,
   /* Limit parallel workers to avoid overwhelming the dev server */
-  workers: process.env.CI ? 2 : 3,
+  workers: process.env.CI ? 4 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Bump default assertion timeout — AWS SDK 3.1039 cold-start on first DynamoDB
