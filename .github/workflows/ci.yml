@@ -41,6 +41,11 @@ jobs:
   unit-test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,6 +67,9 @@ jobs:
           echo "REDDIT_CLIENT_ID=ci-reddit-client" >> .env.local
           echo "REDDIT_CLIENT_SECRET=ci-reddit-secret" >> .env.local
           echo "REDDIT_USER_AGENT=MemeRadarCI/1.0" >> .env.local
+      - run: sleep 5
+      - run: npm run db:init
+        name: Initialize DynamoDB tables
       - run: npm run test -- --testPathPattern=tests/unit
         env:
           DYNAMODB_ENDPOINT: http://localhost:8000
