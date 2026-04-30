@@ -262,8 +262,15 @@ jobs:
       - name: Install Playwright system deps (cache hit)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
-      - run: sleep 15
+      - run: sleep 20
         name: Wait for deployment to stabilize
+      - name: Warm up scanner (ensure fresh stock data for smoke tests)
+        run: |
+          curl -s -X POST "https://thememeradarcom.vercel.app/api/scan" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 90 || echo "Scanner warm-up failed (non-blocking)"
+          sleep 10
       - run: npx playwright test --config=playwright.production.config.ts
         name: Run smoke tests against production
         env:
