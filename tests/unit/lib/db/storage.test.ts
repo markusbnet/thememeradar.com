@@ -953,10 +953,10 @@ describe('Storage Layer', () => {
       const windowMs = 60 * 60 * 1000; // 1h
 
       // Seed data inside the current 1h window (multiple 15-min buckets)
-      await seedMention({ ticker: 'TF1H', timestamp: frozen - 10 * 60 * 1000, mentionCount: 3 });
+      await seedMention({ ticker: 'TF1H', timestamp: frozen - 15 * 60 * 1000, mentionCount: 3 });
       await seedMention({ ticker: 'TF1H', timestamp: frozen - 30 * 60 * 1000, mentionCount: 4 });
       // Seed data inside the previous 1h window
-      await seedMention({ ticker: 'TF1H', timestamp: frozen - windowMs - 10 * 60 * 1000, mentionCount: 2 });
+      await seedMention({ ticker: 'TF1H', timestamp: frozen - windowMs - 15 * 60 * 1000, mentionCount: 2 });
 
       const result = await getTrendingStocks(10, '1h');
       expect(Array.isArray(result)).toBe(true);
