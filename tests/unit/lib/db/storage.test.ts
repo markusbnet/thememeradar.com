@@ -30,6 +30,9 @@ jest.mock('@/lib/db/client', () => {
             );
           } else if (values[':timestamp'] !== undefined) {
             filtered = filtered.filter((i: any) => i.timestamp === values[':timestamp']);
+          } else if (values[':ts'] !== undefined) {
+            // GSI bucket query (timestamp-index): exact match on timestamp bucket
+            filtered = filtered.filter((i: any) => i.timestamp === values[':ts']);
           }
 
           // Handle ScanIndexForward
