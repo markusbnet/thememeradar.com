@@ -3,7 +3,7 @@
  * Handles saving and retrieving stock mentions from DynamoDB
  */
 
-import { docClient, TABLES, PutCommand, QueryCommand, ScanCommand } from './client';
+import { docClient, TABLES, PutCommand, QueryCommand } from './client';
 import { ScanResult, TickerMention } from '@/lib/scanner/scanner';
 
 // Types for stored data
@@ -269,20 +269,38 @@ export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe
 
   const windowStart = now - 2 * windowMs;
 
-  // Scan all mentions within the last 2 windows (current + previous)
-  const scanResult = await docClient.send(
-    new ScanCommand({
-      TableName: TABLES.STOCK_MENTIONS,
-      FilterExpression: '#ts BETWEEN :windowStart AND :now',
-      ExpressionAttributeNames: { '#ts': 'timestamp' },
-      ExpressionAttributeValues: {
-        ':windowStart': windowStart,
-        ':now': now,
-      },
-    })
-  );
+  // Build the list of 15-min bucket timestamps covering the 2-window range.
+  // Querying the timestamp-index GSI per bucket is far cheaper than a full-table
+  // Scan when old (expired-but-not-yet-deleted) items inflate the table size.
+  const BUCKET_MS = 15 * 60 * 1000;
+  const buckets: number[] = [];
+  const firstBucket = Math.floor(windowStart / BUCKET_MS) * BUCKET_MS;
+  for (let ts = firstBucket; ts <= now; ts += BUCKET_MS) {
+    buckets.push(ts);
+  }
 
-  const items = scanResult.Items || [];
+  // Query each bucket in parallel (batches of 20 to avoid DynamoDB burst limits)
+  const BATCH = 20;
+  const allItems: Record<string, unknown>[] = [];
+  for (let i = 0; i < buckets.length; i += BATCH) {
+    const batch = buckets.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(ts =>
+        docClient.send(
+          new QueryCommand({
+            TableName: TABLES.STOCK_MENTIONS,
+            IndexName: 'timestamp-index',
+            KeyConditionExpression: '#ts = :ts',
+            ExpressionAttributeNames: { '#ts': 'timestamp' },
+            ExpressionAttributeValues: { ':ts': ts },
+          })
+        )
+      )
+    );
+    for (const r of results) allItems.push(...(r.Items || []));
+  }
+
+  const items = allItems;
   const currentWindowStart = now - windowMs;
 
   // Aggregate per ticker for current and previous windows
