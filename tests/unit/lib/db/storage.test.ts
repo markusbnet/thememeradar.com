@@ -451,6 +451,19 @@ describe('Storage Layer', () => {
       expect(newStock!.velocity).toBe(100);
     });
 
+    it('when previous window has no data, should sort by mentionCount descending', async () => {
+      const now = roundToInterval(Date.now());
+
+      // Only seed current period — no previous window data at all (data-gap scenario)
+      await seedMention({ ticker: 'DGMED', timestamp: now, mentionCount: 10 });
+      await seedMention({ ticker: 'DGBIG', timestamp: now, mentionCount: 20 });
+      await seedMention({ ticker: 'DGSML', timestamp: now, mentionCount: 5 });
+
+      const result = await getTrendingStocks(10);
+      const relevant = result.filter(s => ['DGMED', 'DGBIG', 'DGSML'].includes(s.ticker));
+      expect(relevant.map(s => s.ticker)).toEqual(['DGBIG', 'DGMED', 'DGSML']);
+    });
+
     it('should filter out stocks with fewer than 5 mentions', async () => {
       const now = roundToInterval(Date.now());
 

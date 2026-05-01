@@ -69,10 +69,13 @@ export default function StockCard({
 
   const sentiment = getSentimentDisplay(sentimentCategory);
   const isPositiveVelocity = velocity > 0;
-  // First-appearance ticker: velocity is pinned at 100% by storage because
-  // there's no previous window to compare against. Show "NEW" instead so we
-  // don't mislead users into thinking a brand-new ticker just surged 100%.
-  const isNewTicker = mentionsPrev === 0;
+  // rankStatus === 'unknown' means the 24h snapshot has no data at all (data gap).
+  // In that case every stock has mentionsPrev=0, so we show "—" rather than "NEW"
+  // to avoid implying that well-known tickers like NVDA just appeared for the first time.
+  // rankStatus === 'new' (previous window has data but this ticker is absent from it)
+  // is a genuine first appearance and still shows "NEW".
+  const isNewTicker = mentionsPrev === 0 && rankStatus !== 'unknown';
+  const isDataGap = mentionsPrev === 0 && rankStatus === 'unknown';
 
   return (
     <Link href={`/stock/${ticker}`}>
@@ -104,9 +107,11 @@ export default function StockCard({
           </div>
 
           {/* Velocity indicator */}
-          <div className={`text-right ${isNewTicker ? 'text-purple-600' : isPositiveVelocity ? 'text-green-700' : 'text-red-700'}`}>
+          <div className={`text-right ${isDataGap ? 'text-gray-400' : isNewTicker ? 'text-purple-600' : isPositiveVelocity ? 'text-green-700' : 'text-red-700'}`}>
             <div className="flex items-center justify-end gap-1">
-              {isNewTicker ? (
+              {isDataGap ? (
+                <span className="text-lg sm:text-xl font-bold">—</span>
+              ) : isNewTicker ? (
                 <span className="text-lg sm:text-xl font-bold">NEW</span>
               ) : (
                 <>
@@ -118,7 +123,7 @@ export default function StockCard({
               )}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {isNewTicker ? 'First seen' : type === 'trending' ? 'Rising' : 'Fading'}
+              {isDataGap ? 'Building' : isNewTicker ? 'First seen' : type === 'trending' ? 'Rising' : 'Fading'}
             </p>
           </div>
         </div>

@@ -319,6 +319,22 @@ export default function DashboardPage() {
           <ViewToggle view={view} onChange={handleViewChange} />
         </div>
 
+        {/* Data gap notice — shown when we have trending stocks but no previous-window baseline yet.
+            This happens briefly after a database reset or initial deployment; resolves within 24–48h. */}
+        {stockData && stockData.trending.length > 0 && stockData.trending.every(s => (s.mentionsPrev ?? 0) === 0) && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3" data-testid="data-gap-notice">
+            <span className="text-blue-500 text-lg mt-0.5">ℹ️</span>
+            <div>
+              <p className="text-blue-800 text-sm font-medium">Building historical baseline</p>
+              <p className="text-blue-700 text-sm mt-0.5">
+                Velocity comparisons for the <span className="font-medium">{timeframe}</span> window need ~{timeframe === '1h' ? '1 hour' : timeframe === '4h' ? '4 hours' : timeframe === '7d' ? '7 days' : '24 hours'} of history to be meaningful.
+                Stocks are ranked by mention volume for now.
+                {timeframe !== '1h' && <span> Switch to <button className="underline font-medium" onClick={() => handleTimeframeChange('1h')}>1h</button> to see live velocity data.</span>}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Trending Stocks Section */}
         <section className="mb-12">
           <div className="flex items-center mb-6">
@@ -388,9 +404,21 @@ export default function DashboardPage() {
 
           {!stockData || stockData.fading.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-500">
-                No fading stocks found. Waiting for data...
-              </p>
+              {stockData && stockData.trending.length > 0 && stockData.trending.every(s => (s.mentionsPrev ?? 0) === 0) ? (
+                <>
+                  <p className="text-gray-600 font-medium">No comparison data yet for the {timeframe} window</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    The fading list appears once we have a full {timeframe === '1h' ? '1-hour' : timeframe === '4h' ? '4-hour' : timeframe === '7d' ? '7-day' : '24-hour'} baseline to compare against.
+                    {timeframe !== '1h' && (
+                      <> <button className="text-purple-600 underline" onClick={() => handleTimeframeChange('1h')}>Switch to 1h</button> to see which stocks are losing momentum right now.</>
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className="text-gray-500">
+                  No fading stocks found. Waiting for data...
+                </p>
+              )}
             </div>
           ) : view === 'table' ? (
             <StockTable stocks={stockData.fading.map(s => ({

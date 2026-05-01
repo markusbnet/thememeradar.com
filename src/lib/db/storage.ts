@@ -357,8 +357,13 @@ export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe
     }
   }
 
-  // Sort by velocity descending, slice to limit
-  const sorted = trending.sort((a, b) => b.velocity - a.velocity).slice(0, limit);
+  // When the previous window has no data at all (data gap — e.g. TTL wipe), sort by
+  // mentionCount instead of velocity so the most-discussed stocks appear first rather
+  // than an arbitrary insertion-order list where every velocity ties at 100%.
+  const previousWindowHasData = previousMap.size > 0;
+  const sorted = trending
+    .sort((a, b) => previousWindowHasData ? b.velocity - a.velocity : b.mentionCount - a.mentionCount)
+    .slice(0, limit);
 
   // Compute 24h rank delta: query the snapshot from 24h ago
   const timestamp24hAgo = roundedNow - 24 * 60 * 60 * 1000;
