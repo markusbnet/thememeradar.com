@@ -74,6 +74,22 @@ test.describe('Happy path: complete user journey', () => {
       // window, so we just verify that some stock card is visible.
       stockCard = page.locator('h3').filter({ hasText: /\$[A-Z]{1,5}/ }).first();
       await expect(stockCard).toBeVisible({ timeout: 20000 });
+
+      // Verify that velocity data is available — i.e. the previous 24h window has
+      // scan data so fading stocks and velocity % are meaningful.
+      // hasPreviousWindowData=false means all stocks show "—" / "Building" velocity
+      // and the fading section is empty, which is the data-gap bug we hit on 2026-05-01.
+      // This assertion is only valid when recentMentions > 0 (scans have been running)
+      // AND recentMentions is large enough to indicate more than just a fresh cold start
+      // (a single warm-up scan produces ~50–200 mentions; 24h of scans produces thousands).
+      const healthRes = await page.request.get('/api/health');
+      const health = await healthRes.json();
+      const { recentMentions, hasPreviousWindowData } = health.data.subsystems.scan;
+      if (recentMentions > 500) {
+        // App has been scanning long enough that the previous 24h window must have data.
+        // If hasPreviousWindowData is false here, scans stopped writing to DynamoDB.
+        expect(hasPreviousWindowData).toBe(true);
+      }
     } else {
       // Local CI: verify the seeded ticker specifically
       stockCard = page.locator('h3', { hasText: new RegExp(`\\$${TICKER}`) }).first();

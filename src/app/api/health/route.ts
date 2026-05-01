@@ -15,7 +15,7 @@
 import { NextResponse } from 'next/server';
 import { DynamoDBClient, ListTablesCommand } from '@aws-sdk/client-dynamodb';
 import { docClient, TABLES } from '@/lib/db/client';
-import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { getScanHeartbeat, type ScanRunStatus } from '@/lib/db/scan-heartbeat';
 
 const REQUIRED_ENV_VARS = [
@@ -68,12 +68,19 @@ async function checkDbAndTables() {
   }
 }
 
+const BUCKET_MS = 15 * 60 * 1000;
+
+function roundToBucket(ms: number): number {
+  return Math.floor(ms / BUCKET_MS) * BUCKET_MS;
+}
+
 async function checkScanFreshness() {
   // Counts mentions recorded in the last 24h and finds the latest timestamp.
   // Scan is fine here: stock_mentions stays small under TTL, and this runs
   // once per health check rather than per user request.
   try {
-    const since = Date.now() - ONE_DAY_MS;
+    const now = Date.now();
+    const since = now - ONE_DAY_MS;
     const res = await docClient.send(
       new ScanCommand({
         TableName: TABLES.STOCK_MENTIONS,
@@ -87,16 +94,38 @@ async function checkScanFreshness() {
     const lastScanAt = items.length
       ? Math.max(...items.map((i: any) => Number(i.timestamp) || 0))
       : null;
+
+    // Check whether the previous 24h window (24–48h ago) has any data.
+    // When false, velocity and fading calculations are in data-gap mode —
+    // all stocks will show "—" velocity and the fading list will be empty.
+    // This is expected on a fresh deployment and self-heals after 24h of scans.
+    // A cheap GSI point-query on a single 15-min bucket ~36h ago is enough.
+    const sampleBucket = roundToBucket(now - 36 * 60 * 60 * 1000);
+    const prevWindowRes = await docClient.send(
+      new QueryCommand({
+        TableName: TABLES.STOCK_MENTIONS,
+        IndexName: 'timestamp-index',
+        KeyConditionExpression: '#ts = :ts',
+        ExpressionAttributeNames: { '#ts': 'timestamp' },
+        ExpressionAttributeValues: { ':ts': sampleBucket },
+        Limit: 1,
+        ProjectionExpression: 'ticker',
+      })
+    );
+    const hasPreviousWindowData = (prevWindowRes.Items?.length ?? 0) > 0;
+
     return {
       ok: items.length > 0,
       lastScanAt,
       recentMentions: items.length,
+      hasPreviousWindowData,
     };
   } catch (error: any) {
     return {
       ok: false,
       lastScanAt: null,
       recentMentions: 0,
+      hasPreviousWindowData: false,
       error: error?.message || String(error),
     };
   }
