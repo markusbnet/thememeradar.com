@@ -69,6 +69,29 @@ interface OptionsActivityData {
   iv30d: number | null;
 }
 
+interface NewsItem {
+  id: number;
+  datetime: number;
+  headline: string;
+  summary: string;
+  source: string;
+  url: string;
+}
+
+interface ShortInterest {
+  date: string;
+  short: number;
+  shortPercent: number;
+}
+
+interface InsiderTransaction {
+  name: string;
+  change: number;
+  transactionCode: string;
+  transactionDate: string;
+  transactionPrice: number;
+}
+
 interface PricePoint {
   timestamp: number;
   price: number;
@@ -90,6 +113,9 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
   const [priceSnapshot, setPriceSnapshot] = useState<PriceSnapshot | null>(null);
   const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
   const [options, setOptions] = useState<OptionsActivityData | null>(null);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [shortInterest, setShortInterest] = useState<ShortInterest | null>(null);
+  const [insiderTransactions, setInsiderTransactions] = useState<InsiderTransaction[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -120,6 +146,15 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
           }
           if (result.data.options) {
             setOptions(result.data.options);
+          }
+          if (result.data.news) {
+            setNews(result.data.news);
+          }
+          if (result.data.shortInterest) {
+            setShortInterest(result.data.shortInterest);
+          }
+          if (result.data.insiderTransactions?.length) {
+            setInsiderTransactions(result.data.insiderTransactions);
           }
         } else {
           setError(result.error || 'Stock not found');
@@ -221,7 +256,7 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Mentions</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.mentionCount.toLocaleString()}</p>
@@ -238,6 +273,18 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Upvotes</h3>
             <p className="text-3xl font-bold text-gray-900">{stockDetails.totalUpvotes.toLocaleString()}</p>
           </div>
+          {shortInterest && (
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Short Interest</h3>
+              <p className={`text-3xl font-bold ${
+                shortInterest.shortPercent > 50 ? 'text-red-700' :
+                shortInterest.shortPercent > 20 ? 'text-orange-600' : 'text-gray-900'
+              }`}>
+                {shortInterest.shortPercent.toFixed(1)}%
+              </p>
+              <p className="text-xs text-gray-400 mt-1">of float · {shortInterest.date}</p>
+            </div>
+          )}
         </div>
 
         {/* Market Data — Finnhub price (primary) + LunarCrush social */}
@@ -482,6 +529,77 @@ export default function StockDetailClient({ ticker }: { ticker: string }) {
         {options && (
           <div className="mt-8">
             <OptionsActivitySection options={options} />
+          </div>
+        )}
+
+        {/* Recent News */}
+        {news.length > 0 && (
+          <div className="mt-8">
+            <CollapsibleSection title={`Recent News (${news.length})`}>
+              <div className="space-y-1">
+                {news.map(item => (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-lg p-3 -mx-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <p className="font-medium text-gray-900 text-sm leading-snug">{item.headline}</p>
+                    {item.summary && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{item.summary}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      {item.source} · {new Date(item.datetime * 1000).toLocaleDateString()}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </CollapsibleSection>
+          </div>
+        )}
+
+        {/* Insider Activity */}
+        {insiderTransactions.length > 0 && (
+          <div className="mt-8">
+            <CollapsibleSection title={`Insider Activity (last 30 days)`}>
+              <div className="overflow-x-auto" tabIndex={0}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th scope="col" className="text-left py-2 px-3 font-medium text-gray-500">Name</th>
+                      <th scope="col" className="text-left py-2 px-3 font-medium text-gray-500">Action</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-gray-500">Shares</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-gray-500">Price</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-gray-500">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insiderTransactions.map((t, i) => {
+                      const isBuy = t.transactionCode === 'P';
+                      const isAward = t.transactionCode === 'A';
+                      const label = isBuy ? 'Buy' : isAward ? 'Award' : 'Sell';
+                      const color = isBuy ? 'bg-green-100 text-green-800' : isAward ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-800';
+                      return (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="py-2 px-3 text-gray-900">{t.name}</td>
+                          <td className="py-2 px-3">
+                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${color}`}>{label}</span>
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums text-gray-900">
+                            {Math.abs(t.change).toLocaleString()}
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums text-gray-600">
+                            {t.transactionPrice > 0 ? `$${t.transactionPrice.toFixed(2)}` : '—'}
+                          </td>
+                          <td className="py-2 px-3 text-right text-gray-500">{t.transactionDate}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CollapsibleSection>
           </div>
         )}
 

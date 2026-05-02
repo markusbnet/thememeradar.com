@@ -11,6 +11,7 @@ import { getStockDetails, getStockEvidence, getStockHistory, getStockTimeBreakdo
 import { getLatestEnrichment } from '@/lib/db/enrichment';
 import { getLatestPrice, getPriceHistory } from '@/lib/db/prices';
 import { getLatestOptionsActivity } from '@/lib/market/swaggystocks';
+import { getCompanyNews, getShortInterest, getInsiderTransactions } from '@/lib/market/finnhub';
 
 export async function GET(
   request: Request,
@@ -21,8 +22,8 @@ export async function GET(
     const ticker = tickerParam.toUpperCase();
 
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    // Fetch stock details, evidence, history, time breakdown, enrichment, prices, and options in parallel
-    const [details, evidence, history, timeBreakdown, enrichment, priceSnapshot, priceHistory, options] = await Promise.all([
+    // Fetch all data in parallel
+    const [details, evidence, history, timeBreakdown, enrichment, priceSnapshot, priceHistory, options, news, shortInterest, insiderTransactions] = await Promise.all([
       getStockDetails(ticker),
       getStockEvidence(ticker, 10),
       getStockHistory(ticker, 7),
@@ -31,6 +32,9 @@ export async function GET(
       getLatestPrice(ticker),
       getPriceHistory(ticker, sevenDaysAgo, Date.now()),
       getLatestOptionsActivity(ticker),
+      getCompanyNews(ticker),
+      getShortInterest(ticker),
+      getInsiderTransactions(ticker),
     ]);
 
     if (!details) {
@@ -55,6 +59,9 @@ export async function GET(
         priceSnapshot: priceSnapshot ?? null,
         priceHistory: priceHistory.map(p => ({ timestamp: p.timestamp, price: p.price, volume: p.volume })),
         options: options ?? null,
+        news: news ?? [],
+        shortInterest: shortInterest ?? null,
+        insiderTransactions: insiderTransactions ?? [],
         timestamp: Date.now(),
       },
     });

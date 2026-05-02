@@ -18,6 +18,7 @@ import { createScanner } from '@/lib/scanner/scanner';
 import { saveScanResults } from '@/lib/db/storage';
 import { enrichWithLunarCrush } from '@/lib/lunarcrush';
 import { enrichWithPrices } from '@/lib/market/finnhub';
+import { enrichWithApewisdom } from '@/lib/market/apewisdom';
 import { parseSubredditList } from '@/lib/scan-config';
 import { checkAndCreateAlerts } from '@/lib/alert-pipeline';
 import { acquireScanLock, releaseScanLock } from '@/lib/db/scan-lock';
@@ -204,6 +205,10 @@ export async function GET(request: NextRequest) {
 
     checkAndCreateAlerts(allTickers).catch((err: unknown) =>
       logger.error('Alert generation error:', err)
+    );
+
+    enrichWithApewisdom().catch((err: unknown) =>
+      logger.error('ApeWisdom enrichment error:', err)
     );
 
     const summary = {

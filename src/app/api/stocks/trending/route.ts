@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const [trendingRaw, fadingRaw, awSnapshot] = await Promise.all([
       getTrendingStocks(10, timeframe),
       getFadingStocks(10, timeframe),
-      getLatestApewisdomSnapshot('wallstreetbets'),
+      getLatestApewisdomSnapshot('all-stocks'),
     ]);
 
     const now = Date.now();

@@ -86,6 +86,9 @@ jest.mock('@/lib/lunarcrush', () => ({
 
 jest.mock('@/lib/market/finnhub', () => ({
   enrichWithPrices: jest.fn().mockResolvedValue(undefined),
+  getCompanyNews: jest.fn().mockResolvedValue([]),
+  getShortInterest: jest.fn().mockResolvedValue(null),
+  getInsiderTransactions: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('@/lib/alert-pipeline', () => ({
@@ -432,6 +435,18 @@ describe('API Contract Tests', () => {
       const res = await tickerGET(req('/api/stocks/AMC') as Parameters<typeof tickerGET>[0], { params });
       const data = await res.json();
       expect(data.data.ticker).toBe('AMC');
+    });
+
+    it('response data includes news, shortInterest, and insiderTransactions fields', async () => {
+      const params = Promise.resolve({ ticker: 'GME' });
+      const res = await tickerGET(req('/api/stocks/GME') as Parameters<typeof tickerGET>[0], { params });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.data).toHaveProperty('news');
+      expect(data.data).toHaveProperty('shortInterest');
+      expect(data.data).toHaveProperty('insiderTransactions');
+      expect(Array.isArray(data.data.news)).toBe(true);
+      expect(Array.isArray(data.data.insiderTransactions)).toBe(true);
     });
   });
 

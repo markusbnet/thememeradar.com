@@ -266,18 +266,22 @@ export default function StockTable({ stocks, type }: StockTableProps) {
 
                 {/* Velocity */}
                 <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
-                  <span
-                    className={`font-medium ${
-                      stock.velocity > 0
-                        ? 'text-green-700'
-                        : stock.velocity < 0
-                          ? 'text-red-700'
-                          : 'text-gray-500'
-                    }`}
-                  >
-                    {stock.velocity > 0 ? '+' : ''}
-                    {stock.velocity.toFixed(0)}%
-                  </span>
+                  {(stock.mentionsPrev ?? 0) === 0 && stock.rankStatus === 'unknown' ? (
+                    <span className="text-gray-400 text-xs">Building</span>
+                  ) : (
+                    <span
+                      className={`font-medium ${
+                        stock.velocity > 0
+                          ? 'text-green-700'
+                          : stock.velocity < 0
+                            ? 'text-red-700'
+                            : 'text-gray-500'
+                      }`}
+                    >
+                      {stock.velocity > 0 ? '+' : ''}
+                      {stock.velocity.toFixed(0)}%
+                    </span>
+                  )}
                 </td>
 
                 {/* Sentiment */}

@@ -8,7 +8,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import type { StockPriceSnapshot, FinnhubQuote, FinnhubCandle } from '@/types/market';
+import type { StockPriceSnapshot, FinnhubQuote, FinnhubCandle, FinnhubNewsItem, FinnhubShortInterestItem, FinnhubInsiderTransaction } from '@/types/market';
 import { getLatestPriceMap, savePrice } from '@/lib/db/prices';
 
 const BASE_URL = 'https://finnhub.io/api/v1';
@@ -65,6 +65,81 @@ export class FinnhubClient {
     return this.get<FinnhubCandle>(
       `/stock/candle?symbol=${ticker}&resolution=D&from=${from}&to=${to}`
     );
+  }
+
+  async getCompanyNews(ticker: string, from: string, to: string): Promise<FinnhubNewsItem[]> {
+    const result = await this.get<FinnhubNewsItem[]>(
+      `/company-news?symbol=${ticker}&from=${from}&to=${to}`
+    );
+    return Array.isArray(result) ? result : [];
+  }
+
+  async getShortInterest(ticker: string, from: string, to: string): Promise<FinnhubShortInterestItem | null> {
+    const result = await this.get<{ data?: FinnhubShortInterestItem[]; symbol?: string }>(
+      `/stock/short-interest?symbol=${ticker}&from=${from}&to=${to}`
+    );
+    if (!result?.data || result.data.length === 0) return null;
+    // Return the most recent entry
+    return result.data[result.data.length - 1];
+  }
+
+  async getInsiderTransactions(ticker: string): Promise<FinnhubInsiderTransaction[]> {
+    const result = await this.get<{ data?: FinnhubInsiderTransaction[]; symbol?: string }>(
+      `/stock/insider-transactions?symbol=${ticker}`
+    );
+    return Array.isArray(result?.data) ? result.data : [];
+  }
+}
+
+function toDateString(ms: number): string {
+  return new Date(ms).toISOString().split('T')[0];
+}
+
+export async function getCompanyNews(ticker: string): Promise<FinnhubNewsItem[]> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return [];
+  try {
+    const client = new FinnhubClient(apiKey);
+    const to = toDateString(Date.now());
+    const from = toDateString(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const news = await client.getCompanyNews(ticker, from, to);
+    return news.slice(0, 5);
+  } catch (error: unknown) {
+    logger.warn(`[Finnhub] Failed to fetch news for ${ticker}:`, error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
+export async function getShortInterest(ticker: string): Promise<FinnhubShortInterestItem | null> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const client = new FinnhubClient(apiKey);
+    const to = toDateString(Date.now());
+    const from = toDateString(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    return await client.getShortInterest(ticker, from, to);
+  } catch (error: unknown) {
+    logger.warn(`[Finnhub] Failed to fetch short interest for ${ticker}:`, error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
+const MEANINGFUL_CODES = new Set(['P', 'S', 'A']);
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+export async function getInsiderTransactions(ticker: string): Promise<FinnhubInsiderTransaction[]> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return [];
+  try {
+    const client = new FinnhubClient(apiKey);
+    const all = await client.getInsiderTransactions(ticker);
+    const cutoff = new Date(Date.now() - THIRTY_DAYS_MS).toISOString().split('T')[0];
+    return all
+      .filter(t => !t.isDerivative && MEANINGFUL_CODES.has(t.transactionCode) && t.transactionDate >= cutoff)
+      .slice(0, 10);
+  } catch (error: unknown) {
+    logger.warn(`[Finnhub] Failed to fetch insider transactions for ${ticker}:`, error instanceof Error ? error.message : error);
+    return [];
   }
 }
 

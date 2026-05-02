@@ -149,4 +149,31 @@ describe('StockTable', () => {
     render(<StockTable stocks={mockStocks} type="trending" />);
     expect(screen.getAllByTestId('sparkline')).toHaveLength(2);
   });
+
+  it('shows "Building" in velocity cell for data-gap stocks (no prior window, unknown rank)', () => {
+    const dataGapStock = {
+      ...mockStocks[0],
+      ticker: 'NEWT',
+      mentionsPrev: 0,
+      rankStatus: 'unknown' as const,
+      rankDelta24h: null,
+      velocity: 100,
+    };
+    render(<StockTable stocks={[dataGapStock]} type="trending" />);
+    expect(screen.getByText('Building')).toBeInTheDocument();
+    expect(screen.queryByText('+100%')).not.toBeInTheDocument();
+  });
+
+  it('shows velocity percentage when mentionsPrev is non-zero', () => {
+    const activeStock = {
+      ...mockStocks[0],
+      ticker: 'ACTV',
+      mentionsPrev: 50,
+      rankStatus: 'climbing' as const,
+      velocity: 25,
+    };
+    render(<StockTable stocks={[activeStock]} type="trending" />);
+    expect(screen.getByText('+25%')).toBeInTheDocument();
+    expect(screen.queryByText('Building')).not.toBeInTheDocument();
+  });
 });
