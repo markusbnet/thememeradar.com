@@ -72,6 +72,7 @@ export default function StockChart({
         viewBox={`0 0 ${width} ${height}`}
         className="w-full"
         style={{ maxHeight: height }}
+        role="img"
         aria-label={title}
       >
         {/* Grid lines */}
