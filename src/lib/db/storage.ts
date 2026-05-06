@@ -5,6 +5,7 @@
 
 import { docClient, TABLES, PutCommand, QueryCommand } from './client';
 import { ScanResult, TickerMention } from '@/lib/scanner/scanner';
+import { SUBREDDIT_WEIGHTS, DEFAULT_SUBREDDIT_WEIGHT } from '@/lib/scanner/config';
 
 // Types for stored data
 export interface StoredStockMention {
@@ -304,30 +305,35 @@ export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe
   const currentWindowStart = now - windowMs;
 
   // Aggregate per ticker for current and previous windows
-  const currentMap = new Map<string, { mentionCount: number; sentimentScore: number; sentimentCategory: string }>();
+  const currentMap = new Map<string, { mentionCount: number; weightedCount: number; sentimentScore: number; sentimentCategory: string }>();
   const previousMap = new Map<string, number>();
+  const weightedPreviousMap = new Map<string, number>();
 
   for (const item of items) {
     const ts = item.timestamp as number;
     const ticker = item.ticker as string;
     const mentions = item.mentionCount as number;
+    const breakdown = (item.subredditBreakdown as Record<string, number> | undefined) ?? {};
+    const weighted = Object.keys(breakdown).length > 0
+      ? Object.entries(breakdown).reduce((sum, [sub, count]) => sum + (SUBREDDIT_WEIGHTS[sub] ?? DEFAULT_SUBREDDIT_WEIGHT) * count, 0)
+      : mentions;
 
     if (ts > currentWindowStart && ts <= now) {
-      // Current window (exclusive of the boundary point)
       const existing = currentMap.get(ticker);
       if (existing) {
         existing.mentionCount += mentions;
-        // Keep the most recent sentiment values (last write wins — fine for aggregation)
+        existing.weightedCount += weighted;
       } else {
         currentMap.set(ticker, {
           mentionCount: mentions,
+          weightedCount: weighted,
           sentimentScore: item.avgSentimentScore as number || 0,
           sentimentCategory: item.sentimentCategory as string || 'neutral',
         });
       }
     } else if (ts >= windowStart && ts <= currentWindowStart) {
-      // Previous window (inclusive of both boundaries)
       previousMap.set(ticker, (previousMap.get(ticker) || 0) + mentions);
+      weightedPreviousMap.set(ticker, (weightedPreviousMap.get(ticker) || 0) + weighted);
     }
   }
 
@@ -337,12 +343,14 @@ export async function getTrendingStocks(limit: number = 10, timeframe: Timeframe
   const trending: Omit<TrendingStock, 'rank24hAgo' | 'rankDelta24h' | 'rankStatus'>[] = [];
   for (const [ticker, data] of currentMap.entries()) {
     const current = data.mentionCount;
+    const currentWeighted = data.weightedCount;
     const previous = previousMap.get(ticker) || 0;
+    const previousWeighted = weightedPreviousMap.get(ticker) || 0;
 
-    // Calculate velocity (% change)
-    const velocity = previous > 0 ? ((current - previous) / previous) * 100 : 100;
+    // Velocity uses subreddit-weighted counts so WSB mentions have more pull than r/stocks
+    const velocity = previousWeighted > 0 ? ((currentWeighted - previousWeighted) / previousWeighted) * 100 : 100;
 
-    // Only include stocks meeting the minimum mention threshold
+    // Threshold uses raw count — prevents a single WSB post from qualifying alone
     if (current >= minMentions) {
       trending.push({
         ticker,
