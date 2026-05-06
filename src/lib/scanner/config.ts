@@ -51,3 +51,14 @@ export const LISTING_MIX: Record<ListingType, ListingConfig> = {
     commentThreshold: 0, // fetch comments for all rising posts (low count, high signal)
   },
 };
+export const SUBREDDIT_WEIGHTS: Record<string, number> = {
+  wallstreetbets: 3,
+  Superstonk: 3,
+  pennystocks: 2,
+  options: 1.5,
+  stocks: 1,
+  investing: 1,
+  StockMarket: 1,
+};
+
+export const DEFAULT_SUBREDDIT_WEIGHT = 1;
