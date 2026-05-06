@@ -96,6 +96,7 @@ async function seedMention(data: {
   neutralCount?: number;
   avgSentimentScore?: number;
   sentimentCategory?: string;
+  subredditBreakdown?: Record<string, number>;
 }) {
   await docClient.send(
     new PutCommand({
@@ -109,6 +110,7 @@ async function seedMention(data: {
         neutralCount: data.neutralCount || 0,
         avgSentimentScore: data.avgSentimentScore || 0,
         sentimentCategory: data.sentimentCategory || 'neutral',
+        ...(data.subredditBreakdown ? { subredditBreakdown: data.subredditBreakdown } : {}),
       },
     })
   );
@@ -1049,4 +1051,72 @@ describe('Storage Layer', () => {
       expect(validTimeframes).toHaveLength(4);
     });
   });
+  describe('getTrendingStocks — subreddit weighting', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+      clearRankSnapshotCache();
+    });
+
+    it('should give WSB mentions 3× weight in velocity calculation', async () => {
+      const frozen = roundToInterval(new Date('2025-09-01T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 24 * 60 * 60 * 1000;
+
+      // Prev: 10 mentions from r/stocks (weight 1) → weighted = 10
+      await seedMention({
+        ticker: 'WSBW',
+        timestamp: frozen - windowMs - 15 * 60 * 1000,
+        mentionCount: 10,
+        subredditBreakdown: { stocks: 10 },
+      });
+      // Current: 10 mentions from WSB (weight 3) → weighted = 30
+      await seedMention({
+        ticker: 'WSBW',
+        timestamp: frozen - 15 * 60 * 1000,
+        mentionCount: 10,
+        subredditBreakdown: { wallstreetbets: 10 },
+      });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'WSBW');
+      expect(stock).toBeDefined();
+      // velocity = (30 - 10) / 10 * 100 = 200%
+      expect(stock!.velocity).toBe(200);
+    });
+
+    it('should fall back to raw mentionCount when subredditBreakdown is absent', async () => {
+      const frozen = roundToInterval(new Date('2025-09-02T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+      const windowMs = 24 * 60 * 60 * 1000;
+
+      // No subredditBreakdown — old row format
+      await seedMention({ ticker: 'FBCK', timestamp: frozen - windowMs - 15 * 60 * 1000, mentionCount: 10 });
+      await seedMention({ ticker: 'FBCK', timestamp: frozen - 15 * 60 * 1000, mentionCount: 20 });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'FBCK');
+      expect(stock).toBeDefined();
+      // fallback to raw: (20 - 10) / 10 * 100 = 100%
+      expect(stock!.velocity).toBe(100);
+    });
+
+    it('should not inflate mentionCount — threshold still uses raw count', async () => {
+      const frozen = roundToInterval(new Date('2025-09-03T10:00:00.000Z').getTime());
+      jest.spyOn(Date, 'now').mockReturnValue(frozen);
+
+      // 3 raw mentions from WSB — raw is below threshold (5), weighted = 9 but should not qualify
+      await seedMention({
+        ticker: 'RAWT',
+        timestamp: frozen - 15 * 60 * 1000,
+        mentionCount: 3,
+        subredditBreakdown: { wallstreetbets: 3 },
+      });
+
+      const result = await getTrendingStocks(10);
+      const stock = result.find(s => s.ticker === 'RAWT');
+      // Should NOT appear — raw count 3 < minMentions 5
+      expect(stock).toBeUndefined();
+    });
+  });
+
 });
