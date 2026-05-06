@@ -3,6 +3,8 @@ import { getTrendingStocks, getFadingStocks } from '@/lib/db/storage';
 import { getEnrichmentMap } from '@/lib/db/enrichment';
 import { computeOpportunityScore } from '@/lib/opportunity-score';
 
+const SIGNAL_PRIORITY: Record<string, number> = { rising: 0, hot: 1, watch: 2 };
+
 export async function GET() {
   try {
     const [trending, fading] = await Promise.all([
@@ -24,7 +26,12 @@ export async function GET() {
     const opportunities = allStocks
       .map((stock) => computeOpportunityScore(stock, enrichmentMap.get(stock.ticker) ?? null))
       .filter((opp) => opp.signalLevel !== 'none')
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => {
+        const aPriority = SIGNAL_PRIORITY[a.signalLevel] ?? 99;
+        const bPriority = SIGNAL_PRIORITY[b.signalLevel] ?? 99;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return b.score - a.score;
+      });
 
     return NextResponse.json({
       success: true,
