@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface StockChartProps {
   data: { label: string; value: number }[];
   title: string;
@@ -15,6 +17,8 @@ export default function StockChart({
   height = 200,
   valueFormatter = (v) => v.toString(),
 }: StockChartProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   if (!data || data.length < 2) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -48,12 +52,18 @@ export default function StockChart({
   const linePath = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
   const fillPath = `${linePath} L ${points[points.length - 1].x},${paddingTop + chartHeight} L ${points[0].x},${paddingTop + chartHeight} Z`;
 
-  // Y-axis ticks (5 ticks)
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const value = min + (range * i) / 4;
     const y = paddingTop + chartHeight - (i / 4) * chartHeight;
     return { value, y };
   });
+
+  const hovered = hoveredIndex !== null ? points[hoveredIndex] : null;
+  const tooltipWidth = 120;
+  const tooltipX = hovered
+    ? Math.min(hovered.x + 10, width - paddingRight - tooltipWidth)
+    : 0;
+  const tooltipY = hovered ? Math.max(hovered.y - 40, paddingTop) : 0;
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -62,7 +72,6 @@ export default function StockChart({
         viewBox={`0 0 ${width} ${height}`}
         className="w-full"
         style={{ maxHeight: height }}
-        role="img"
         aria-label={title}
       >
         {/* Grid lines */}
@@ -96,12 +105,19 @@ export default function StockChart({
 
         {/* Data points */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={hoveredIndex === i ? 5 : 3}
+            fill={color}
+            stroke={hoveredIndex === i ? '#fff' : 'none'}
+            strokeWidth={hoveredIndex === i ? 2 : 0}
+          />
         ))}
 
         {/* X-axis labels */}
         {points.map((p, i) => {
-          // Show every other label if more than 7 points
           if (data.length > 7 && i % 2 !== 0 && i !== data.length - 1) return null;
           return (
             <text
@@ -114,6 +130,75 @@ export default function StockChart({
             >
               {p.label}
             </text>
+          );
+        })}
+
+        {/* Crosshair */}
+        {hovered && (
+          <line
+            x1={hovered.x}
+            y1={paddingTop}
+            x2={hovered.x}
+            y2={paddingTop + chartHeight}
+            stroke={color}
+            strokeWidth="1"
+            strokeDasharray="3,3"
+            opacity="0.6"
+          />
+        )}
+
+        {/* Tooltip */}
+        {hovered && (
+          <g>
+            <rect
+              x={tooltipX}
+              y={tooltipY}
+              width={tooltipWidth}
+              height={44}
+              rx="4"
+              fill="#1f2937"
+              opacity="0.9"
+            />
+            <text
+              x={tooltipX + tooltipWidth / 2}
+              y={tooltipY + 16}
+              textAnchor="middle"
+              fontSize="11"
+              fill="#9ca3af"
+            >
+              {hovered.label}
+            </text>
+            <text
+              x={tooltipX + tooltipWidth / 2}
+              y={tooltipY + 34}
+              textAnchor="middle"
+              fontSize="13"
+              fill="#f9fafb"
+              fontWeight="600"
+            >
+              {valueFormatter(hovered.value)}
+            </text>
+          </g>
+        )}
+
+        {/* Invisible hover zones */}
+        {points.map((p, i) => {
+          const prev = i > 0 ? points[i - 1] : null;
+          const next = i < points.length - 1 ? points[i + 1] : null;
+          const zoneX = prev ? (prev.x + p.x) / 2 : paddingLeft;
+          const zoneEnd = next ? (p.x + next.x) / 2 : paddingLeft + chartWidth;
+          return (
+            <rect
+              key={i}
+              x={zoneX}
+              y={paddingTop}
+              width={zoneEnd - zoneX}
+              height={chartHeight}
+              fill="transparent"
+              onPointerEnter={() => setHoveredIndex(i)}
+              onPointerLeave={() => setHoveredIndex(null)}
+              style={{ cursor: 'crosshair' }}
+            />
           );
         })}
       </svg>
