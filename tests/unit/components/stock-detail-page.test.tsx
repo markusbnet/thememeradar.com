@@ -123,7 +123,7 @@ describe('StockDetailPage', () => {  // tests StockDetailClient
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Total Mentions')).toBeInTheDocument();
+      expect(screen.getByText('24h Mentions')).toBeInTheDocument();
     });
 
     expect(screen.getByText('Unique Posts')).toBeInTheDocument();
