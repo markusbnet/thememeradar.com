@@ -59,6 +59,8 @@ export default function DashboardPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>('24h');
   const [view, setView] = useState<'cards' | 'table'>('cards');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isStockDataLoading, setIsStockDataLoading] = useState(false);
+  const [stockDataCache, setStockDataCache] = useState<Partial<Record<Timeframe, StockData>>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -118,18 +120,22 @@ export default function DashboardPage() {
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStockData = async (tf: Timeframe = timeframe) => {
+    setIsStockDataLoading(true);
     try {
       const response = await fetch(`/api/stocks/trending?timeframe=${tf}`);
       const result = await response.json();
 
       if (result.success) {
         setStockData(result.data);
+        setStockDataCache(prev => ({ ...prev, [tf]: result.data }));
         setError(null);
       } else {
         setError(result.error || 'Failed to fetch stock data');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Network error');
+    } finally {
+      setIsStockDataLoading(false);
     }
   };
 
@@ -162,6 +168,9 @@ export default function DashboardPage() {
     const params = new URLSearchParams(window.location.search);
     params.set('timeframe', tf);
     window.history.replaceState({}, '', `?${params.toString()}`);
+    // Show cached result immediately while fetching fresh data in background
+    const cached = stockDataCache[tf];
+    if (cached) setStockData(cached);
     fetchStockData(tf);
   };
 
@@ -288,14 +297,6 @@ export default function DashboardPage() {
         {/* Opportunities Section — only shown when signal-qualifying stocks exist */}
         {opportunities.length > 0 && (
           <section className="mb-12" data-testid="opportunities-section">
-            <div className="flex items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                🎯 Opportunities
-              </h2>
-              <span className="ml-3 text-sm text-gray-500">
-                {opportunities.length} signal{opportunities.length !== 1 ? 's' : ''}
-              </span>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {opportunities.slice(0, 10).map((opp, index) => (
                 <OpportunityCard
@@ -336,7 +337,7 @@ export default function DashboardPage() {
         )}
 
         {/* Trending Stocks Section */}
-        <section className="mb-12">
+        <section className={`mb-12 transition-opacity duration-150 ${isStockDataLoading ? 'opacity-60' : 'opacity-100'}`}>
           <div className="flex items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
               📈 Top 10 Trending (Rising)
@@ -392,7 +393,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Fading Stocks Section */}
-        <section>
+        <section className={`transition-opacity duration-150 ${isStockDataLoading ? 'opacity-60' : 'opacity-100'}`}>
           <div className="flex items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
               📉 Top 10 Fading (Losing Interest)
