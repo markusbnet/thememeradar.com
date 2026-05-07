@@ -51,6 +51,8 @@ function normalizeOptionsActivity(options: OptionsActivity): number {
   return Math.round(Math.min(callPutRatio, 3) / 3 * 100);
 }
 
+export const MIN_OPPORTUNITY_MENTIONS = 5;
+
 export function classifySignalLevel(score: number): SignalLevel {
   if (score >= 75) return 'hot';
   if (score >= 50) return 'rising';
@@ -68,6 +70,8 @@ export function computeOpportunityScore(
   const socialDominanceScore = enrichment ? normalizeSocialDominance(enrichment.social_dominance) : 0;
   const volumeChangeScore = enrichment ? normalizeVolumeChange(enrichment.percent_change_24h) : 0;
   const creatorInfluenceScore = enrichment ? normalizeCreatorInfluence(enrichment.top_creators) : 0;
+
+  const belowMentionThreshold = stock.mentionCount < MIN_OPPORTUNITY_MENTIONS;
 
   if (options !== null) {
     const optionsScore = normalizeOptionsActivity(options);
@@ -88,7 +92,7 @@ export function computeOpportunityScore(
     return {
       ticker: stock.ticker,
       score,
-      signalLevel: classifySignalLevel(score),
+      signalLevel: belowMentionThreshold ? 'none' : classifySignalLevel(score),
       subScores: {
         velocity: velocityScore,
         sentiment: sentimentScore,
@@ -111,7 +115,7 @@ export function computeOpportunityScore(
   return {
     ticker: stock.ticker,
     score,
-    signalLevel: classifySignalLevel(score),
+    signalLevel: belowMentionThreshold ? 'none' : classifySignalLevel(score),
     subScores: {
       velocity: velocityScore,
       sentiment: sentimentScore,

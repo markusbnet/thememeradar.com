@@ -274,3 +274,48 @@ describe('classifySignalLevel', () => {
     expect(classifySignalLevel(10)).toBe('none');
   });
 });
+
+describe('mention count quality gate', () => {
+  it('mentionCount=1 with high velocity is forced to signalLevel none', () => {
+    const result = computeOpportunityScore({ ...baseStock, mentionCount: 1, velocity: 500 }, baseEnrichment);
+    expect(result.signalLevel).toBe('none');
+  });
+
+  it('mentionCount=4 (below threshold of 5) is forced to signalLevel none regardless of score', () => {
+    const enrichment = { ...baseEnrichment, percent_change_24h: 20, social_dominance: 20 };
+    const result = computeOpportunityScore({ ...baseStock, mentionCount: 4, velocity: 500, sentimentScore: 1 }, enrichment);
+    expect(result.signalLevel).toBe('none');
+  });
+
+  it('mentionCount=5 (at threshold) allows normal signal classification', () => {
+    const enrichment = {
+      ...baseEnrichment,
+      percent_change_24h: 20,
+      social_dominance: 20,
+      top_creators: [{ screen_name: 'inf', network: 'twitter', influencer_rank: 1, followers: 1_000_000, posts: 5, engagements: 50000 }],
+    };
+    const result = computeOpportunityScore({ ...baseStock, mentionCount: 5, velocity: 500, sentimentScore: 1 }, enrichment);
+    expect(result.signalLevel).not.toBe('none');
+  });
+
+  it('score is still computed for low-mention stocks (gate only affects signalLevel)', () => {
+    const result = computeOpportunityScore({ ...baseStock, mentionCount: 2, velocity: 500 }, null);
+    expect(result.score).toBeGreaterThan(0);
+    expect(result.signalLevel).toBe('none');
+  });
+});
+
+describe('options activity edge cases', () => {
+  it('putCallRatio=0 (all puts, no calls) yields optionsActivityScore 0', () => {
+    const allPutsOptions = { ticker: 'GME', timestamp: 1700000000000, callOpenInterest: 0, putOpenInterest: 500000, putCallRatio: 0, iv30d: 0.9, fetchedAt: 1700000000000, ttl: 1702592000 };
+    const result = computeOpportunityScore(baseStock, baseEnrichment, allPutsOptions);
+    expect(result.subScores.optionsActivity).toBe(0);
+  });
+
+  it('puts-dominant (putCallRatio=2.0) yields low but non-zero optionsActivityScore', () => {
+    const putsOptions = { ticker: 'GME', timestamp: 1700000000000, callOpenInterest: 100000, putOpenInterest: 200000, putCallRatio: 2.0, iv30d: 0.9, fetchedAt: 1700000000000, ttl: 1702592000 };
+    const result = computeOpportunityScore(baseStock, baseEnrichment, putsOptions);
+    // callPutRatio = 1/2.0 = 0.5; min(0.5, 3)/3*100 = 17
+    expect(result.subScores.optionsActivity).toBe(17);
+  });
+});

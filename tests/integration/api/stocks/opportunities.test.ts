@@ -168,4 +168,40 @@ describe('GET /api/stocks/opportunities', () => {
     expect(data.success).toBe(false);
     expect(data.error).toBe('Failed to fetch opportunities');
   });
+
+  it('sorts rising before hot by signal priority even when hot has higher score', async () => {
+    // HOT_STOCK: velocity=500, sentiment=1.0, pctChange=18 → score=81 → 'hot'
+    // RISING_STOCK: velocity=400, sentiment=0.5, pctChange=3 → score=54 → 'rising'
+    // Expected: RISING_STOCK appears first (signal priority: rising=0, hot=1)
+    mockGetTrending.mockResolvedValue([
+      mockStock('HOT_STOCK', 500, 1.0),
+      mockStock('RISING_STOCK', 400, 0.5),
+    ]);
+    mockGetEnrichmentMap.mockResolvedValue(new Map([
+      ['HOT_STOCK', mockEnrichment('HOT_STOCK', 18)],
+      ['RISING_STOCK', mockEnrichment('RISING_STOCK', 3)],
+    ]));
+
+    const response = await GET();
+    const data = await response.json();
+    const opps = data.data.opportunities;
+
+    const hotIdx = opps.findIndex((o: { ticker: string }) => o.ticker === 'HOT_STOCK');
+    const risingIdx = opps.findIndex((o: { ticker: string }) => o.ticker === 'RISING_STOCK');
+
+    expect(opps[hotIdx].signalLevel).toBe('hot');
+    expect(opps[risingIdx].signalLevel).toBe('rising');
+    expect(risingIdx).toBeLessThan(hotIdx);
+  });
+
+  it('filters out low-mention stocks (mentionCount < 5) even with high velocity', async () => {
+    // mockStock defaults to mentionCount=100, override to 2 for THINLY_TRADED
+    const thinStock = { ...mockStock('THINLY_TRADED', 500, 1.0), mentionCount: 2 };
+    mockGetTrending.mockResolvedValue([thinStock]);
+    mockGetEnrichmentMap.mockResolvedValue(new Map([['THINLY_TRADED', mockEnrichment('THINLY_TRADED', 18)]]));
+
+    const response = await GET();
+    const data = await response.json();
+    expect(data.data.opportunities).toHaveLength(0);
+  });
 });
