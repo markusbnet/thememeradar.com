@@ -394,7 +394,7 @@ describe('DashboardPage', () => {
         expect(screen.getByText(/Top 10 Trending/)).toBeInTheDocument();
       });
 
-      expect(screen.queryByText(/Opportunities/)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('opportunities-section')).not.toBeInTheDocument();
     });
 
     it('renders opportunities section when hot/rising opportunities exist', async () => {
@@ -410,7 +410,7 @@ describe('DashboardPage', () => {
       render(<DashboardPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Opportunities/)).toBeInTheDocument();
+        expect(screen.getByTestId('opportunities-section')).toBeInTheDocument();
       });
 
       expect(screen.getByTestId('opp-card-GME')).toBeInTheDocument();
